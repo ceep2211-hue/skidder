@@ -1,0 +1,81 @@
+-- Path : ReplicatedStorage.Modules.Core.CFrameSpring.Quaternion
+-- Script path: ReplicatedStorage.Modules.Core.CFrameSpring.Quaternion
+-- Decompile time: 2.11 ms
+
+local u0 = {__type = "quaternion"}
+local u1 = {__index = u0}
+local u5 = setmetatable({}, {__mode = "k"})
+local abs = math.abs
+local cos = math.cos
+local sin = math.sin
+local acos = math.acos
+local sqrt = math.sqrt
+
+function u1.__mul(a1, a2) -- Line: 12 -- upvalues: u5 (val), u0 (val)
+    local w = a1.w
+    local w_2 = a2.w
+    local v1 = u5[a1]
+    local v2 = u5[a2]
+    local v3 = w * w_2 - v1:Dot(v2)
+    local v4 = v1 * w_2 + v2 * w + v1:Cross(v2)
+    return u0.new(v3, v4.x, v4.y, v4.z)
+end
+
+function u1.__pow(a1, a2) -- Line: 20 -- upvalues: sin (val), u0 (val), cos (val)
+    local v1, v2 = a1:toAxisAngle()
+    v2 = v2 * a2 * 0.5
+    v1 = sin(v2) * v1
+    return u0.new(cos(v2), v1.x, v1.y, v1.z)
+end
+
+function u1.__tostring(a1) -- Line: 27
+    return table.concat({a1.w, a1.x, a1.y, a1.z}, ", ")
+end
+
+function u0.new(a1, a2, a3, a4) -- Line: 32 -- upvalues: u1 (val), u5 (val)
+    local v1 = {w = a1, x = a2, y = a3, z = a4}
+    v1 = setmetatable(v1, u1)
+    u5[v1] = (Vector3.new(a2, a3, a4))
+    return v1
+end
+
+function u0.fromCFrame(a1) -- Line: 46 -- upvalues: sin (val), u0 (val), cos (val)
+    local v1, v2 = a1:toAxisAngle()
+    v2 = v2 * 0.5
+    v1 = sin(v2) * v1
+    return u0.new(cos(v2), v1.x, v1.y, v1.z)
+end
+
+function u0:inverse() -- Line: 53 -- upvalues: u5 (val), u0 (val)
+    local w = self.w
+    local v1 = w * w + u5[self]:Dot(u5[self])
+    local v2 = w / v1
+    local v3 = -u5[self] / v1
+    return u0.new(v2, v3.x, v3.y, v3.z)
+end
+
+function u0:toAxisAngle() -- Line: 63 -- upvalues: u5 (val), acos (val)
+    local v1 = u5[self]
+    local v2 = acos(self.w) * 2
+    if v2 % 6.283185307179586 == 0 and v1:Dot(v1) == 0 then
+        v1 = Vector3.new(1, 0, 0)
+    end
+    return v1.unit, v2
+end
+
+function u0:slerp(a2, a3) -- Line: 75
+    return (a2 * self:inverse()) ^ a3 * self
+end
+
+function u0.slerpClosest(a1, a2, a3) -- Line: 79 -- upvalues: u0 (val)
+    if 0 < a1.w * a2.w + a1.x * a2.x + a1.y * a2.y + a1.z * a2.z then
+        return a1:slerp(a2, a3)
+    end
+    return a1:slerp(u0.new(-a2.w, -a2.x, -a2.y, -a2.z), a3)
+end
+
+function u0.toCFrame(a1) -- Line: 90
+    return CFrame.new(0, 0, 0, a1.x, a1.y, a1.z, a1.w)
+end
+
+return u0

@@ -1,0 +1,143 @@
+-- Path : StarterPlayer.StarterPlayerScripts.PlayerModule.ControlModule.PathDisplay
+-- Script path: StarterPlayer.StarterPlayerScripts.PlayerModule.ControlModule.PathDisplay
+-- Decompile time: 3.17 ms
+
+local ImageHandleAdornment
+local CommonUtils = script.Parent.Parent:WaitForChild("CommonUtils")
+local UserRaycastPerformanceImprovements = require(CommonUtils:WaitForChild("FlagUtil")).getUserFlag("UserRaycastPerformanceImprovements")
+local u17 = RaycastParams.new()
+u17.FilterType = Enum.RaycastFilterType.Exclude
+local u19 = {spacing = 8, image = "rbxasset://textures/Cursors/Gamepad/Pointer.png"}
+u19.imageSize = Vector2.new(2, 2)
+local u26 = {}
+local u27 = {}
+local Model = Instance.new("Model")
+Model.Name = "PathDisplayPoints"
+local Part = Instance.new("Part")
+Part.Anchored = true
+Part.CanCollide = false
+Part.Transparency = 1
+Part.Name = "PathDisplayAdornee"
+Part.CFrame = CFrame.new(0, 0, 0)
+Part.Parent = Model
+local u44 = {}
+local u45 = 30
+local v1 = u45
+for i = 1, v1 do
+    ImageHandleAdornment = Instance.new("ImageHandleAdornment")
+    ImageHandleAdornment.Archivable = false
+    ImageHandleAdornment.Adornee = Part
+    ImageHandleAdornment.Image = u19.image
+    ImageHandleAdornment.Size = u19.imageSize
+    u44[i] = ImageHandleAdornment
+end
+
+local function retrieveFromPool() -- Line: 41 -- upvalues: u44 (val), u45 (ref)
+    local v1 = u44[1]
+    if not v1 then
+        return nil
+    end
+    local v2 = u44
+    local v3 = u45
+    u44[1] = u44[u45]
+    v2[v3] = nil
+    u45 = u45 - 1
+    return v1
+end
+
+local function returnToPool(a1) -- Line: 52 -- upvalues: u45 (ref), u44 (val) -- types: a1: userdata
+    u45 = u45 + 1
+    u44[u45] = a1
+end
+
+local function renderPoint(a1, a2) -- Line: 57
+    -- upvalues: u45 (ref), u44 (val), UserRaycastPerformanceImprovements (val), u17 (val), Model (val)
+    local v1, v2, v3, v4
+    if u45 == 0 then
+        return nil
+    end
+    local v5 = u44[1]
+    if v5 then
+        v3 = u44
+        v4 = u45
+        u44[1] = u44[u45]
+        v3[v4] = nil
+        u45 = u45 - 1
+        v1 = v5
+    else
+        v1 = nil
+    end
+    if UserRaycastPerformanceImprovements then
+        u17.FilterDescendantsInstances = {game.Players.LocalPlayer.Character, workspace.CurrentCamera}
+        v5 = workspace:Raycast(a1 + Vector3.new(0, 2, 0), Vector3.new(0, -8, 0), u17)
+        if not v5 then
+            return nil
+        end
+        v1.CFrame = CFrame.lookAlong(v5.Position, v5.Normal)
+        v1.Parent = Model
+        return v1
+    end
+    v5 = Ray.new(a1 + Vector3.new(0, 2, 0), (Vector3.new(0, -8, 0)))
+    v2, v3, v4 = workspace:FindPartOnRayWithIgnoreList(v5, {game.Players.LocalPlayer.Character, workspace.CurrentCamera})
+    if not v2 then
+        return nil
+    end
+    v1.CFrame = CFrame.new(v3, v3 + v4)
+    v1.Parent = Model
+    return v1
+end
+
+function u19.setCurrentPoints(a1) -- Line: 89 -- upvalues: u26 (ref)
+    if typeof(a1) == "table" then
+        u26 = a1
+        return
+    end
+    u26 = {}
+end
+
+function u19.clearRenderedPath() -- Line: 97 -- upvalues: u27 (ref), u45 (ref), u44 (val), Model (val)
+    for i, v in ipairs(u27) do
+        v.Parent = nil
+        u45 = u45 + 1
+        u44[u45] = v
+    end
+    u27 = {}
+    Model.Parent = nil
+end
+
+function u19.renderPath() -- Line: 106 -- upvalues: u19 (val), u26 (ref), u27 (ref), renderPoint (val), Model (val)
+    u19.clearRenderedPath()
+    if u26 and #u26 ~= 0 then
+        local magnitude, v1, v2, v3, v4
+        local v5 = #u26
+        local v6 = u26[v5]
+        local v7 = 0
+        u27[1] = (renderPoint(v6, true))
+        if not u27[1] then
+            return
+        end
+        while true do
+            v1 = u26[v5]
+            v2 = u26[v5 - 1]
+            if v5 < 2 then
+                break
+            end
+            v3 = v2 - v1
+            magnitude = v3.magnitude
+            if not (magnitude < v7) then
+                v4 = renderPoint(v1 + v3.unit * v7, false)
+                if v4 then
+                    u27[#u27 + 1] = v4
+                end
+                v7 = v7 + u19.spacing
+            else
+                v7 = v7 - magnitude
+                v5 = v5 - 1
+            end
+        end
+        Model.Parent = workspace.CurrentCamera
+        return
+    end
+end
+
+return u19

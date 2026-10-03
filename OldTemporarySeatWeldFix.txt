@@ -1,0 +1,4 @@
+-- Path : ReplicatedStorage.Modules.Game.Character.TemporarySeatWeldFix.OldTemporarySeatWeldFix
+-- Script path: ReplicatedStorage.Modules.Game.Character.TemporarySeatWeldFix.OldTemporarySeatWeldFix
+-- Decompile time: 0.03 ms
+

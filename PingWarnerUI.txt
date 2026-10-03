@@ -1,0 +1,33 @@
+-- Path : ReplicatedStorage.Modules.Game.UI.PingWarnerUI
+-- Script path: ReplicatedStorage.Modules.Game.UI.PingWarnerUI
+-- Decompile time: 0.76 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+require(game.ReplicatedStorage.Modules.Core.Net)
+require(game.ReplicatedStorage.Modules.Core.Util)
+require(ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local PlaceInfo = require(game.ReplicatedStorage.Modules.Game.GameInfo.PlaceInfo)
+game:GetService("RunService")
+local u46 = PlaceInfo.is_dev_place()
+local v1 = {}
+local LocalPlayer = game.Players.LocalPlayer
+
+function v1.loaded() -- Line: 19 -- upvalues: UI (val), LocalPlayer (val), u46 (val)
+    local PingWarningHolder = UI.get("PingWarningHolder")
+    task.spawn(function() -- Line: 22 -- upvalues: LocalPlayer (upval), PingWarningHolder (val), u46 (upval)
+        local v1, v2
+        while true do
+            task.wait(2)
+            v1 = (LocalPlayer:GetNetworkPing()) + (LocalPlayer:GetAttribute("ServerPing") or 0)
+            v2 = PingWarningHolder
+            if v1 > 0.2 then
+                v2.Visible = true
+            else
+                v2.Visible = false
+            end
+        end
+    end)
+end
+
+return v1

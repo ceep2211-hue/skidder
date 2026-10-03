@@ -1,0 +1,124 @@
+-- Path : ReplicatedStorage.Modules.Game.GameInfo.PlaceInfo
+-- Script path: ReplicatedStorage.Modules.Game.GameInfo.PlaceInfo
+-- Decompile time: 1.67 ms
+
+local u0 = {
+    pro_servers_min_level = 50,
+    place_ids = {
+        dev = 123061299740490,
+        dev_pro = 112734848240858,
+        dev_vc = 82557585340152,
+        dev_new_account = 92989364664501,
+        dev_first_time_player = 101852527987775,
+        dev_blockspin_plus = 93789555873974,
+        main = 104715542330896,
+        main_pro = 102036043572089,
+        main_vc = 113269916962108,
+        main_new_account = 97556409405464,
+        main_first_time_player = 132247642420063,
+        main_blockspin_plus = 95898900045000,
+    },
+}
+game["Run Service"]:IsStudio()
+local PlaceId = game.PlaceId
+u0.place_id = PlaceId
+
+function u0.get_place_name() -- Line: 25 -- upvalues: u0 (val), PlaceId (val)
+    for i, j in u0.place_ids do
+        if j == PlaceId then
+            return i
+        end
+    end
+    return "UnknownName-" .. tostring(PlaceId)
+end
+
+function u0.is_console_lobby_only() -- Line: 34
+    if game.MatchmakingType ~= Enum.MatchmakingType.XboxOnly
+        and game.MatchmakingType ~= Enum.MatchmakingType.PlayStationOnly then
+        return false
+    end
+    return true
+end
+
+function u0.is_dev_place() -- Line: 42 -- upvalues: PlaceId (val), u0 (val)
+    local v1 = true
+    if PlaceId ~= u0.place_ids.dev then
+        v1 = true
+        if PlaceId ~= u0.place_ids.dev_pro then
+            v1 = true
+            if PlaceId ~= u0.place_ids.dev_vc then
+                v1 = true
+                if PlaceId ~= u0.place_ids.dev_new_account then
+                    v1 = true
+                    if PlaceId ~= u0.place_ids.dev_first_time_player then
+                        v1 = PlaceId == u0.place_ids.dev_blockspin_plus
+                    end
+                end
+            end
+        end
+    end
+    return v1
+end
+
+function u0.is_main_place() -- Line: 51 -- upvalues: PlaceId (val), u0 (val)
+    local v1 = true
+    if PlaceId ~= u0.place_ids.main then
+        v1 = true
+        if PlaceId ~= u0.place_ids.main_vc then
+            v1 = true
+            if PlaceId ~= u0.place_ids.main_pro then
+                v1 = true
+                if PlaceId ~= u0.place_ids.main_new_account then
+                    v1 = true
+                    if PlaceId ~= u0.place_ids.main_first_time_player then
+                        v1 = PlaceId == u0.place_ids.main_blockspin_plus
+                    end
+                end
+            end
+        end
+    end
+    return v1
+end
+
+function u0.is_new_account_place() -- Line: 60 -- upvalues: PlaceId (val), u0 (val)
+    local v1 = true
+    if PlaceId ~= u0.place_ids.dev_new_account then
+        v1 = PlaceId == u0.place_ids.main_new_account
+    end
+    return v1
+end
+
+function u0.is_first_time_player_place() -- Line: 65 -- upvalues: PlaceId (val), u0 (val)
+    local v1 = true
+    if PlaceId ~= u0.place_ids.dev_first_time_player then
+        v1 = PlaceId == u0.place_ids.main_first_time_player
+    end
+    return v1
+end
+
+function u0.is_vc_place() -- Line: 70 -- upvalues: PlaceId (val), u0 (val)
+    local v1 = true
+    if PlaceId ~= u0.place_ids.dev_vc then
+        v1 = PlaceId == u0.place_ids.main_vc
+    end
+    return v1
+end
+
+function u0.is_pro_place() -- Line: 75 -- upvalues: PlaceId (val), u0 (val)
+    local v1 = true
+    if PlaceId ~= u0.place_ids.dev_pro then
+        v1 = PlaceId == u0.place_ids.main_pro
+    end
+    return v1
+end
+
+function u0.is_blockspin_plus_place() -- Line: 80 -- upvalues: PlaceId (val), u0 (val)
+    local v1 = true
+    if PlaceId ~= u0.place_ids.dev_blockspin_plus then
+        v1 = PlaceId == u0.place_ids.main_blockspin_plus
+    end
+    return v1
+end
+
+u0.root_main_place = 104715542330896
+return u0

@@ -1,0 +1,45 @@
+-- Path : ReplicatedStorage.Modules.Game.Quests.QuestsData.Milestones.PawnItems
+-- Script path: ReplicatedStorage.Modules.Game.Quests.QuestsData.Milestones.PawnItems
+-- Decompile time: 0.33 ms
+
+return {
+    {
+        display_name = "Cash for Clutter",
+        requirements = "Sell {max_counter} to Rick at the Pawn Shop",
+        max_counter = 3,
+        layout_order = 1,
+        rewards = {
+            {
+                image = "rbxassetid://106880354532086",
+                name = "${amount}",
+                item_info = {name = "Money", item_type = "money", amount = 100},
+            },
+        },
+    },
+    {
+        display_name = "Cash for Clutter",
+        requirements = "Sell {max_counter} to Rick at the Pawn Shop",
+        max_counter = 5,
+        layout_order = 2,
+        rewards = {
+            {
+                image = "rbxassetid://106880354532086",
+                name = "${amount}",
+                item_info = {name = "Money", item_type = "money", amount = 200},
+            },
+        },
+    },
+    {
+        display_name = "Cash for Clutter",
+        requirements = "Sell {max_counter} to Rick at the Pawn Shop",
+        max_counter = 10,
+        layout_order = 3,
+        rewards = {
+            {
+                image = "rbxassetid://106880354532086",
+                name = "${amount}",
+                item_info = {name = "Money", item_type = "money", amount = 300},
+            },
+        },
+    },
+}

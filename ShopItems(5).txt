@@ -1,0 +1,17 @@
+-- Path : Workspace.ShopZone_Burger.ShopItems
+-- Script path: Workspace.ShopZone_Burger.ShopItems
+-- Decompile time: 0.28 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+game:GetService("ServerStorage")
+require(game.ServerStorage.Modules.Game.ItemSystem.Items)
+local ItemUtils = require(ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+require(game.ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+return {
+    {
+        name = "Milkshake",
+        item_type = "throwable",
+        amount = 1,
+        cost = ItemUtils.get_item_rarity_price("Milkshake"),
+    },
+}

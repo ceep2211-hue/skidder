@@ -1,0 +1,71 @@
+-- Path : ReplicatedStorage.Modules.Game.ItemTypes.PowerUp
+-- Script path: ReplicatedStorage.Modules.Game.ItemTypes.PowerUp
+-- Decompile time: 1.86 ms
+
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+require(game.ReplicatedStorage.Modules.Core.State)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local Sprint = require(game.ReplicatedStorage.Modules.Game.Sprint)
+local PowerUpEffect = require(game.ReplicatedStorage.Modules.Game.UI.PowerUpEffect)
+local PassivesUI = require(game.ReplicatedStorage.Modules.Game.UI.PassivesUI)
+local u58 = {}
+u58.class = StatefulObject.new_class(function() -- Line: 11
+    return {}
+end, script.Name)
+
+function u58.initiate() end
+
+function u58.loaded() -- Line: 19
+    -- upvalues: u58 (val), Char (val), Util (val), PowerUpEffect (val), Sprint (val), PassivesUI (val), Net (val)
+    u58.class.hook(function(a1) -- Line: 20
+        -- upvalues: Char (upval), Util (upval), PowerUpEffect (upval), Sprint (upval), PassivesUI (upval), Net (upval)
+        local instance = a1.instance
+        local u10 = Char.anim(instance:FindFirstChild("UseAnimation", true) or 80735327245569)
+        local u16 = instance:FindFirstChild("UseSound", true) or nil
+        local u17 = nil
+        local u18 = nil
+        instance.Activated:Connect((Util.db(function() -- Line: 28
+            -- upvalues: u16 (val), u10 (val), instance (val), u17 (ref), u18 (ref), PowerUpEffect (upval), Char (upval)
+            -- upvalues: Sprint (upval), PassivesUI (upval), Net (upval)
+            if u16 then
+                u16:Play()
+            end
+            u10:Play()
+            task.delay(u10.Length - 2.5, function() -- Line: 34 -- upvalues: instance (upval), u17 (upval), u18 (upval), PowerUpEffect (upval)
+                local v1, v2
+                if instance:GetAttribute("StaminaRestoreAmount") then
+                    v1, v2 = PowerUpEffect.award_effect("Stamina", instance:GetAttribute("StaminaRestoreAmount"), Color3.fromRGB(83, 181, 255))
+                    u17 = v1
+                    u18 = v2
+                    return
+                end
+                if instance:GetAttribute("HealthRestoreAmount") then
+                    v1, v2 = PowerUpEffect.award_effect("Health", instance:GetAttribute("HealthRestoreAmount"), Color3.fromRGB(140, 255, 83))
+                    u17 = v1
+                    u18 = v2
+                end
+            end)
+            u10.Ended:Wait()
+            if Char.held_tool.get() == instance then
+                if instance:GetAttribute("StaminaRestoreAmount") then
+                    Sprint.restore_stamina(instance:GetAttribute("StaminaRestoreAmount"))
+                end
+                if instance:GetAttribute("EffectDuration") then
+                    PassivesUI.create_passive(instance.Name, instance:GetAttribute("EffectDuration"))
+                end
+                Net.get("consume_power_up", instance)
+            end
+        end)))
+        instance.Unequipped:Connect(function() -- Line: 59 -- upvalues: u17 (ref), u18 (ref)
+            if u17 and u17.running then
+                u17:cancel()
+                u18:Destroy()
+            end
+        end)
+        return function() end
+    end)
+end
+
+return u58

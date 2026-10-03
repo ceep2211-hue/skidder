@@ -1,0 +1,29 @@
+-- Path : Workspace.ShopZone_Quick11.ShopItems
+-- Script path: Workspace.ShopZone_Quick11.ShopItems
+-- Decompile time: 0.50 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+game:GetService("ServerStorage")
+require(game.ServerStorage.Modules.Game.ItemSystem.Items)
+local ItemUtils = require(ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+local FlagManager = require(game.ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+return {
+    {
+        name = "Bottle",
+        item_type = "throwable",
+        amount = 1,
+        cost = ItemUtils.get_item_rarity_price("Bottle"),
+    },
+    {
+        name = "Bull Energy",
+        item_type = "consumable",
+        amount = 1,
+        cost = ItemUtils.get_item_rarity_price("Bull Energy"),
+    },
+    FlagManager.FLAG_DICE_GAME_ENABLED and {
+        name = "Dice",
+        item_type = "misc",
+        amount = 1,
+        cost = ItemUtils.get_item_rarity_price("Dice"),
+    } or nil,
+}

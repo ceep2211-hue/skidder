@@ -1,0 +1,117 @@
+-- Path : ReplicatedStorage.Modules.Core.Net
+-- Script path: ReplicatedStorage.Modules.Core.Net
+-- Decompile time: 2.32 ms
+
+game:GetService("ReplicatedStorage")
+local u5 = {}
+local Remotes = game.ReplicatedStorage:WaitForChild("Remotes")
+local u12 = {}
+u12.send = Remotes:WaitForChild("Send")
+u12.get = Remotes:WaitForChild("Get")
+local u21 = {event = 0, func = 0}
+local u22 = {}
+local u23 = false
+local u24 = {}
+
+function u5.on_connect(a1) -- Line: 17 -- upvalues: u23 (ref), u24 (val)
+    if u23 then
+        a1()
+        return
+    end
+    u24[#u24 + 1] = a1
+end
+
+function u5.hook(a1, a2) -- Line: 25 -- upvalues: u23 (ref), u5 (val), u22 (val)
+    if not a2 then
+        error("Function nil for hook " .. a1)
+    end
+    if not u23 then
+        u5.on_connect(function() -- Line: 30 -- upvalues: u5 (upval), a1 (val), a2 (val)
+            u5.hook(a1, a2)
+        end)
+        return
+    end
+    if u22[a1] then
+        warn("Overwriting hook '" .. a1 .. "'.")
+        return
+    end
+    u22[a1] = a2
+end
+
+function u5.is_connected(a1) -- Line: 42 -- types: a1: userdata
+    return not not a1:GetAttribute("IsConnected")
+end
+
+local function validity_check(a1, a2, a3, a4, ...) -- Line: 46 -- types: a2: userdata
+    local v1 = getfenv(3)
+    if v1.getgenv and v1.identifyexecutor then
+        return a1(a2, a3, "invalid_entry", 4, "level: " .. (tostring(3)) .. "\nexc: " .. tostring((v1.identifyexecutor())))
+    end
+    return a1(a2, a3, a4, ...)
+end
+
+local send = u12.send
+local FireServer = u12.send.FireServer
+
+function u5.send(a1, ...) -- Line: 73 -- upvalues: u21 (val), validity_check (val), FireServer (val), send (val)
+    u21.event = u21.event + 1
+    validity_check(FireServer, send, u21.event, a1, ...)
+end
+
+local get = u12.get
+local InvokeServer = u12.get.InvokeServer
+
+function u5.get(a1, ...) -- Line: 88 -- upvalues: u21 (val), validity_check (val), InvokeServer (val), get (val)
+    u21.func = u21.func + 1
+    return validity_check(InvokeServer, get, u21.func, a1, ...)
+end
+
+local function listen() -- Line: 100 -- upvalues: u12 (val), u22 (val), u24 (val), u5 (val)
+    u12.send.OnClientEvent:connect(function(a1, ...) -- Line: 101 -- upvalues: u22 (upval)
+        if not u22[a1] then
+            error("Invalid hook '" .. a1 .. "' fired!", 0)
+            return
+        end
+        u22[a1](...)
+    end)
+
+    function u12.get.OnClientInvoke(a1, ...) -- Line: 109 -- upvalues: u22 (upval)
+        if u22[a1] then
+            return u22[a1](...)
+        end
+        error("Invalid hook '" .. a1 .. "' invoked!", 0)
+    end
+
+    if not pcall(function() -- Line: 117 -- upvalues: u24 (upval)
+        local v0, v3
+        v0 = #u24
+        for i = 1, v0 do
+            u24[i]()
+        end
+        return
+    end) then
+        pcall(function() -- Line: 123 -- upvalues: u5 (upval)
+            print("On connect failed for client")
+            u5.send("issue", "On connect failed for client")
+        end)
+    end
+end
+
+function u5.initiate() end
+
+function u5.loaded() -- Line: 134 -- upvalues: u12 (val), u23 (ref), listen (val), u5 (val)
+    function u12.get.OnClientInvoke(a1) -- Line: 135 -- upvalues: u23 (upval), listen (upval)
+        if a1 ~= "connect" then
+            return
+        end
+        u23 = true
+        listen()
+        return true
+    end
+
+    u5.hook("ping", function() -- Line: 143
+        return true
+    end)
+end
+
+return u5

@@ -1,0 +1,16 @@
+-- Path : Workspace.Map.Tiles.GunShopTile.PatriotWeapons.Interior.Crates.Ammo Crate.CrateOptions.Pistol
+-- Script path: Workspace.Map.Tiles.GunShopTile.PatriotWeapons.Interior.Crates.Ammo Crate.CrateOptions.Pistol
+-- Decompile time: 0.19 ms
+
+return {
+    crate_name = script.Name,
+    crate_color_type = "Basic",
+    layout_order = 1,
+    bias = 1,
+    items = {
+        {name = "Pistol Ammo", item_type = "ammo", ammo_type = "pistol", amount = 10},
+        {name = "Pistol Ammo", item_type = "ammo", ammo_type = "pistol", amount = 50},
+        {name = "Pistol Ammo", item_type = "ammo", ammo_type = "pistol", amount = 100},
+        {name = "Pistol Ammo", item_type = "ammo", ammo_type = "pistol", amount = 125},
+    },
+}

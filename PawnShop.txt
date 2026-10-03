@@ -1,0 +1,53 @@
+-- Path : ReplicatedStorage.Modules.Game.Inventory.PawnShop
+-- Script path: ReplicatedStorage.Modules.Game.Inventory.PawnShop
+-- Decompile time: 1.75 ms
+
+local u0 = {}
+local ItemUtils = require(game.ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+u0.SELL_PERCENTAGE = 30
+u0.FLAG_ACCOUNT_FOR_DURABILITY = true
+u0.DURABILITY_AFFECTS_PRICE_PERCENTAGE = 70
+
+local function get_discard_price(a1) -- Line: 9 -- upvalues: u0 (val)
+    local v1 = 0
+    if a1 and a1:GetAttribute("RarityPrice") then
+        v1 = math.round((a1:GetAttribute("RarityPrice")) * (u0.SELL_PERCENTAGE / 100))
+    end
+    return v1
+end
+
+local function get_price_from_durability(a1, a2) -- Line: 17 -- upvalues: u0 (val) -- types: a1: number, a2: number
+    return (math.round(a1 - a1 * (u0.DURABILITY_AFFECTS_PRICE_PERCENTAGE / 100) * (1 - a2)))
+end
+
+function u0.get_sell_price_for_item(a1) -- Line: 24 -- upvalues: ItemUtils (val), u0 (val)
+    local name = a1.name
+    local v1 = ItemUtils.get_item_instance(name)
+    local v2 = 0
+    if v1 and v1:GetAttribute("RarityPrice") then
+        v2 = math.round((v1:GetAttribute("RarityPrice")) * (u0.SELL_PERCENTAGE / 100))
+    end
+    if ItemUtils.get_item_type(name) == "fish" then
+        local v3 = ItemUtils.calculate_fish_freshness(a1.name, a1.caught_stamp)
+        v2 = math.max(1, (math.round(v2 * a1.weight * v3)))
+    end
+    local durability = a1.durability or a1.health
+    if durability and u0.FLAG_ACCOUNT_FOR_DURABILITY then
+        local Attribute_2 = v1:GetAttribute("Durability") or v1:GetAttribute("Health")
+        if Attribute_2 and durability and Attribute_2 ~= 0 then
+            if v2 ~= 0 then
+                return (math.round(v2 - v2 * (u0.DURABILITY_AFFECTS_PRICE_PERCENTAGE / 100) * (1 - (math.clamp(durability / Attribute_2, 0, 1)))))
+            end
+            print("No durability price??", v2)
+            return 0
+        end
+        return v2
+    end
+    return v2
+end
+
+function u0.initiate() end
+
+function u0.loaded() end
+
+return u0

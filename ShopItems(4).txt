@@ -1,0 +1,49 @@
+-- Path : Workspace.ShopZone_Illegal.ShopItems
+-- Script path: Workspace.ShopZone_Illegal.ShopItems
+-- Decompile time: 0.58 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+game:GetService("ServerStorage")
+require(game.ServerStorage.Modules.Game.ItemSystem.Items)
+local ItemUtils = require(ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+local FlagManager = require(game.ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local v1 = {
+    {
+        name = "HackToolBasic",
+        item_type = "misc",
+        amount = 1,
+        layout_order = 3,
+        cost = ItemUtils.get_item_rarity_price("HackToolBasic"),
+    },
+}
+v1[2] = {
+    name = "Shiesty",
+    item_type = "accessory",
+    amount = 1,
+    layout_order = 2,
+    cost = ItemUtils.get_item_rarity_price("Shiesty"),
+}
+v1[3] = {
+    name = "HackToolPro",
+    item_type = "misc",
+    amount = 1,
+    layout_order = 4,
+    cost = ItemUtils.get_item_rarity_price("HackToolPro"),
+    skill_lock_info = {skill_type = "atm_hacker", skill_name = "HackTool_Pro"},
+}
+v1[4] = {
+    name = "HackToolUltimate",
+    item_type = "misc",
+    amount = 1,
+    layout_order = 5,
+    cost = ItemUtils.get_item_rarity_price("HackToolUltimate"),
+    skill_lock_info = {skill_type = "atm_hacker", skill_name = "HackTool_Ultimate"},
+}
+v1[5] = FlagManager.FLAG_LOCKPICK_ENABLED and {
+    name = "Lockpick",
+    item_type = "misc",
+    amount = 1,
+    layout_order = 1,
+    cost = ItemUtils.get_item_rarity_price("Lockpick"),
+} or nil
+return v1

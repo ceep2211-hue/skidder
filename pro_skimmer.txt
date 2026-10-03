@@ -1,0 +1,18 @@
+-- Path : ReplicatedStorage.Modules.Game.Quests.QuestsData.Milestones.pro_skimmer
+-- Script path: ReplicatedStorage.Modules.Game.Quests.QuestsData.Milestones.pro_skimmer
+-- Decompile time: 0.16 ms
+
+return {
+    {
+        display_name = "Pro Skimmer",
+        max_counter = 5,
+        requirements = "Successfully Hack {max_counter} ATMs",
+        rewards = {
+            {
+                image = "rbxassetid://106880354532086",
+                name = "${amount}",
+                item_info = {name = "Money", item_type = "money", amount = 175},
+            },
+        },
+    },
+}

@@ -1,0 +1,168 @@
+-- Path : ReplicatedStorage.Modules.Game.Quests.QuestsUI
+-- Script path: ReplicatedStorage.Modules.Game.Quests.QuestsUI
+-- Decompile time: 4.85 ms
+
+require(game.ReplicatedStorage.Modules.Core.Char)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local Tween = require(game.ReplicatedStorage.Modules.Core.Tween)
+local Data = require(game.ReplicatedStorage.Modules.Core.Data)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local UIFX = require(game.ReplicatedStorage.Modules.Core.UIFX)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local SubMenuBackground = require(game.ReplicatedStorage.Modules.Game.UI.SubMenuBackground)
+local QuestsData = require(game.ReplicatedStorage.Modules.Game.Quests.QuestsData)
+local QuestInfoRewardsUI = require(game.ReplicatedStorage.Modules.Game.Quests.QuestInfoRewardsUI)
+local NotificationsUI = require(ReplicatedStorage.Modules.Game.UI.NotificationsUI)
+require(ReplicatedStorage.Modules.Game.Inventory.ItemsUI)
+require(ReplicatedStorage.Modules.Game.CashEffect)
+local DisplayNotification = require(ReplicatedStorage.Modules.Game.UI.DisplayNotification)
+local u101 = {}
+u101.enabled = State.new(false)
+
+local function calculate_layout_order(a1, a2, a3, a4) -- Line: 24
+    if a4 then
+        if a3 then
+            return 1000000
+        end
+        return 0
+    end
+    if a2 > 0 then
+        return (math.floor((1 - a1 / a2) * 1000))
+    end
+    return 500000
+end
+
+local function get_status_text(a1, a2) -- Line: 39
+    ("%*/%*"):format(a1, a2)
+    return (math.ceil(a1 / a2 * 100)) .. "%"
+end
+
+function u101.update() -- Line: 47 -- upvalues: QuestsData (val), Data (val), UI (val), Tween (val)
+    local QuestClaimButton, claimed, completed, counter, max_counter, max_counter_2, v1, v2, v3
+    local v4 = nil
+    local v5 = nil
+    for i, j in QuestsData.list, v4, v5 do
+        v2 = Data.active_quests[i]
+        counter = 0
+        completed = false
+        claimed = false
+        if v2 then
+            counter = v2.counter
+            completed = v2.completed
+            claimed = v2.claimed
+        end
+        v3 = UI.get("QuestsScrollingFrame"):FindFirstChild(i)
+        if v3 then
+            max_counter = j.max_counter
+            v1 = if completed then if not claimed then 0 else 1000000 else if not (max_counter > 0) then 500000 else math.floor((1 - counter / max_counter) * 1000)
+            max_counter_2 = j.max_counter
+            ;("%*/%*"):format(counter, max_counter_2)
+            if QuestsData.is_quest_playable(Data, i) then
+                v3.Visible = true
+            else
+                v3.Name = i
+                v3.Visible = false
+            end
+            v3.LayoutOrder = v1
+            v3.Title.Text = ("%* - %*"):format(j.display_name, (math.ceil(counter / max_counter_2 * 100)) .. "%")
+            local CompletionBar = v3.PaddingFrame.CompletionBarFrame.CompletionBar
+            QuestClaimButton = v3.QuestClaimButton
+            QuestClaimButton.Visible = completed
+            v3.PaddingFrame.Visible = not completed
+            local u91 = counter / j.max_counter
+            local Scale = CompletionBar.Size.Y.Scale
+            task.delay(0.2, function() -- Line: 84 -- upvalues: Tween (upval), CompletionBar (val), u91 (val), Scale (val)
+                Tween.play(CompletionBar, TweenInfo.new(0.2), {Size = UDim2.fromScale(u91, Scale)})
+            end)
+            if not claimed then
+                QuestClaimButton.TextLabel.Text = "Claim"
+            else
+                QuestClaimButton.TextLabel.Text = "Claimed"
+            end
+        end
+    end
+end
+
+function u101.init_quests_templates() -- Line: 102
+    -- upvalues: QuestsData (val), UI (val), QuestInfoRewardsUI (val), Net (val), u101 (val)
+    local v1
+    local v2 = nil
+    local v3 = nil
+    for i, j in QuestsData.list, v2, v3 do
+        v1 = UI.get("QuestTemplate"):Clone()
+        v1.Name = i
+        v1.Visible = true
+        v1.Parent = UI.get("QuestsScrollingFrame")
+        local rewards = j.rewards
+        if not rewards then
+            rewards = {}
+        end
+        UI.on_click(v1, function() -- Line: 111 -- upvalues: QuestInfoRewardsUI (upval), j (val), rewards (val)
+            QuestInfoRewardsUI.display(j.display_name, j.requirements, rewards)
+        end)
+        UI.on_click(v1.QuestClaimButton, function() -- Line: 117 -- upvalues: Net (upval), i (val), j (val)
+            if Net.get("claim_quest", i) then
+                for i2, j2 in j.rewards do end
+            end
+        end)
+    end
+    u101.update()
+end
+
+function u101.initiate() -- Line: 132 -- upvalues: Data (val), u101 (val)
+    Data.on_connect(function() -- Line: 133 -- upvalues: u101 (upval)
+        u101.init_quests_templates()
+    end)
+end
+
+function u101.loaded() -- Line: 138
+    -- upvalues: UI (val), u101 (val), SubMenuBackground (val), UIFX (val), QuestInfoRewardsUI (val), Data (val)
+    -- upvalues: Net (val), NotificationsUI (val), QuestsData (val), DisplayNotification (val)
+    local QuestsHolder = UI.get("QuestsHolder")
+    QuestsHolder.Visible = false
+    local QuestTemplate = UI.get("QuestTemplate")
+    QuestTemplate.Visible = false
+    u101.enabled.hook(function(a1, a2) -- Line: 144
+        -- upvalues: SubMenuBackground (upval), u101 (upval), UI (upval), UIFX (upval), QuestsHolder (val)
+        if a1 == a2 or not SubMenuBackground.can_open() then
+            return
+        end
+        if not a1 then
+            SubMenuBackground.close()
+            UIFX.scale_close(QuestsHolder)
+            return
+        end
+        u101.update()
+        SubMenuBackground.open(u101.enabled, UI.get("Quests"))
+        UIFX.scale_open(QuestsHolder)
+    end)
+    UI.on_click("QuestsButton", function() -- Line: 158 -- upvalues: u101 (upval)
+        u101.enabled.update(function(a1) -- Line: 159
+            return not a1
+        end)
+    end)
+    UI.on_click("QuestsCloseButton", function() -- Line: 164 -- upvalues: u101 (upval)
+        u101.enabled.set(false)
+    end)
+    QuestInfoRewardsUI.enabled.hook(function(a1, a2) -- Line: 168 -- upvalues: u101 (upval)
+        if a2 then
+            task.defer(function() -- Line: 171 -- upvalues: u101 (upval)
+                u101.enabled.set(true)
+            end)
+        end
+    end)
+    Data.hook("active_quests", function() -- Line: 177 -- upvalues: u101 (upval)
+        if u101.enabled.get() then
+            u101.update()
+        end
+    end)
+    Net.hook("player_completed_quest", function(a1) -- Line: 184
+        -- upvalues: NotificationsUI (upval), QuestsData (upval), DisplayNotification (upval), UI (upval), u101 (upval)
+        script.QuestComplete:Play()
+        NotificationsUI.show_notification("rbxassetid://112963981882608", (("Completed \"%*\""):format(QuestsData.list[a1].display_name)))
+        DisplayNotification.add_notification(UI.get("QuestsButton"), u101.enabled, true)
+    end)
+end
+
+return u101

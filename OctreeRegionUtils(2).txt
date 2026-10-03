@@ -1,0 +1,248 @@
+-- Path : ReplicatedStorage.Modules.Core.Octree.OctreeRegionUtils
+-- Script path: ReplicatedStorage.Modules.Core.Octree.OctreeRegionUtils
+-- Decompile time: 6.05 ms
+
+local u0 = {
+    {0.25, 0.25, -0.25},
+    {-0.25, 0.25, -0.25},
+    {0.25, 0.25, 0.25},
+    {-0.25, 0.25, 0.25},
+    {0.25, -0.25, -0.25},
+    {-0.25, -0.25, -0.25},
+    {0.25, -0.25, 0.25},
+    {-0.25, -0.25, 0.25},
+}
+local u33 = {}
+
+function u33.create(a1, a2, a3, a4, a5, a6, a7, a8) -- Line: 64
+    local v1 = a4 / 2
+    local v2 = a5 / 2
+    local v3 = a6 / 2
+    local v4 = {node_count = 0, subRegions = {}, lowerBounds = {a1 - v1, a2 - v2, a3 - v3}}
+    v4.upperBounds = {a1 + v1, a2 + v2, a3 + v3}
+    v4.position = {a1, a2, a3}
+    v4.size = {a4, a5, a6}
+    v4.parent = a7
+    v4.depth = a7 and a7.depth + 1 or 1
+    v4.parentIndex = a8
+    v4.nodes = {}
+    return v4
+end
+
+function u33.addNode(a1, a2) -- Line: 101
+    assert(a2, "Bad node")
+    local parent = a1
+    local v1 = a2
+    while parent do
+        if not parent.nodes[v1] then
+            parent.nodes[v1] = v1
+            parent.node_count = parent.node_count + 1
+        end
+        parent = parent.parent
+    end
+end
+
+function u33.moveNode(a1, a2, a3) -- Line: 121
+    assert(a1.depth == a2.depth, "fromLowest.depth ~= toLowest.depth")
+    assert(a1 ~= a2, "fromLowest == toLowest")
+    local parent_2 = a1
+    local parent_3 = a2
+    local v1 = a3
+    while parent_2 ~= parent_3 do
+        assert(parent_2.nodes[v1], "Not in currentFrom")
+        assert(0 < parent_2.node_count, "No nodes in currentFrom")
+        parent_2.nodes[v1] = nil
+        parent_2.node_count = parent_2.node_count - 1
+        if parent_2.node_count <= 0 and parent_2.parentIndex then
+            assert(parent_2.parent, "Bad currentFrom.parent")
+            assert(parent_2.parent.subRegions[parent_2.parentIndex] == parent_2, "Not in subregion")
+            parent_2.parent.subRegions[parent_2.parentIndex] = nil
+        end
+        assert(not parent_3.nodes[v1], "Failed to add")
+        parent_3.nodes[v1] = v1
+        parent_3.node_count = parent_3.node_count + 1
+        parent_2 = parent_2.parent
+        parent_3 = parent_3.parent
+    end
+end
+
+function u33.removeNode(a1, a2) -- Line: 162
+    assert(a2, "Bad node")
+    local parent_2 = a1
+    local v1 = a2
+    while parent_2 do
+        assert(parent_2.nodes[v1], "Not in current")
+        assert(0 < parent_2.node_count, "Current has bad node count")
+        parent_2.nodes[v1] = nil
+        parent_2.node_count = parent_2.node_count - 1
+        if parent_2.node_count <= 0 and parent_2.parentIndex then
+            assert(parent_2.parent, "No parent")
+            assert(parent_2.parent.subRegions[parent_2.parentIndex] == parent_2, "Not in subregion")
+            parent_2.parent.subRegions[parent_2.parentIndex] = nil
+        end
+        parent_2 = parent_2.parent
+    end
+end
+
+function u33.getSearchRadiusSquared(a1, a2, a3) -- Line: 194
+    local v1 = a1 + 0.8660254037844386 * a2
+    return v1 * v1 + a3
+end
+
+function u33.getNeighborsWithinRadius(a1, a2, a3, a4, a5, a6, a7, a8) -- Line: 216 -- upvalues: u33 (val)
+    local RawPosition, RawPosition_2, RawPosition_3, position, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10
+    assert(a8, "Bad maxDepth")
+    local v11 = u33.getSearchRadiusSquared(a2, a1.size[1] / 2, 1e-06)
+    local v12 = a2 * a2
+    local v13, v14, v15, v16, v17, v18, v19 = a3, a4, a5, a8, a6, a7, a2
+    for k, v in pairs(a1.subRegions) do
+        position = v.position
+        v1 = position[1]
+        v2 = position[2]
+        v3 = position[3]
+        v4 = v13 - v1
+        v5 = v14 - v2
+        v6 = v15 - v3
+        if v4 * v4 + v5 * v5 + v6 * v6 <= v11 then
+            if v.depth ~= v16 then
+                u33.getNeighborsWithinRadius(v, v19, v13, v14, v15, v17, v18, v16)
+            else
+                for k2, i in pairs(v.nodes) do
+                    RawPosition, RawPosition_2, RawPosition_3 = k2:GetRawPosition()
+                    v7 = v13 - RawPosition
+                    v8 = v14 - RawPosition_2
+                    v9 = v15 - RawPosition_3
+                    v10 = v7 * v7 + v8 * v8 + v9 * v9
+                    if v10 <= v12 then
+                        v17[#v17 + 1] = (k2:GetObject())
+                        v18[#v18 + 1] = v10
+                    end
+                end
+            end
+        end
+    end
+end
+
+function u33.getOrCreateSubRegionAtDepth(a1, a2, a3, a4, a5) -- Line: 264 -- upvalues: u33 (val)
+    local v1, v2
+    local v3 = a1
+    local v4, v5, v6 = a2, a3, a4
+    for i = a1.depth, a5 do
+        v2 = u33.getSubRegionIndex(v3, v4, v5, v6)
+        v1 = v3.subRegions[v2]
+        if not v1 then
+            v1 = u33.createSubRegion(v3, v2)
+            v3.subRegions[v2] = v1
+        end
+        v3 = v1
+    end
+    return v3
+end
+
+function u33.createSubRegion(a1, a2) -- Line: 288 -- upvalues: u0 (val), u33 (val)
+    local size = a1.size
+    local position = a1.position
+    local v1 = u0[a2]
+    return u33.create(
+        position[1] + v1[1] * size[1],
+        position[2] + v1[2] * size[2],
+        position[3] + v1[3] * size[3],
+        size[1] / 2,
+        size[2] / 2,
+        size[3] / 2,
+        a1,
+        a2
+    )
+end
+
+function u33.inRegionBounds(a1, a2, a3, a4) -- Line: 312
+    local lowerBounds = a1.lowerBounds
+    local upperBounds = a1.upperBounds
+    local v1 = false
+    if lowerBounds[1] <= a2 then
+        v1 = false
+        if a2 <= upperBounds[1] then
+            v1 = false
+            if lowerBounds[2] <= a3 then
+                v1 = false
+                if a3 <= upperBounds[2] then
+                    v1 = false
+                    if lowerBounds[3] <= a4 then
+                        v1 = a4 <= upperBounds[3]
+                    end
+                end
+            end
+        end
+    end
+    return v1
+end
+
+function u33.getSubRegionIndex(a1, a2, a3, a4) -- Line: 331
+    local v1 = if not (a1.position[1] < a2) then 2 else 1
+    if a3 <= a1.position[2] then
+        v1 = v1 + 4
+    end
+    if a1.position[3] <= a4 then
+        v1 = v1 + 2
+    end
+    return v1
+end
+
+function u33.getTopLevelRegionHash(a1, a2, a3) -- Line: 353
+    return a1 * 73856093 + a2 * 19351301 + a3 * 83492791
+end
+
+function u33.getTopLevelRegionCellIndex(a1, a2, a3, a4) -- Line: 369
+    return (math.floor(a2 / a1[1] + 0.5)), (math.floor(a3 / a1[2] + 0.5)), (math.floor(a4 / a1[3] + 0.5))
+end
+
+function u33.getTopLevelRegionPosition(a1, a2, a3, a4) -- Line: 386
+    return a1[1] * a2, a1[2] * a3, a1[3] * a4
+end
+
+function u33.areEqualTopRegions(a1, a2, a3, a4) -- Line: 402
+    local position = a1.position
+    local v1 = false
+    if position[1] == a2 then
+        v1 = false
+        if position[2] == a3 then
+            v1 = position[3] == a4
+        end
+    end
+    return v1
+end
+
+function u33.findRegion(a1, a2, a3, a4, a5) -- Line: 419 -- upvalues: u33 (val)
+    local v1, v2, v3 = u33.getTopLevelRegionCellIndex(a2, a3, a4, a5)
+    local v4 = a1[u33.getTopLevelRegionHash(v1, v2, v3)]
+    if not v4 then
+        return nil
+    end
+    local v5, v6, v7 = u33.getTopLevelRegionPosition(a2, v1, v2, v3)
+    for k, v in pairs(v4) do
+        if u33.areEqualTopRegions(v, v5, v6, v7) then
+            return v
+        end
+    end
+    return nil
+end
+
+function u33.getOrCreateRegion(a1, a2, a3, a4, a5) -- Line: 448 -- upvalues: u33 (val)
+    local v1, v2, v3 = u33.getTopLevelRegionCellIndex(a2, a3, a4, a5)
+    local v4 = u33.getTopLevelRegionHash(v1, v2, v3)
+    local v5 = a1[v4]
+    if not v5 then
+        a1[v4] = {}
+    end
+    local v6, v7, v8 = u33.getTopLevelRegionPosition(a2, v1, v2, v3)
+    for k, v in pairs(v5) do
+        if u33.areEqualTopRegions(v, v6, v7, v8) then
+            return v
+        end
+    end
+    local v9 = u33.create(v6, v7, v8, a2[1], a2[2], a2[3])
+    table.insert(v5, v9)
+    return v9
+end
+
+return u33

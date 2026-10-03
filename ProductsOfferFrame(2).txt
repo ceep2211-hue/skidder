@@ -1,0 +1,157 @@
+-- Path : ReplicatedStorage.Modules.Game.UI.ProductsOfferFrame
+-- Script path: ReplicatedStorage.Modules.Game.UI.ProductsOfferFrame
+-- Decompile time: 3.50 ms
+
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+require(game.ReplicatedStorage.Modules.Core.UI)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+local StoreUI = require(ReplicatedStorage.Modules.Game.Store.StoreUI)
+local v1 = {}
+local u47 = {}
+local u48 = {"BlockSpinPlusButton"}
+
+function v1.rotate_offers(a1) -- Line: 17 -- upvalues: Net (val), StoreUI (val), u47 (val)
+    task.spawn(function() -- Line: 18 -- upvalues: Net (upval), StoreUI (upval), u47 (upval), a1 (val)
+        Net.send("set_purchase_location", "ProductsOfferFrame")
+        StoreUI.turn_off_gifting()
+        u47[a1]()
+        StoreUI.update_preferred_subscription()
+    end)
+end
+
+local function is_product_eligible_for_display(a1) -- Line: 26
+    -- upvalues: u48 (val), StoreUI (val)
+    if not table.find(u48, a1.Name) then
+        if not StoreUI.is_product_frame_compliant(a1) then
+            return false
+        end
+        return true
+    end
+    if StoreUI.policy_subscriptions_can_be_purchased.get() and not StoreUI.is_subscribed.get() then
+        return true
+    end
+    return false
+end
+
+local function remove_current_offers(a1) -- Line: 46
+    for i, j in a1 do
+        j.Visible = false
+    end
+end
+
+local function add_mandatory_offers(a1, a2) -- Line: 52
+    -- upvalues: u48 (val), is_product_eligible_for_display (val)
+    local v1
+    local v2 = 0
+    for i, j in u48 do
+        v1 = a1:FindFirstChild(j)
+        if v1 and is_product_eligible_for_display(v1) then
+            v1.Visible = true
+            v2 = v2 + a2[v1].get().Y
+        end
+    end
+    return v2
+end
+
+local function get_more_fitting_products(a1, a2, a3, a4) -- Line: 67
+    -- upvalues: is_product_eligible_for_display (val)
+    local v1, v2
+    local v3 = {}
+    local v4 = nil
+    local v5 = nil
+    local v6, v7, v8 = a2, a3, a4
+    for i, j in a1, v4, v5 do
+        if is_product_eligible_for_display(j) then
+            v1 = v6[j]
+            if v1.get() == Vector2.zero then
+                v1.wait()
+            end
+            v2 = v1.get()
+            if not j.Visible and v7 + v2.Y <= v8.Y then
+                table.insert(v3, j)
+            end
+        end
+    end
+    return v3
+end
+
+local function new_offer_frame(a1) -- Line: 88
+    -- upvalues: State (val), add_mandatory_offers (val), get_more_fitting_products (val), Util (val), StoreUI (val)
+    -- upvalues: u47 (val)
+    local u1 = {}
+    local u2 = {}
+    local u3 = 0
+
+    local function update_size(a1) -- Line: 94 -- upvalues: u2 (val), State (upval) -- types: a1: userdata
+        if not u2[a1] then
+            u2[a1] = (State.new(Vector2.zero))
+        end
+        local v1 = u2[a1].get()
+        if v1.X < a1.AbsoluteSize.X and v1.Y < a1.AbsoluteSize.Y then
+            u2[a1].set(a1.AbsoluteSize)
+        end
+    end
+
+    local function should_refresh_offers() -- Line: 106 -- upvalues: u3 (ref)
+        if 120 < tick() - u3 then
+            return true
+        end
+        return false
+    end
+
+    local function on_update() -- Line: 113
+        -- upvalues: u2 (val), a1 (val), u3 (ref), u1 (val), add_mandatory_offers (upval)
+        -- upvalues: get_more_fitting_products (upval)
+        tick()
+        local v1 = u2[a1]
+        if not not not (120 < tick() - u3) then
+            return
+        end
+        u3 = tick()
+        if v1.get() == Vector2.zero then
+            v1.wait()
+        end
+        local v2 = u1
+        local v3 = nil
+        local v4 = nil
+        for i, j in v2, v3, v4 do
+            j.Visible = false
+        end
+        local v5 = 0 + add_mandatory_offers(a1, u2)
+        while true do
+            v2 = get_more_fitting_products(u1, u2, v5, v1.get())
+            if #v2 == 0 then
+                break
+            end
+            v3 = v2[math.random(#v2)]
+            v4 = u2[v3].get()
+            v3.Visible = true
+            v5 = v5 + v4.Y
+        end
+    end
+
+    Util.hook_children(a1, function(a1) -- Line: 151 -- upvalues: StoreUI (upval), u1 (val), Util (upval), update_size (val) -- types: a1: userdata
+        if a1:HasTag(StoreUI.TAGS.PRODUCT_FRAME) then
+            table.insert(u1, a1)
+            Util.watch_property(a1, "AbsoluteSize", function(a1_2) -- Line: 155 -- upvalues: update_size (upval), a1 (val) -- types: a1_2: userdata
+                update_size(a1)
+            end)
+        end
+    end)
+    Util.watch_property(a1, "AbsoluteSize", function(a1_2) -- Line: 161 -- upvalues: update_size (val), a1 (val)
+        update_size(a1)
+    end)
+    u47[a1] = on_update
+    on_update()
+end
+
+function v1.initiate() end
+
+function v1.loaded() -- Line: 174 -- upvalues: Util (val), new_offer_frame (val)
+    Util.hook_tag(script.Name, new_offer_frame)
+end
+
+return v1

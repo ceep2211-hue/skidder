@@ -1,0 +1,13 @@
+-- Path : Workspace.Vehicles.Rezvani.Scripts.Client.Input.nitroHandler
+-- Script path: Workspace.Vehicles.Rezvani.Scripts.Client.Input.nitroHandler
+-- Decompile time: 0.30 ms
+
+local Constants = require(script.Parent.Parent.Parent.Constants)
+local Inputs = script.Parent.Parent.Parent.Parent.Inputs
+return function(a1, a2) -- Line: 6 -- upvalues: Inputs (val), Constants (val)
+    if a2 == Enum.UserInputState.Begin then
+        Inputs:SetAttribute(Constants.NITRO_INPUT_ATTRIBUTE, true)
+        return
+    end
+    Inputs:SetAttribute(Constants.NITRO_INPUT_ATTRIBUTE, false)
+end

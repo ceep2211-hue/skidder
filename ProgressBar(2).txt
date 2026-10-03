@@ -1,0 +1,138 @@
+-- Path : ReplicatedStorage.Modules.Game.UI.ProgressBar
+-- Script path: ReplicatedStorage.Modules.Game.UI.ProgressBar
+-- Decompile time: 4.14 ms
+
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local Audio = require(game.ReplicatedStorage.Modules.Core.Audio)
+require(game.ReplicatedStorage.Modules.Core.Signal)
+local Keybinds = require(game.ReplicatedStorage.Modules.Game.Keybinds)
+require(game.ReplicatedStorage.Modules.Core.Tween)
+require(game.ReplicatedStorage.Modules.Core.UI)
+require(game.ReplicatedStorage.Modules.Core.State)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local u54 = {}
+local UI = require(ReplicatedStorage.Modules.Core.UI)
+local State_2 = require(ReplicatedStorage.Modules.Core.State)
+local Tween = require(ReplicatedStorage.Modules.Core.Tween)
+u54.all_bar_types = {default = 0, cooking = 1}
+u54.bar_enabled = State_2.new(false)
+u54.current_length = State_2.new(0)
+u54.max_length = State_2.new(0)
+u54.bar_type = State_2.new(0)
+u54.finished_area_position = State_2.new(0.5)
+u54.finished_area_size = State_2.new(0.05)
+
+function u54.start_bar(a1, a2, a3) -- Line: 31 -- upvalues: u54 (val) -- types: a1: number, a2: number, a3: number
+    u54.bar_type.set(u54.all_bar_types.cooking)
+    u54.finished_area_size.set(a3 / a1)
+    u54.finished_area_position.set(a2 / a1)
+    u54.max_length.set(a1)
+    u54.bar_enabled.set(true)
+end
+
+function u54.get_status_from_ui() -- Line: 46 -- upvalues: UI (val)
+    local Scale = UI.get("ProgressBarFrame").MainFrame.BarAmount.Size.X.Scale
+    local CookedPerfectly = UI.get("CookedPerfectly")
+    local Scale_2 = CookedPerfectly.Position.X.Scale
+    if CookedPerfectly.Position.X.Scale + CookedPerfectly.Size.X.Scale < Scale then
+        return "Over"
+    end
+    if Scale_2 <= Scale then
+        return "Perfect"
+    end
+    return "Under"
+end
+
+function u54.force_end_bar() -- Line: 64 -- upvalues: u54 (val)
+    u54.bar_enabled.set(false)
+end
+
+function u54.initiate() end
+
+function u54.loaded() -- Line: 72 -- upvalues: UI (val), u54 (val), Util (val), Tween (val), Keybinds (val), Audio (val)
+    UI.get("ProgressBar")
+    local ProgressBarFrame = UI.get("ProgressBarFrame")
+    local CookedPerfectly = ProgressBarFrame.MainFrame.CookedPerfectly
+    local FinishBar = ProgressBarFrame.InputFrame.FinishBar
+    local InputFrame = ProgressBarFrame.InputFrame
+    local BarAmount = ProgressBarFrame.MainFrame.BarAmount
+    local u15 = nil
+    u54.finished_area_position.hook(function(a1) -- Line: 81 -- upvalues: CookedPerfectly (val)
+        CookedPerfectly.Position = UDim2.fromScale(a1, 0)
+    end)
+    u54.finished_area_size.hook(function(a1) -- Line: 85 -- upvalues: CookedPerfectly (val)
+        CookedPerfectly.Size = UDim2.fromScale(a1, 1)
+    end)
+    local u29 = Util.override(function(a1, a2) -- Line: 89
+        -- upvalues: u54 (upval), UI (upval), BarAmount (val), u15 (ref), Tween (upval), Keybinds (upval), Audio (upval)
+        -- upvalues: ProgressBarFrame (val)
+        if not a1 then
+            if u15 then
+                u15:Cancel()
+                u15:Destroy()
+            end
+            if u54.bar_type.get() == u54.all_bar_types.cooking and u54.get_status_from_ui() ~= "Perfect" then
+                Audio.error()
+                for i = 1, 4 do
+                    task.wait(0.08)
+                    BarAmount.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+                    task.wait(0.05)
+                    BarAmount.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                end
+            end
+            Keybinds.unhook_action("minigame_click")
+        else
+            if u54.bar_type.get() ~= u54.all_bar_types.cooking then
+                local SpeedAmount_2 = (UI.get("ProgressBarFrame")).SpeedAmount
+                SpeedAmount_2.Text = ("Complete in %* seconds"):format((math.round((u54.max_length.get()) * 100)) / 100)
+            else
+                local SpeedAmount = (UI.get("ProgressBarFrame")).SpeedAmount
+                SpeedAmount.Text = ("Complete in %* seconds"):format((math.round((u54.finished_area_position.get()) * (u54.max_length.get()) * 100)) / 100)
+            end
+            local v1 = TweenInfo.new(u54.max_length.get(), Enum.EasingStyle.Linear)
+            BarAmount.Size = UDim2.fromScale(0, 1)
+            u15 = Tween.create(BarAmount, v1, {Size = UDim2.fromScale(1, 1)})
+            u15:Play()
+            u15.Completed:Connect(function() -- Line: 107 -- upvalues: u15 (upval)
+                u15:Destroy()
+            end)
+            Keybinds.hook_action("minigame_click", function(a1) -- Line: 111 -- upvalues: Keybinds (upval), u54 (upval)
+                if a1
+                    and Keybinds.current_input_mode.get() == "gamepad"
+                    and u54.bar_type.get() == u54.all_bar_types.cooking then
+                    u54.bar_enabled.set(false)
+                end
+            end)
+        end
+        ProgressBarFrame.Visible = a1
+    end)
+    u54.bar_enabled.hook(function(a1, a2) -- Line: 140 -- upvalues: u29 (val)
+        u29(a1, a2)
+    end)
+    u54.bar_type.hook(function(a1) -- Line: 144 -- upvalues: u54 (upval), InputFrame (val), CookedPerfectly (val) -- types: a1: number
+        if a1 == u54.all_bar_types.default then
+            InputFrame.Visible = false
+            CookedPerfectly.Visible = false
+            return
+        end
+        if a1 == u54.all_bar_types.cooking then
+            InputFrame.Visible = true
+            CookedPerfectly.Visible = true
+        end
+    end)
+    UI.on_click(FinishBar, function() -- Line: 154 -- upvalues: u54 (upval)
+        u54.bar_enabled.set(false)
+    end)
+    Keybinds.hook_action_icon("minigame_click", function(a1) -- Line: 158 -- upvalues: Keybinds (upval), ProgressBarFrame (val) -- types: a1: string?
+        if a1 and Keybinds.current_input_mode.get() == "gamepad" then
+            ProgressBarFrame.InputFrame.FinishBar.Visible = false
+            ProgressBarFrame.InputFrame.ConsoleButton.Image = a1
+            ProgressBarFrame.InputFrame.ConsoleButton.Visible = true
+            return
+        end
+        ProgressBarFrame.InputFrame.FinishBar.Visible = true
+        ProgressBarFrame.InputFrame.ConsoleButton.Visible = false
+    end)
+end
+
+return u54

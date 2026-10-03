@@ -1,0 +1,41 @@
+-- Path : ReplicatedStorage.Modules.Game.PolicyInfo
+-- Script path: ReplicatedStorage.Modules.Game.PolicyInfo
+-- Decompile time: 0.74 ms
+
+local PolicyService = game:GetService("PolicyService")
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local LocalPlayer = game.Players.LocalPlayer
+local u15 = {info = nil}
+u15.info_ready = State.new(false)
+
+function u15.loaded() -- Line: 11 -- upvalues: PolicyService (val), LocalPlayer (val), u15 (val)
+    local result, success
+    for i = 1, 5 do
+        success, result = pcall(function() -- Line: 13 -- upvalues: PolicyService (upval), LocalPlayer (upval)
+            return PolicyService:GetPolicyInfoForPlayerAsync(LocalPlayer)
+        end)
+        if success and result then
+            u15.info = result
+            u15.info_ready.set(true)
+            return
+        end
+        task.wait(1)
+        u15.info_ready.set(true)
+    end
+end
+
+function u15.is_external_link_allowed(a1) -- Line: 27 -- upvalues: u15 (val) -- types: a1: string
+    if u15.info == nil then
+        return false
+    end
+    return table.find(u15.info.AllowedExternalLinkReferences, a1)
+end
+
+function u15.is_external_link_allowed_async(a1) -- Line: 32 -- upvalues: u15 (val) -- types: a1: string
+    if not u15.info_ready.get() then
+        u15.info_ready.wait()
+    end
+    return u15.is_external_link_allowed(a1)
+end
+
+return u15

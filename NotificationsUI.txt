@@ -1,0 +1,90 @@
+-- Path : ReplicatedStorage.Modules.Game.UI.NotificationsUI
+-- Script path: ReplicatedStorage.Modules.Game.UI.NotificationsUI
+-- Decompile time: 2.35 ms
+
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+require(game.ReplicatedStorage.Modules.Core.UIFX)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local u35 = {}
+local u38 = State.new(0)
+local u39 = {}
+
+local function display_notification(a1, a2, a3, a4) -- Line: 16
+    -- upvalues: UI (val), u38 (val), Util (val)
+    local NotificationTemplate = UI.get("NotificationTemplate")
+    if a4 then
+        local v1 = false
+        for i, j in NotificationTemplate.Parent:GetChildren() do
+            if j:IsA("TextLabel") and j.Text == a2 then
+                v1 = true
+            end
+        end
+        if v1 then
+            return
+        end
+    end
+    u38.update(function(a1) -- Line: 28
+        return a1 + 1
+    end)
+    local u38_2 = NotificationTemplate:Clone()
+    u38_2.Visible = true
+    u38_2.Name = "Notification"
+    u38_2.ImageLabel.Image = a1 or ""
+    u38_2.ImageLabel.ImageTransparency = 1
+    u38_2.Text = a2
+    u38_2.Size = UDim2.fromScale(1, 0)
+    u38_2.Parent = NotificationTemplate.Parent
+    Util.tween(u38_2, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Size = UDim2.fromScale(0, 1)})
+    Util.tween(u38_2.ImageLabel, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {ImageTransparency = 0})
+    task.delay(a3 or 3, function() -- Line: 39 -- upvalues: Util (upval), u38_2 (val), u38 (upval)
+        Util.tween(u38_2.ImageLabel, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {ImageTransparency = 1})
+        Util.tween(u38_2, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {Size = UDim2.fromScale(0, 0)}).Completed:Wait()
+        u38_2:Destroy()
+        u38.update(function(a1) -- Line: 43
+            return a1 - 1
+        end)
+    end)
+end
+
+function u35.show_notification(a1, a2, a3, a4) -- Line: 47
+    -- upvalues: u38 (val), u39 (val), display_notification (val)
+    if not (10 <= u38.get()) then
+        display_notification(a1, a2, a3, a4)
+        return
+    end
+    if a4 then
+        local v1 = false
+        for i, j in u39 do
+            if j.text == a2 then
+                v1 = true
+            end
+        end
+        if v1 then
+            return
+        end
+    end
+    table.insert(u39, {image = a1, text = a2, lifetime = a3})
+end
+
+function u35.initiate() -- Line: 66 -- upvalues: Net (val), u35 (val)
+    Net.hook("notification", u35.show_notification)
+end
+
+function u35.loaded() -- Line: 70 -- upvalues: UI (val), u38 (val), u39 (val), display_notification (val)
+    local NotificationTemplate = UI.get("NotificationTemplate")
+    NotificationTemplate.Visible = false
+    u38.hook(function(a1, a2) -- Line: 73 -- upvalues: u39 (upval), display_notification (upval)
+        if a1 < a2 and a1 < 10 then
+            local v1 = #u39
+            if v1 > 0 then
+                v1 = u39[1]
+                table.remove(u39, 1)
+                display_notification(v1.image, v1.text)
+            end
+        end
+    end)
+end
+
+return u35

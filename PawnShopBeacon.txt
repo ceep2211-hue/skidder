@@ -1,0 +1,78 @@
+-- Path : ReplicatedStorage.Modules.Game.Inventory.PawnShopBeacon
+-- Script path: ReplicatedStorage.Modules.Game.Inventory.PawnShopBeacon
+-- Decompile time: 1.66 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+require(game.ReplicatedStorage.Modules.Core.Audio)
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+local ItemsUI = require(game.ReplicatedStorage.Modules.Game.Inventory.ItemsUI)
+local BeaconUtil = require(ReplicatedStorage.Modules.Game.Inventory.BeaconUtil)
+local NotificationsUI = require(game.ReplicatedStorage.Modules.Game.UI.NotificationsUI)
+local u55 = {}
+
+local function set_inventory(a1) -- Line: 20 -- upvalues: ItemsUI (val) -- types: a1: boolean
+    if not a1 then
+        ItemsUI.is_open.set(false)
+        return
+    end
+    ItemsUI.is_open.set(true)
+    ItemsUI.inventory_type.set("sell")
+end
+
+u55.class = StatefulObject.new_class(function() -- Line: 13 -- upvalues: State (val)
+    return {owner = State.new(nil), enabled = State.new(true)}
+end, script.Name)
+
+function u55.initiate() end
+
+function u55.loaded() -- Line: 36
+    -- upvalues: u55 (val), Util (val), BeaconUtil (val), ItemsUI (val), NotificationsUI (val)
+    u55.class.hook(function(a1) -- Line: 37 -- upvalues: Util (upval), BeaconUtil (upval), ItemsUI (upval), NotificationsUI (upval)
+        local instance = a1.instance
+        Util.wait_for_descendant(instance, "TouchPart")
+        local OpenSound = a1.get("OpenSound")
+        local CloseSound = a1.get("CloseSound")
+        local u16 = BeaconUtil.init_beacon(instance)
+
+        local function can_access() -- Line: 44 -- upvalues: a1 (val)
+            if not a1.states.enabled.get() then
+                return false
+            end
+            local v1 = a1.states.owner.get()
+            if v1 ~= nil and v1 ~= game.Players.LocalPlayer then
+                return false
+            end
+            return true
+        end
+
+        u16.on_enter:Connect(function() -- Line: 53 -- upvalues: a1 (val), ItemsUI (upval), OpenSound (val), NotificationsUI (upval)
+            local v1
+            if a1.states.enabled.get() then
+                local v2 = a1.states.owner.get()
+                v1 = if v2 == nil then true else not (v2 ~= game.Players.LocalPlayer)
+            else
+                v1 = false
+            end
+            if not v1 then
+                NotificationsUI.show_notification("", "You can not access this pawn shop")
+                return
+            end
+            ItemsUI.is_open.set(true)
+            ItemsUI.inventory_type.set("sell")
+            OpenSound:Play()
+        end)
+        u16.on_leave:Connect(function() -- Line: 63 -- upvalues: ItemsUI (upval), CloseSound (val)
+            if ItemsUI.is_open.get() then
+                ItemsUI.is_open.set(false)
+                CloseSound:Play()
+            end
+        end)
+        return function() -- Line: 70 -- upvalues: u16 (val)
+            u16.on_stream()
+        end
+    end)
+end
+
+return u55

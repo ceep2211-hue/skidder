@@ -1,0 +1,23 @@
+-- Path : Workspace.Map.Tiles.PrestigeDealerAndHousing.PrestigeCarDealer.Interior.Crates.Car Crate.CrateOptions.Omega
+-- Script path: Workspace.Map.Tiles.PrestigeDealerAndHousing.PrestigeCarDealer.Interior.Crates.Car Crate.CrateOptions.Omega
+-- Decompile time: 0.30 ms
+
+require(game.ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+return {
+    crate_name = script.Name,
+    crate_color_type = "Omega",
+    layout_order = 4,
+    bias = 0.6640995793902038,
+    items = {
+        {name = "G-Cruzer", item_type = "car"},
+        {name = "SRT", item_type = "car"},
+        {name = "Trackhawk", item_type = "car"},
+        {name = "Urus", item_type = "car"},
+        {name = "Cullivane", item_type = "car"},
+        {name = "Go Kart", item_type = "car"},
+        {name = "Stang", item_type = "car"},
+        {name = "Rezvani", item_type = "car"},
+        {name = "Turbolin", item_type = "car"},
+        {name = "Hurricane", item_type = "car"},
+    },
+}

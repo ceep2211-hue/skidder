@@ -1,0 +1,74 @@
+-- Path : ReplicatedStorage.Modules.Game.UI.PassivesUI
+-- Script path: ReplicatedStorage.Modules.Game.UI.PassivesUI
+-- Decompile time: 1.69 ms
+
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local UIFX = require(game.ReplicatedStorage.Modules.Core.UIFX)
+local RarityIndicator = require(game.ReplicatedStorage.Modules.Game.Inventory.RarityIndicator)
+local ItemUtils = require(game.ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+require(game.ReplicatedStorage.Modules.Core.Net)
+local u58 = {applied_passives = {}}
+
+function u58.create_passive(a1, a2) -- Line: 14
+    -- upvalues: u58 (val), ItemUtils (val), UI (val), RarityIndicator (val), UIFX (val), State (val), Util (val)
+    -- upvalues: Char (val)
+    if u58.applied_passives[a1] then
+        u58.applied_passives[a1].set(a2)
+        return
+    end
+    local v1 = ItemUtils.get_item_instance(a1)
+    if v1 == nil then
+        return
+    end
+    local u21 = UI.get("PassiveTemplate"):Clone()
+    u21.Name = "Passive"
+    u21.Parent = UI.get("PassiveTemplate").Parent
+    RarityIndicator.apply_rarity_color(a1, u21)
+    u21.ImageLabel.Image = v1:GetAttribute("ImageId")
+    u21.Countdown.Text = ("%*"):format(a2)
+    u21.Visible = false
+    UIFX.scale_open(u21)
+    local u52 = State.new(a2)
+    u52.hook(function(a1) -- Line: 31 -- upvalues: u21 (val)
+        u21.Countdown.Text = ("%*"):format(a1)
+    end)
+    u58.applied_passives[a1] = u52
+    task.spawn(function() -- Line: 37 -- upvalues: u52 (val), u21 (val), UIFX (upval), u58 (upval), a1 (val)
+        while 0 < u52.get() do
+            task.wait(1)
+            u52.update(function(a1) -- Line: 40
+                return a1 - 1
+            end)
+            if u21.Parent == nil then
+                return
+            end
+        end
+        UIFX.scale_close(u21)
+        u58.applied_passives[a1] = nil
+        task.wait(1)
+        u21:Destroy()
+    end)
+    local u68 = Util.watch_attribute(Char.get_hum(), "IsDead", function(a1_2) -- Line: 53 -- upvalues: UIFX (upval), u21 (val), u58 (upval), a1 (val)
+        if a1_2 then
+            UIFX.scale_close(u21)
+            u58.applied_passives[a1] = nil
+            task.wait(1)
+            u21:Destroy()
+        end
+    end)
+    u21.Destroying:Connect(function() -- Line: 62 -- upvalues: u68 (val)
+        u68:Disconnect()
+    end)
+end
+
+function u58.initiate() end
+
+function u58.loaded() -- Line: 73 -- upvalues: UI (val)
+    local PassiveTemplate = UI.get("PassiveTemplate")
+    PassiveTemplate.Visible = false
+end
+
+return u58

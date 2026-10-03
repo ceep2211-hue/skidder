@@ -1,0 +1,103 @@
+-- Path : ReplicatedStorage.Modules.Game.Quests.QuestsData
+-- Script path: ReplicatedStorage.Modules.Game.Quests.QuestsData
+-- Decompile time: 2.34 ms
+
+local Name, v1, v2, v3, v4
+game:GetService("ReplicatedStorage")
+require(game.ReplicatedStorage.Modules.Core.Data)
+local StringManipulation = require(game.ReplicatedStorage.Modules.Core.StringManipulation)
+local u85 = {list = {}}
+
+local function get_quest_index(a1, a2) -- Line: 11
+    return a1 .. "_" .. tostring(a2)
+end
+
+for i, j in script.Milestones:GetChildren() do
+    Name = j.Name
+    v1 = require(j)
+    v2 = nil
+    v3 = nil
+    for k, n in v1, v2, v3 do
+        v4 = Name .. "_" .. tostring(k)
+        n.unlock_params = {milestone = Name, index = k}
+        StringManipulation.recursive_string_search({["{max_counter}"] = n.max_counter}, n)
+        for m, i5 in n.rewards do
+            if i5.item_info and i5.item_info.amount then
+                StringManipulation.recursive_string_search({["{amount}"] = i5.item_info.amount}, i5)
+            end
+        end
+        u85.list[v4] = n
+    end
+end
+
+function u85.get_quest_unique_strings(a1, a2) -- Line: 45 -- types: a2: string
+    local v1 = a1.active_quests[a2]
+    if v1 and v1.unique_strings then
+        return v1.unique_strings
+    end
+    return {}
+end
+
+function u85.has_completed_quest(a1, a2) -- Line: 53 -- types: a2: string
+    local v1 = a1.active_quests[a2]
+    if v1 and v1.completed then
+        return true
+    end
+    return false
+end
+
+function u85.get_quest_unlock_info(a1) -- Line: 61 -- upvalues: u85 (val) -- types: a1: string
+    local v1 = ""
+    local v2 = u85.list[a1]
+    if v2 then
+        v1 = ("This item can be unlocked by completing the quest \"%*\""):format(v2.display_name)
+    end
+    return v1
+end
+
+function u85.is_quest_playable(a1, a2) -- Line: 72 -- upvalues: u85 (val) -- types: a2: string
+    local unlock_params
+    local unlock_params_2 = u85.list[a2].unlock_params
+    local active_quests = a1.active_quests
+    if active_quests[a2] and active_quests[a2].claimed then
+        return false
+    end
+    if unlock_params_2.index == 1 then
+        return true
+    end
+    for i, j in u85.list do
+        unlock_params = j.unlock_params
+        if unlock_params.milestone == unlock_params_2.milestone
+            and unlock_params.index < unlock_params_2.index
+            and not u85.has_completed_quest(a1, i) then
+            return false
+        end
+    end
+    return true
+end
+
+function u85.get_current_quest_index_for_milestone(a1, a2) -- Line: 111 -- types: a2: string
+    local v1 = script.Milestones:FindFirstChild(a2)
+    if v1 and v1:IsA("ModuleScript") then
+        local v2, v3
+        local v4 = require(v1)
+        local v5 = nil
+        local v6 = nil
+        for i, j in v4, v5, v6 do
+            v3 = v1.Name .. "_" .. tostring(i)
+            v2 = nil
+            for k, n in a1.active_quests do
+                if k == v3 then
+                    v2 = n
+                    break
+                end
+            end
+            if not v2 or not v2.completed then
+                return true, v3
+            end
+        end
+    end
+    return false, ""
+end
+
+return u85

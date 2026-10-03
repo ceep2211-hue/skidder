@@ -1,0 +1,14 @@
+-- Path : Workspace.Vehicles.Rezvani.Scripts.Client.FX.Particles
+-- Script path: Workspace.Vehicles.Rezvani.Scripts.Client.FX.Particles
+-- Decompile time: 0.22 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local v1 = {}
+require(ReplicatedStorage.Utility)
+local Parent = script.Parent.Parent.Parent.Parent
+
+function v1.EnableTireSkidTrail(a1) end
+
+function v1.DisableTireSkidTrail() end
+
+return v1

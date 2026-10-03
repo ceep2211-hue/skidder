@@ -1,0 +1,115 @@
+-- Path : ReplicatedStorage.Modules.Core.Octree
+-- Script path: ReplicatedStorage.Modules.Core.Octree
+-- Decompile time: 3.11 ms
+
+local OctreeRegionUtils = require(script:WaitForChild("OctreeRegionUtils"))
+local OctreeNode = require(script:WaitForChild("OctreeNode"))
+local u14 = {ClassName = "Octree"}
+u14.__index = u14
+
+function u14.new() -- Line: 57 -- upvalues: u14 (val)
+    local v1 = setmetatable({}, u14)
+    v1._maxRegionSize = {512, 512, 512}
+    v1._maxDepth = 4
+    v1._regionHashMap = {}
+    return v1
+end
+
+function u14.GetAllNodes(a1) -- Line: 85
+    local v1 = {}
+    for k, v in pairs(a1._regionHashMap) do
+        for k2, i in pairs(v) do
+            for k3, j in pairs(i.nodes) do
+                v1[#v1 + 1] = k3
+            end
+        end
+    end
+    return v1
+end
+
+function u14.CreateNode(a1, a2, a3) -- Line: 117 -- upvalues: OctreeNode (val)
+    assert(typeof(a2) == "Vector3", "Bad position value")
+    assert(a3, "Bad object value")
+    local v1 = OctreeNode.new(a1, a3)
+    v1:SetPosition(a2)
+    return v1
+end
+
+function u14.RadiusSearch(a1, a2, a3) -- Line: 145
+    assert(typeof(a2) == "Vector3", "Bad position")
+    assert(type(a3) == "number", "Bad radius")
+    local v1, u37 = a1:_radiusSearch(a2.x, a2.y, a2.z, a3)
+    local v2 = {}
+    local v3 = #v1
+    for i = 1, v3 do
+        v2[i] = i
+    end
+    table.sort(v2, function(a1, a2) -- Line: 158 -- upvalues: u37 (val)
+        return u37[a1] < u37[a2]
+    end)
+    v3 = {}
+    local v4 = {}
+    for i2, v in ipairs(v2) do
+        v3[i2] = v1[v]
+        v4[i2] = u37[v]
+    end
+    return v3, v4
+end
+
+function u14.KNearestNeighborsSearch(a1, a2, a3, a4) -- Line: 183
+    local v1
+    assert(typeof(a2) == "Vector3", "Bad position")
+    assert(type(a4) == "number", "Bad radius")
+    local v2, v3 = a1:_radiusSearch(a2.x, a2.y, a2.z, a4)
+    local v4 = {}
+    for k, v in pairs(v3) do
+        table.insert(v4, {dist2 = v, index = k})
+    end
+    table.sort(v4, function(a1, a2) -- Line: 198
+        return a1.dist2 < a2.dist2
+    end)
+    local v5 = {}
+    local v6 = {}
+    for i = 1, (math.min(#v4, a3)) do
+        v1 = v4[i]
+        v6[#v6 + 1] = v1.dist2
+        v5[#v5 + 1] = v2[v1.index]
+    end
+    return v5, v6
+end
+
+function u14.GetOrCreateLowestSubRegion(a1, a2, a3, a4) -- Line: 222 -- upvalues: OctreeRegionUtils (val)
+    return OctreeRegionUtils.getOrCreateSubRegionAtDepth(a1:_getOrCreateRegion(a2, a3, a4), a2, a3, a4, a1._maxDepth)
+end
+
+function u14:_radiusSearch(a2, a3, a4, a5) -- Line: 227 -- upvalues: OctreeRegionUtils (val)
+    local position, v1, v2, v3, v4, v5, v6
+    local v7 = {}
+    local v8 = {}
+    local v9 = OctreeRegionUtils.getSearchRadiusSquared(a5, self._maxRegionSize[1], 1e-09)
+    for k, v in pairs(self._regionHashMap) do
+        for k2, i in pairs(v) do
+            position = i.position
+            v1 = position[1]
+            v2 = position[2]
+            v3 = position[3]
+            v4 = v10 - v1
+            v5 = v11 - v2
+            v6 = v12 - v3
+            if v4 * v4 + v5 * v5 + v6 * v6 <= v9 then
+                OctreeRegionUtils.getNeighborsWithinRadius(i, v13, v10, v11, v12, v7, v8, v14._maxDepth)
+            end
+        end
+    end
+    return v7, v8
+end
+
+function u14._getRegion(a1, a2, a3, a4) -- Line: 251 -- upvalues: OctreeRegionUtils (val)
+    return OctreeRegionUtils.findRegion(a1._regionHashMap, a1._maxRegionSize, a2, a3, a4)
+end
+
+function u14:_getOrCreateRegion(a2, a3, a4) -- Line: 255 -- upvalues: OctreeRegionUtils (val)
+    return OctreeRegionUtils.getOrCreateRegion(self._regionHashMap, self._maxRegionSize, a2, a3, a4)
+end
+
+return u14

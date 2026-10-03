@@ -1,0 +1,13 @@
+-- Path : Workspace.Vehicles.SRT.Scripts.Client.FX.playRandomSound
+-- Script path: Workspace.Vehicles.SRT.Scripts.Client.FX.playRandomSound
+-- Decompile time: 0.28 ms
+
+return function(a1, a2, a3) -- Line: 2 -- types: a1: table, a2: userdata, a3: number?
+    local u10 = a1[math.random(1, #a1)]:Clone()
+    u10.Volume = u10.Volume * (a3 or 1)
+    u10.Parent = a2
+    u10:Play()
+    task.delay(u10.TimeLength / u10.PlaybackSpeed, function() -- Line: 12 -- upvalues: u10 (val)
+        u10:Destroy()
+    end)
+end

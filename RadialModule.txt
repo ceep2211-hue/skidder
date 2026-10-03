@@ -1,0 +1,142 @@
+-- Path : ReplicatedStorage.Modules.Game.UI.RadialModule
+-- Script path: ReplicatedStorage.Modules.Game.UI.RadialModule
+-- Decompile time: 2.88 ms
+
+local u0 = {}
+u0.__index = u0
+game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+u0.prototype = {}
+u0.prototype.__index = u0.prototype
+
+function u0.new(a1, a2, a3) -- Line: 47 -- upvalues: u0 (val) -- types: a1: userdata, a2: string?, a3: table?
+    local prototype = u0.prototype
+    local v1 = setmetatable({}, prototype)
+    local v2 = a3 or {
+        ImageTransparency = 0.5,
+        FlipProgress = false,
+        BackgroundTransparency = 0.8,
+        BackgroundType = "TransAndColor",
+        ProgressTransparency = 0,
+        ImageColor = Color3.fromRGB(255, 255, 255),
+        ImageId = a2 or "6553408336",
+        BackgroundColor = Color3.fromRGB(0, 0, 0),
+        ProgressColor = Color3.fromRGB(255, 255, 255),
+    }
+    v1.Progress = 0
+    v1.Configuration = v2
+    v1.ColorSequenceColor = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, v1.Configuration.ProgressColor),
+        ColorSequenceKeypoint.new(0.5, v1.Configuration.ProgressColor),
+        ColorSequenceKeypoint.new(0.501, v1.Configuration.BackgroundColor),
+        (ColorSequenceKeypoint.new(1, v1.Configuration.BackgroundColor)),
+    })
+    v1.NumberSequenceTrans = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, v1.Configuration.ProgressTransparency),
+        NumberSequenceKeypoint.new(0.5, v1.Configuration.ProgressTransparency),
+        NumberSequenceKeypoint.new(0.501, v1.Configuration.BackgroundTransparency),
+        (NumberSequenceKeypoint.new(1, v1.Configuration.BackgroundTransparency)),
+    })
+    v1.Instance = a1
+    v1.animation_connection = false
+    return v1
+end
+
+function u0.prototype.Init(a1) -- Line: 83
+    a1:SetProgress(0)
+end
+
+function u0.prototype.SetProgressColor(a1, a2) -- Line: 88 -- types: a1: table, a2: userdata
+    a1.Configuration.ProgressColor = a2
+    a1.ColorSequenceColor = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, a1.Configuration.ProgressColor),
+        ColorSequenceKeypoint.new(0.5, a1.Configuration.ProgressColor),
+        ColorSequenceKeypoint.new(0.501, a1.Configuration.BackgroundColor),
+        (ColorSequenceKeypoint.new(1, a1.Configuration.BackgroundColor)),
+    })
+    a1:Update()
+end
+
+function u0.prototype:Update() -- Line: 102
+    local v1 = math.clamp(self.Progress * 3.6, 0, 360)
+    local ImageLabel = self.Instance.Frame1.ImageLabel
+    local ImageLabel_2 = self.Instance.Frame2.ImageLabel
+    local UIGradient = ImageLabel.UIGradient
+    local v2 = not self.Configuration.FlipProgress and math.clamp(v1, 179, 360) or 179 - math.clamp(v1, 0, 180)
+    UIGradient.Rotation = v2
+    local UIGradient_2 = ImageLabel_2.UIGradient
+    v2 = not self.Configuration.FlipProgress and math.clamp(v1, 0, 179) or 179 - math.clamp(v1, 179, 360)
+    UIGradient_2.Rotation = v2
+    ImageLabel.ImageColor3 = self.Configuration.ImageColor
+    ImageLabel_2.ImageColor3 = self.Configuration.ImageColor
+    ImageLabel.ImageTransparency = self.Configuration.ImageTransparency
+    ImageLabel_2.ImageTransparency = self.Configuration.ImageTransparency
+    ImageLabel.Image = "rbxassetid://" .. self.Configuration.ImageId
+    ImageLabel_2.Image = "rbxassetid://" .. self.Configuration.ImageId
+    if self.Configuration.BackgroundType == "Color" then
+        ImageLabel.UIGradient.Color = self.ColorSequenceColor
+        ImageLabel_2.UIGradient.Color = self.ColorSequenceColor
+        ImageLabel.UIGradient.Transparency = NumberSequence.new(0)
+        ImageLabel_2.UIGradient.Transparency = NumberSequence.new(0)
+        return
+    end
+    if self.Configuration.BackgroundType == "Trans" then
+        ImageLabel.UIGradient.Transparency = self.NumberSequenceTrans
+        ImageLabel_2.UIGradient.Transparency = self.NumberSequenceTrans
+        ImageLabel.UIGradient.Color = ColorSequence.new(Color3.new(1, 1, 1))
+        ImageLabel_2.UIGradient.Color = ColorSequence.new(Color3.new(1, 1, 1))
+        return
+    end
+    if self.Configuration.BackgroundType ~= "TransAndColor" then
+        self.Configuration.BackgroundType = "Trans"
+        self:Update()
+        error("[RadialModule] Unknown Type Provided. Use “Trans”, “Color” or “TransAndColor” \n [Default] \"Trans\".")
+        return
+    end
+    ImageLabel.UIGradient.Transparency = self.NumberSequenceTrans
+    ImageLabel_2.UIGradient.Transparency = self.NumberSequenceTrans
+    ImageLabel.UIGradient.Color = self.ColorSequenceColor
+    ImageLabel_2.UIGradient.Color = self.ColorSequenceColor
+end
+
+function u0.prototype:SetProgress(a2) -- Line: 150 -- types: self: table, a2: number?
+    self:StopAnimating()
+    self.Progress = a2 or 100
+    self:Update()
+end
+
+function u0.prototype:StopAnimating(a2) -- Line: 157 -- types: self: table, a2: boolean
+    if self.animation_connection then
+        self.animation_connection:Disconnect()
+        self.animation_connection = nil
+        if a2 then
+            self.Progress = 100
+        end
+    end
+    self:Update()
+end
+
+local function lerp(a1, a2, a3) -- Line: 170
+    return a1 + (a2 - a1) * a3
+end
+
+function u0.prototype.TweenProgress(a1, a2, a3) -- Line: 175
+    -- upvalues: RunService (val)
+    local u3 = a2 or 100
+    if a1.animation_connection then
+        a1.animation_connection:Disconnect()
+        a1.animation_connection = nil
+    end
+    local u10 = 0
+    a1.animation_connection = RunService.Heartbeat:Connect(function(a1_2) -- Line: 187 -- upvalues: u10 (ref), a3 (val), a1 (val), u3 (ref)
+        u10 = math.min(u10 + a1_2 / a3, 1)
+        local v1 = u10
+        a1.Progress = 0 + (u3 - 0) * v1
+        a1:Update()
+        if u10 >= 1 then
+            a1:StopAnimating()
+        end
+    end)
+end
+
+return u0

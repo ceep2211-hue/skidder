@@ -1,0 +1,55 @@
+-- Path : ReplicatedStorage.Modules.Game.UI.PowerUpEffect
+-- Script path: ReplicatedStorage.Modules.Game.UI.PowerUpEffect
+-- Decompile time: 1.86 ms
+
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local Tween = require(game.ReplicatedStorage.Modules.Core.Tween)
+local Audio = require(game.ReplicatedStorage.Modules.Core.Audio)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+return {
+    award_effect = function(a1, a2, a3) -- Line: 8
+        -- upvalues: UI (val), Util (val), Audio (val), Tween (val), Char (val)
+        local u9 = UI.get("XPTextLabel"):Clone()
+        local v1 = Util.override(function() -- Line: 11
+            -- upvalues: Util (upval), u9 (val), a2 (val), a1 (val), a3 (val), UI (upval), Audio (upval), Tween (upval)
+            -- upvalues: Char (upval)
+            local v1 = Util.rand(0, 6.283185307179586)
+            local v2 = UDim2.fromScale(math.sin(v1) * 0.3 + 0.5, math.cos(v1) * 0.3 + 0.5)
+            u9.Text = ("+%* %*"):format(a2, a1)
+            u9.Visible = true
+            u9.TextTransparency = 1
+            if a3 then
+                u9.UIStroke.Color = a3
+            end
+            u9.UIStroke.Transparency = 1
+            u9.Position = v2
+            u9.Parent = UI.get("XPEffectHolder")
+            Audio.play(135171851682558, 0.05)
+            Tween.play(u9.UIStroke, TweenInfo.new(0.5, Enum.EasingStyle.Circular, Enum.EasingDirection.Out), {Transparency = 0})
+            Tween.play(
+                u9,
+                TweenInfo.new(1.5, Enum.EasingStyle.Circular, Enum.EasingDirection.Out),
+                {TextTransparency = 0, Position = v2 + UDim2.fromOffset(0, -50)}
+            ).Completed:Wait()
+            task.wait(0.5)
+            local v3 = workspace.CurrentCamera:WorldToViewportPoint((Char.get_hrp()).Position)
+            v3 = UDim2.fromOffset(v3.X, v3.Y)
+            Tween.play(u9.UIScale, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.In, 0, false, 0.25), {Scale = 0})
+            Tween.play(u9, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.In, 0, false, 0), {Position = v3}).Completed:Wait()
+            Audio.play(104112404859359, 0.05)
+            if not a3 then
+                (Char.get_hrp():FindFirstChild("XPShockwave", true)):Emit(1)
+            else
+                local v4 = Char.get_hrp():FindFirstChild("XPShockwave", true):Clone()
+                v4.Color = ColorSequence.new(a3, Color3.fromRGB(255, 255, 255))
+                v4.Parent = Char.get_hrp()
+                game.Debris:AddItem(v4, 0.5)
+                v4:Emit(1)
+            end
+            u9:Destroy()
+        end)
+        v1()
+        return v1, u9
+    end,
+}

@@ -1,0 +1,62 @@
+-- Path : ReplicatedStorage.Modules.Game.Quests.QuestInfoRewardsUI
+-- Script path: ReplicatedStorage.Modules.Game.Quests.QuestInfoRewardsUI
+-- Decompile time: 1.45 ms
+
+local UIFX = require(game.ReplicatedStorage.Modules.Core.UIFX)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local SubMenuBackground = require(ReplicatedStorage.Modules.Game.UI.SubMenuBackground)
+local u32 = {}
+u32.enabled = State.new(false)
+
+function u32.initiate() end
+
+local u37 = {}
+
+function u32.display(a1, a2, a3) -- Line: 17 -- upvalues: u37 (val), UI (val), u32 (val) -- types: a1: string
+    local image, name, v1
+    for i, j in u37 do
+        j:Destroy()
+    end
+    local QuestRewardTemplate = UI.get("QuestRewardTemplate")
+    for k, n in a3 do
+        image = n.image
+        name = n.name
+        v1 = QuestRewardTemplate:Clone()
+        v1.Visible = true
+        v1.Name = name
+        v1.RewardImage.Image = image
+        v1.RewardName.Text = name
+        v1.Parent = UI.get("QuestInfoScrollingFrame")
+        table.insert(u37, v1)
+    end
+    UI.get("QuestInfoHolder").Title.Text = a1
+    local QuestRequirements = UI.get("QuestRequirements")
+    QuestRequirements.Text = tostring(a2)
+    u32.enabled.set(true)
+end
+
+function u32.loaded() -- Line: 43 -- upvalues: UI (val), u32 (val), SubMenuBackground (val), UIFX (val)
+    local QuestRewardTemplate = UI.get("QuestRewardTemplate")
+    QuestRewardTemplate.Visible = false
+    local QuestInfoHolder = UI.get("QuestInfoHolder")
+    u32.enabled.hook(function(a1, a2) -- Line: 48
+        -- upvalues: SubMenuBackground (upval), u32 (upval), UI (upval), UIFX (upval), QuestInfoHolder (val)
+        if a1 == a2 or not SubMenuBackground.can_open() then
+            return
+        end
+        if a1 then
+            SubMenuBackground.open(u32.enabled, UI.get("QuestInfoAwards"))
+            UIFX.scale_open(QuestInfoHolder)
+            return
+        end
+        SubMenuBackground.close()
+        UIFX.scale_close(QuestInfoHolder)
+    end)
+    UI.on_click("QuestInfoCloseButton", function() -- Line: 64 -- upvalues: u32 (upval)
+        u32.enabled.set(false)
+    end)
+end
+
+return u32

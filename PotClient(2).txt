@@ -1,0 +1,247 @@
+-- Path : ReplicatedStorage.Modules.Game.Farming.PotClient
+-- Script path: ReplicatedStorage.Modules.Game.Farming.PotClient
+-- Decompile time: 6.40 ms
+
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+local FlagManager = require(game.ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local FarmingInfo = require(game.ReplicatedStorage.Modules.Game.Farming.FarmingInfo)
+local SkillsList = require(game.ReplicatedStorage.Modules.Game.Skills.SkillsList)
+local Data = require(game.ReplicatedStorage.Modules.Core.Data)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local Timer = require(game.ReplicatedStorage.Modules.Core.Timer)
+local u59 = {
+    FLAG_FARMING_ENABLED = FlagManager.FLAG_FARMING_ENABLED,
+    FLAG_SHOW_SELL_PRICE = true,
+    FLAG_SHOW_QUALITY_PERCENTAGE = true,
+}
+
+function time_completion_percentage(a1, a2) -- Line: 40
+    local v1 = get_current_os_time()
+    if a2 <= v1 then
+        return 1
+    end
+    if v1 <= a1 then
+        return 0
+    end
+    return (v1 - a1) / (a2 - a1) * 1
+end
+
+u59.time_completion_percentage = time_completion_percentage
+u59.class = StatefulObject.new_class(function() -- Line: 17 -- upvalues: State (val)
+    return {
+        current_plant = State.new(""),
+        current_soil = State.new(""),
+        current_pot = State.new(""),
+        watered_stamp = State.new(0),
+        planted_stamp = State.new(0),
+        water_retention = State.new(1),
+        growth_multiplier = State.new(1),
+        reward_multiplier = State.new(1),
+        special_effects = State.new(""),
+        dead_stamp = State.new(0),
+    }
+end, "PlantPot")
+
+function get_current_os_time() -- Line: 53
+    local v1 = math.round((workspace:GetServerTimeNow()))
+    if workspace:GetAttribute("os_time_multiplier") then
+        return v1 + (workspace:GetAttribute("os_time_multiplier") - 1) * (v1 - workspace:GetAttribute("os_time_multiplier_starting_stamp"))
+    end
+    return v1
+end
+
+u59.get_current_os_time = get_current_os_time
+
+function u59.loaded() -- Line: 66
+    -- upvalues: u59 (val), State (val), Util (val), FarmingInfo (val), Timer (val), SkillsList (val), Data (val)
+    if not u59.FLAG_FARMING_ENABLED then
+        return
+    end
+    local u5 = State.new(nil)
+    u5.hook(function(a1, a2) -- Line: 71
+        if a2 then
+            a2.Transparency = 1
+        end
+    end)
+    u59.class.hook(function(a1) -- Line: 77
+        -- upvalues: Util (upval), FarmingInfo (upval), u59 (upval), Timer (upval), SkillsList (upval), Data (upval)
+        -- upvalues: u5 (val)
+        a1.get("Soil")
+        local PotPlaceholder = a1.get("PotPlaceholder")
+        local BillboardGui = a1.get("BillboardGui")
+        local u14 = Util.wait_for_descendant(a1.instance, "ProximityPrompt")
+
+        local function refresh_plant_growth() -- Line: 83
+            -- upvalues: a1 (val), FarmingInfo (upval), BillboardGui (val), u59 (upval)
+            local v1 = a1.states.current_plant.get()
+            local v2 = a1.states.planted_stamp.get()
+            local v3 = a1.states.watered_stamp.get()
+            local v4 = a1.states.current_plant.get()
+            local time_to_grow = FarmingInfo.plants[v1].time_to_grow
+            local v5 = time_completion_percentage(v2, v2 + time_to_grow) * 100
+            local v6 = time_completion_percentage(v3, v3 + FarmingInfo.plants[v1].quality_time * a1.states.water_retention.get())
+            local v7 = math.floor(100 - v6 * 100)
+            a1.instance:SetAttribute("CompletionPercentage", v5)
+            local v8 = time_to_grow / a1.states.growth_multiplier.get()
+            local v9 = get_current_os_time()
+            local v10 = math.max(0, v2 + v8 - v9)
+            local v11 = math.floor(v10 / 86400)
+            local v12 = math.floor(v10 % 86400 / 3600)
+            local v13 = math.floor(v10 / 60)
+            local v14 = math.floor(v10 % 60)
+            if v10 == 0 then
+                BillboardGui.TextLabel.Text = "Done"
+            elseif v7 ~= 0 then
+                if v13 < 10 then
+                    v13 = ("0%*"):format(v13)
+                end
+                if v14 < 10 then
+                    v14 = ("0%*"):format(v14)
+                end
+                if not (v11 > 0) then
+                    if not (v12 > 0) then
+                        BillboardGui.TextLabel.Text = ("%*:%*"):format(v13, v14)
+                    else
+                        BillboardGui.TextLabel.Text = ("%*h"):format(v12)
+                    end
+                elseif v11 ~= 1 then
+                    BillboardGui.TextLabel.Text = ("%* days %*h"):format(v11, v12)
+                else
+                    BillboardGui.TextLabel.Text = ("%* day %*h"):format(v11, v12)
+                end
+            else
+                BillboardGui.TextLabel.Text = "Done"
+            end
+            BillboardGui.TextLabel.Visible = true
+            local CashReward = BillboardGui.Frame.CashReward
+            local GrowQuality = BillboardGui.Frame.GrowQuality
+            local NeedsWater = BillboardGui.NeedsWater
+            local v15 = false
+            if v7 < 50 then
+                v15 = v10 > 0
+            end
+            NeedsWater.Visible = v15
+            if not u59.FLAG_SHOW_SELL_PRICE then
+                CashReward.Visible = false
+            else
+                local v16 = math.round((math.max(
+                    1,
+                    FarmingInfo.plants[v4].reward * (math.clamp(math.map(v6, 0.5, 1, 1, 0), 0, 1)) * (a1.states.reward_multiplier.get())
+                )))
+                CashReward.Visible = true
+                CashReward.Text = ("$%*"):format(v16)
+            end
+            if not u59.FLAG_SHOW_QUALITY_PERCENTAGE then
+                GrowQuality.Visible = false
+                return
+            end
+            if v7 >= 50 then
+                GrowQuality.TextColor3 = Color3.fromRGB(47, 255, 71)
+                GrowQuality.ImageLabel.ImageColor3 = Color3.fromRGB(255, 255, 255)
+            elseif not (v7 > 0) then
+                GrowQuality.TextColor3 = Color3.fromRGB(255, 86, 35)
+                GrowQuality.ImageLabel.ImageColor3 = Color3.fromRGB(232, 70, 30)
+            else
+                GrowQuality.TextColor3 = Color3.fromRGB(255, 237, 37)
+                GrowQuality.ImageLabel.ImageColor3 = Color3.fromRGB(232, 190, 24)
+            end
+            GrowQuality.Visible = true
+            GrowQuality.Text = ("%*%%"):format(v7)
+        end
+
+        local u21 = Timer.new(1, refresh_plant_growth, true)
+        a1.clean(function() -- Line: 169 -- upvalues: u21 (val)
+            u21.stop()
+        end)
+
+        local function update_pot() -- Line: 173
+            -- upvalues: a1 (val), SkillsList (upval), Data (upval), u5 (upval), PotPlaceholder (val)
+            local v1 = a1.states.current_pot.get()
+            local v2 = false
+            if (a1.instance:GetAttribute("OwnerUserId")) == game.Players.LocalPlayer.UserId then
+                v2 = true
+                if a1.instance:GetAttribute("PotIndex") ~= "1" then
+                    v2 = SkillsList.has_skill(Data, "farmer", "ExtraPot" .. a1.instance:GetAttribute("PotIndex"))
+                end
+            end
+            if v1 == "" and v2 then
+                if u5.get() ~= nil and u5.get() ~= PotPlaceholder then
+                    PotPlaceholder.Transparency = 1
+                    if u5.get() == PotPlaceholder then
+                        u5.set(nil)
+                    end
+                    return
+                end
+                u5.set(PotPlaceholder)
+                PotPlaceholder.Transparency = 0.5
+                return
+            end
+            PotPlaceholder.Transparency = 1
+            if u5.get() == PotPlaceholder then
+                u5.set(nil)
+            end
+        end
+
+        local function update_prompt_enabled() -- Line: 187
+            -- upvalues: PotPlaceholder (val), a1 (val), SkillsList (upval), Data (upval), u14 (val)
+            local Transparency = PotPlaceholder.Transparency
+            local v1 = a1.states.current_pot.get()
+            local v2 = false
+            if (a1.instance:GetAttribute("OwnerUserId")) == game.Players.LocalPlayer.UserId then
+                v2 = true
+                if a1.instance:GetAttribute("PotIndex") ~= "1" then
+                    v2 = SkillsList.has_skill(Data, "farmer", "ExtraPot" .. a1.instance:GetAttribute("PotIndex"))
+                end
+            end
+            if Transparency ~= 1 then
+                u14.Enabled = true
+                return
+            end
+            local v3 = false
+            if v1 ~= "" then
+                v3 = v2
+            end
+            u14.Enabled = v3
+        end
+
+        Util.watch_property(PotPlaceholder, "Transparency", update_prompt_enabled)
+        u5.hook(function(a1) -- Line: 203 -- upvalues: PotPlaceholder (val), update_pot (val)
+            if a1 ~= PotPlaceholder then
+                update_pot()
+            end
+        end)
+        Util.watch_attribute(a1.instance, "OwnerUserId", update_pot)
+
+        local function refresh() -- Line: 211
+            -- upvalues: a1 (val), refresh_plant_growth (val), u21 (val), BillboardGui (val)
+            local v1 = a1.states.current_plant.get()
+            a1.states.planted_stamp.get()
+            a1.states.watered_stamp.get()
+            if v1 and v1 ~= "" then
+                refresh_plant_growth()
+                u21.start()
+                return
+            end
+            BillboardGui.Frame.GrowQuality.Visible = false
+            BillboardGui.Frame.CashReward.Visible = false
+            BillboardGui.NeedsWater.Visible = false
+            BillboardGui.TextLabel.Visible = false
+            u21.stop()
+        end
+
+        Data.hook("xp", function() -- Line: 228 -- upvalues: update_pot (val), update_prompt_enabled (val)
+            update_pot()
+            update_prompt_enabled()
+        end)
+        return function() -- Line: 233 -- upvalues: a1 (val), refresh (val), update_pot (val), update_prompt_enabled (val)
+            a1.states.planted_stamp.hook(refresh)
+            a1.states.current_plant.hook(refresh)
+            a1.states.watered_stamp.hook(refresh)
+            a1.states.current_pot.hook(update_pot)
+            update_prompt_enabled()
+        end
+    end)
+end
+
+return u59

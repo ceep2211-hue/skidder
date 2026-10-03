@@ -1,0 +1,197 @@
+-- Path : ReplicatedStorage.Modules.Core.ObjectClick
+-- Script path: ReplicatedStorage.Modules.Core.ObjectClick
+-- Decompile time: 4.89 ms
+
+local Tbl = require(game.ReplicatedStorage.Modules.Core.Tbl)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local u21 = {}
+u21.last_clicked_world_position = Vector3.new()
+local u25 = RaycastParams.new()
+local u26 = {}
+u25.FilterType = Enum.RaycastFilterType.Exclude
+u25.FilterDescendantsInstances = u26
+local u29 = RaycastParams.new()
+local u30 = {}
+u29.FilterType = Enum.RaycastFilterType.Exclude
+u29.FilterDescendantsInstances = u30
+u21.disabled = false
+local GuiInset = game:GetService("GuiService"):GetGuiInset()
+
+function u21.get_clicked() -- Line: 25 -- upvalues: u26 (val), u25 (val), GuiInset (val), Char (val)
+    local CurrentCamera = workspace.CurrentCamera
+    local Mouse = game.Players.LocalPlayer:GetMouse()
+    if not table.find(u26, game.Players.LocalPlayer.Character) then
+        table.insert(u26, game.Players.LocalPlayer.Character)
+        u25.FilterDescendantsInstances = u26
+    end
+    local v1 = CurrentCamera:ViewportPointToRay(Mouse.X, Mouse.Y + GuiInset.Y, 0)
+    local v2 = nil
+    local v3 = 0
+    repeat
+        v3 = v3 + 1
+        if v3 > 100 then
+            break
+        end
+        if v2 and v2.Instance then
+            table.insert(u26, v2.Instance)
+            u25.FilterDescendantsInstances = u26
+        end
+        v2 = workspace:Raycast(v1.Origin, v1.Direction * 100, u25)
+    until not v2
+        or not v2.Instance
+        or v2.Instance.Transparency < 1
+        or v2.Instance.Name == "clipbrush"
+        or v2.Instance:FindFirstAncestor("Hitbox")
+    if v2 and v2.Instance and (v2.Position - Char.get_hrp().Position).Magnitude < 50 then
+        return v2
+    end
+end
+
+function u21.get_click_detector() -- Line: 59 -- upvalues: u30 (val), u29 (val), GuiInset (val), Char (val)
+    local CurrentCamera = workspace.CurrentCamera
+    local Mouse = game.Players.LocalPlayer:GetMouse()
+    if not table.find(u30, game.Players.LocalPlayer.Character) then
+        table.insert(u30, game.Players.LocalPlayer.Character)
+        u29.FilterDescendantsInstances = u30
+    end
+    local v1 = CurrentCamera:ViewportPointToRay(Mouse.X, Mouse.Y + GuiInset.Y, 0)
+    local v2 = nil
+    local v3 = 0
+    repeat
+        v3 = v3 + 1
+        if v3 > 100 then
+            break
+        end
+        if v2 and v2.Instance then
+            table.insert(u30, v2.Instance)
+            u29.FilterDescendantsInstances = u30
+        end
+        v2 = workspace:Raycast(v1.Origin, v1.Direction * 100, u29)
+    until not v2
+        or not v2.Instance
+        or v2.Instance.Transparency < 1
+        or v2.Instance.Name == "clipbrush"
+        or v2.Instance:FindFirstAncestor("Hitbox")
+    if v2 and v2.Instance then
+        local ClickDetector
+        local Instance_2 = v2.Instance
+        local Magnitude = (v2.Position - Char.get_hrp().Position).Magnitude
+        local v4 = 0
+        while Instance_2 ~= workspace do
+            v4 = v4 + 1
+            if v4 > 100 then
+                return
+            end
+            ClickDetector = Instance_2:FindFirstChildWhichIsA("ClickDetector")
+            if ClickDetector and Magnitude <= ClickDetector.MaxActivationDistance then
+                return ClickDetector
+            end
+            Instance_2 = Instance_2.Parent
+        end
+    end
+end
+
+local u44 = {}
+
+function u21.new(a1, a2) -- Line: 121 -- upvalues: u44 (val), Tbl (val) -- types: a1: userdata, a2: function
+    local ClickDetector = a1:FindFirstChildWhichIsA("ClickDetector")
+    if not ClickDetector then
+        ClickDetector = Instance.new("ClickDetector", a1)
+    end
+    ClickDetector.MaxActivationDistance = 64
+    if not u44[ClickDetector] then
+        u44[ClickDetector] = {}
+    end
+    table.insert(u44[ClickDetector], a2)
+    return {
+        destroy = function() -- Line: 130 -- upvalues: Tbl (upval), u44 (upval), ClickDetector (val), a2 (val)
+            Tbl.remove_value(u44[ClickDetector], a2)
+            if #u44[ClickDetector] == 0 then
+                u44[ClickDetector] = nil
+            end
+        end,
+    }
+end
+
+u21.hooks = {}
+
+function u21.hook(a1) -- Line: 141 -- upvalues: u21 (val) -- types: a1: function
+    table.insert(u21.hooks, a1)
+end
+
+function u21.on_click(a1) -- Line: 147 -- upvalues: u21 (val), u44 (val), Tbl (val), Net (val)
+    local v1
+    local v2 = u21.get_click_detector()
+    local v3 = u21.get_clicked()
+    if not v3 and not v2 then
+        for i, j in u21.hooks do
+            task.spawn(j)
+        end
+        return
+    end
+    if u21.disabled then
+        for k, n in u21.hooks do
+            task.spawn(n)
+        end
+        return
+    end
+    local v4 = tick()
+    local Position = a1.Position
+    if a1.UserInputType ~= Enum.UserInputType.Touch then
+        if v2 and v2 == u21.get_click_detector() then
+            if u44[v2] then
+                Tbl.safe_loop(u44[v2], function(a1_2) -- Line: 164 -- upvalues: a1 (val)
+                    task.spawn(a1_2, a1.Position)
+                end)
+            end
+            Net.send("cd", v2)
+        end
+        if v3 then
+            v1 = u21.get_clicked()
+            if v1 and v3.Instance == v1.Instance then
+                u21.last_clicked_world_position = v1.Position
+                for i6, i7 in u21.hooks do
+                    task.spawn(i7, v1)
+                end
+                return
+            end
+        end
+        return
+    end
+    repeat
+        a1:GetPropertyChangedSignal("UserInputState"):Wait()
+    until a1.UserInputState == Enum.UserInputState.End
+    v1 = tick() - v4
+    if not (v1 > 0.4) and not (4 < (Position - a1.Position).Magnitude) then
+        if v2 and v2 == u21.get_click_detector() then
+            if u44[v2] then
+                Tbl.safe_loop(u44[v2], function(a1_2) -- Line: 164 -- upvalues: a1 (val)
+                    task.spawn(a1_2, a1.Position)
+                end)
+            end
+            Net.send("cd", v2)
+        end
+        if v3 then
+            v1 = u21.get_clicked()
+            if v1 and v3.Instance == v1.Instance then
+                u21.last_clicked_world_position = v1.Position
+                for m, i5 in u21.hooks do
+                    task.spawn(i5, v1)
+                end
+                return
+            end
+        end
+        return
+    end
+end
+
+function u21.initiate() -- Line: 189 -- upvalues: Net (val), u21 (val)
+    Net.hook("lock_object_click", function(a1) -- Line: 190 -- upvalues: u21 (upval)
+        u21.disabled = a1
+    end)
+end
+
+function u21.loaded() end
+
+return u21

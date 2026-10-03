@@ -1,0 +1,50 @@
+-- Path : ReplicatedStorage.Modules.Game.NPC
+-- Script path: ReplicatedStorage.Modules.Game.NPC
+-- Decompile time: 1.14 ms
+
+require(game.ReplicatedStorage.Modules.Core.Util)
+local Timer = require(game.ReplicatedStorage.Modules.Core.Timer)
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+require(game.ReplicatedStorage.Modules.Core.State)
+local u28 = {}
+u28.class = StatefulObject.new_class(function() -- Line: 8
+    return {}
+end, script.Name)
+
+function u28.initiate() end
+
+function u28.loaded() -- Line: 20 -- upvalues: u28 (val), Timer (val)
+    u28.class.hook(function(a1) -- Line: 22 -- upvalues: Timer (upval)
+        local Animator = a1.get("Animator")
+        local v1 = Animator:LoadAnimation((Animator:WaitForChild("Stance")))
+        v1.Priority = Enum.AnimationPriority.Core
+        v1:Play()
+        local Idle = Animator:WaitForChild("Idle")
+        local u20 = 1
+        local u26 = Timer.new(10, function() -- Line: 33 -- upvalues: Idle (val), u20 (ref), Animator (val)
+            local Children = Idle:GetChildren()
+            u20 = u20 + 1
+            local v1 = u20
+            if #Children < v1 then
+                u20 = 1
+            end
+            local u16 = Animator:LoadAnimation(Children[u20])
+            u16.Looped = false
+            u16.Priority = Enum.AnimationPriority.Idle
+            u16:Play()
+            u16.Ended:Once(function() -- Line: 47 -- upvalues: u16 (val)
+                u16:Destroy()
+            end)
+        end, true)
+        a1.streamed.hook(function(a1) -- Line: 52 -- upvalues: u26 (val)
+            if a1 then
+                u26.start()
+                return
+            end
+            u26.stop()
+        end)
+        return false
+    end)
+end
+
+return u28

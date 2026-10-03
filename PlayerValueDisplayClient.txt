@@ -1,0 +1,20 @@
+-- Path : ReplicatedStorage.Modules.Game.Home.PlayerValueDisplayClient
+-- Script path: ReplicatedStorage.Modules.Game.Home.PlayerValueDisplayClient
+-- Decompile time: 0.38 ms
+
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local u14 = {tag = "PlayerValueDisplay"}
+u14.class = StatefulObject.new_class(function() -- Line: 6 -- upvalues: State (val)
+    return {target_player = State.new(nil)}
+end, u14.tag)
+
+function u14.initiate() end
+
+function u14.loaded() -- Line: 20 -- upvalues: u14 (val)
+    u14.class.hook(function(a1) -- Line: 22
+        return function() end
+    end)
+end
+
+return u14
