@@ -1,0 +1,13 @@
+-- Path : ReplicatedStorage.Modules.Core.Attrib
+-- Script path: ReplicatedStorage.Modules.Core.Attrib
+-- Decompile time: 0.33 ms
+
+return {
+    event = function(a1, a2, a3) -- Line: 4
+        return (a1:GetAttributeChangedSignal(a2)):Connect(a3)
+    end,
+    update = function(a1, a2, a3) -- Line: 8
+        a1:SetAttribute(a2, (a3((a1:GetAttribute(a2)))))
+    end,
+    initiate = function() end,
+}

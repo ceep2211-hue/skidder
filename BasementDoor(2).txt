@@ -1,0 +1,73 @@
+-- Path : ReplicatedStorage.Modules.Game.World.BasementDoor
+-- Script path: ReplicatedStorage.Modules.Game.World.BasementDoor
+-- Decompile time: 2.19 ms
+
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local u12 = {}
+local FlagManager = require(ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local Timer = require(ReplicatedStorage.Modules.Core.Timer)
+require(ReplicatedStorage.Modules.Core.Zone)
+local Util = require(ReplicatedStorage.Modules.Core.Util)
+require(ReplicatedStorage.Modules.Core.Audio)
+local Char = require(ReplicatedStorage.Modules.Core.Char)
+local State = require(ReplicatedStorage.Modules.Core.State)
+u12.basement_door_class = StatefulObject.new_class(function() -- Line: 13
+    return {}
+end, script.Name)
+
+function u12.initiate() end
+
+function u12.loaded() -- Line: 22
+    -- upvalues: FlagManager (val), u12 (val), Util (val), State (val), Timer (val), Char (val)
+    if not FlagManager.FLAG_CAN_OPEN_BASEMENT then
+        return
+    end
+    u12.basement_door_class.hook(function(a1) -- Line: 25 -- upvalues: Util (upval), State (upval), Timer (upval), Char (upval)
+        local Door1 = a1.get("Door1")
+        local Pivot = Door1:GetPivot()
+        local Door2 = a1.get("Door2")
+        local Pivot_2 = Door2:GetPivot()
+        local NumberValue = Instance.new("NumberValue")
+        Util.watch_property(NumberValue, "Value", function(a1) -- Line: 37 -- upvalues: Door1 (val), Pivot (val), Door2 (val), Pivot_2 (val)
+            Door1:PivotTo(Pivot * (CFrame.Angles(0, math.rad(a1 * 100), 0)))
+            Door2:PivotTo(Pivot_2 * (CFrame.Angles(0, math.rad(a1 * -100), 0)))
+        end)
+        local u25 = State.new(false)
+        u25.hook(function(a1, a2) -- Line: 43 -- upvalues: Util (upval), NumberValue (val)
+            if a1 == a2 then
+                return
+            end
+            if a1 then
+                Util.tween(NumberValue, TweenInfo.new(1), {Value = 1})
+                return
+            end
+            Util.tween(NumberValue, TweenInfo.new(1), {Value = 0})
+        end)
+        local u34 = Timer.new(0.1, function() -- Line: 58 -- upvalues: a1 (val), Char (upval), u25 (val)
+            local Workspace
+            if a1.instance.Parent == nil then
+                return
+            end
+            for i, j in Char.get_all() do
+                Workspace = game.Workspace
+                if j:IsDescendantOf(Workspace)
+                    and (j:GetPivot().Position - a1.instance:GetPivot().Position).Magnitude < 15 then
+                    u25.set(true)
+                    return
+                end
+            end
+            u25.set(false)
+        end, true)
+        a1.streamed.hook(function(a1) -- Line: 69 -- upvalues: u34 (val)
+            if a1 then
+                u34.start()
+                return
+            end
+            u34.stop()
+        end)
+        return function() end
+    end)
+end
+
+return u12

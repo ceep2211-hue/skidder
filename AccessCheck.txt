@@ -1,0 +1,21 @@
+-- Path : Workspace.Map.Tiles.GasStationTile.Quick11.Interior.ShelfStockingJob.SunflowerSeedsBox.AccessCheck
+-- Script path: Workspace.Map.Tiles.GasStationTile.Quick11.Interior.ShelfStockingJob.SunflowerSeedsBox.AccessCheck
+-- Decompile time: 0.41 ms
+
+require(game.ReplicatedStorage.Modules.Core.Data)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+game:GetService("RunService")
+local SkillsList = require(game.ReplicatedStorage.Modules.Game.Skills.SkillsList)
+require(game.ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local v1 = {}
+require(ReplicatedStorage.Modules.Game.Jobs.JobData)
+
+function v1.can_access(a1) -- Line: 12 -- upvalues: SkillsList (val)
+    if SkillsList.has_skill(a1, "shelf_stocker", "ShelfStockerUnlockSeedsCrate")
+        and SkillsList.has_skill(a1, "farmer", "FarmerUnlockSeedsCrate") then
+        return true
+    end
+    return false, "You need to be level 50 in Shelf Stocking and level 30 in Farming"
+end
+
+return v1

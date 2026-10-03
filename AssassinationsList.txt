@@ -1,0 +1,50 @@
+-- Path : ReplicatedStorage.Modules.Game.Emotes.AssassinationsList
+-- Script path: ReplicatedStorage.Modules.Game.Emotes.AssassinationsList
+-- Decompile time: 0.33 ms
+
+require(game.ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+return {
+    {
+        display_name = "Shoe kiss",
+        skill_unlock_name = "shoe_kiss",
+        name = "shoe_kiss",
+        image = "rbxassetid://91339835815905",
+    } or nil,
+    {display_name = "MJ", skill_unlock_name = "mj", name = "mj", image = "rbxassetid://127919931263199"} or nil,
+    {
+        display_name = "Baseball bat",
+        skill_unlock_name = "baseball_bat",
+        name = "baseball_bat",
+        image = "rbxassetid://110134574830272",
+    } or nil,
+    {
+        display_name = "Headbutt",
+        skill_unlock_name = "headbutt",
+        name = "headbutt",
+        image = "rbxassetid://116778887455427",
+    },
+    {
+        display_name = "Stomp",
+        skill_unlock_name = "stomp_execution",
+        name = "stomp_execution",
+        image = "rbxassetid://77345357942169",
+    },
+    {
+        display_name = "Concrete Justice",
+        skill_unlock_name = "execution_1",
+        name = "execution_1",
+        image = "rbxassetid://106541708820615",
+    },
+    {
+        display_name = "Stick to the Face",
+        skill_unlock_name = "execution_2",
+        name = "execution_2",
+        image = "rbxassetid://89353660847949",
+    },
+    {
+        display_name = "Raijin's Judgment",
+        skill_unlock_name = "execution_3",
+        name = "execution_3",
+        image = "rbxassetid://137250014948616",
+    },
+}

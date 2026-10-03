@@ -1,0 +1,116 @@
+-- Path : ReplicatedStorage.Modules.Game.Visuals.CastVisuals
+-- Script path: ReplicatedStorage.Modules.Game.Visuals.CastVisuals
+-- Decompile time: 2.14 ms
+
+local v1 = {}
+local u6 = {}
+u6.__index = {
+    Hide = function(self) -- Line: 13
+        self.CastOriginPart.Parent = nil
+    end,
+    Raycast = function(self, a2, a3, a4) -- Line: 17 -- types: self: table, a2: vector, a3: vector, a4: userdata?
+        local v1 = self.WorldRoot:Raycast(a2, a3, a4)
+        if not v1 then
+            self:Hide()
+            return
+        end
+        self.CastOriginPart.CFrame = CFrame.lookAt(a2, v1.Position)
+        self.LineVisual.Length = v1.Distance - 0.25
+        self.ConeVisual.CFrame = CFrame.new(0, 0, -v1.Distance)
+        self.BoxVisual.Visible = false
+        self.SphereVisual.Visible = false
+        local CastOriginPart = self.CastOriginPart
+        local Terrain = self.WorldRoot:FindFirstChild("Terrain") or self.WorldRoot
+        CastOriginPart.Parent = Terrain
+    end,
+    Blockcast = function(self, a2, a3, a4, a5) -- Line: 38 -- types: self: table, a2: userdata, a3: vector, a4: vector, a5: userdata?
+        local v1 = self.WorldRoot:Blockcast(a2, a3, a4, a5)
+        if not v1 then
+            self:Hide()
+            return
+        end
+        self.CastOriginPart.CFrame = a2
+        local v2 = CFrame.lookAt(Vector3.new(0, 0, 0), a4.Unit)
+        local v3 = CFrame.new(a4.Unit * v1.Distance)
+        self.LineVisual.Length = v1.Distance - 0.25
+        self.LineVisual.CFrame = v2
+        self.ConeVisual.CFrame = CFrame.lookAt(v3.Position - a4.Unit * 0.25, v3.Position + a4)
+        self.BoxVisual.CFrame = v3
+        self.BoxVisual.Size = a3
+        self.BoxVisual.Visible = true
+        self.SphereVisual.Visible = false
+        local CastOriginPart = self.CastOriginPart
+        local Terrain = self.WorldRoot:FindFirstChild("Terrain") or self.WorldRoot
+        CastOriginPart.Parent = Terrain
+    end,
+    Spherecast = function(self, a2, a3, a4, a5) -- Line: 67 -- types: self: table, a2: vector, a3: number, a4: vector, a5: userdata?
+        local v1 = self.WorldRoot:Spherecast(a2, a3, a4, a5)
+        if not v1 then
+            self:Hide()
+            return
+        end
+        local v2 = a2 + a4.Unit * v1.Distance
+        self.CastOriginPart.CFrame = CFrame.lookAt(a2, v2)
+        self.LineVisual.Length = v1.Distance - 0.25
+        self.ConeVisual.CFrame = CFrame.new(0, 0, -v1.Distance)
+        self.SphereVisual.CFrame = CFrame.new(0, 0, -v1.Distance)
+        self.SphereVisual.Radius = a3
+        self.SphereVisual.Visible = true
+        self.BoxVisual.Visible = false
+        local CastOriginPart = self.CastOriginPart
+        local Terrain = self.WorldRoot:FindFirstChild("Terrain") or self.WorldRoot
+        CastOriginPart.Parent = Terrain
+    end,
+}
+
+function v1.new(a1, a2) -- Line: 118 -- upvalues: u6 (val) -- types: a1: CFrame?, a2: userdata?
+    local v1 = {Color = a1 or Color3.new(0, 0, 1), WorldRoot = a2 or workspace}
+    local v2 = setmetatable(v1, u6)
+    local Part = Instance.new("Part")
+    Part.Transparency = 1
+    Part.CanCollide = false
+    Part.CanQuery = false
+    Part.CanTouch = false
+    Part.Anchored = true
+    Part.Size = Vector3.new(0.009999999776482582, 0.009999999776482582, 0.009999999776482582)
+    v2.CastOriginPart = Part
+    local LineHandleAdornment = Instance.new("LineHandleAdornment")
+    LineHandleAdornment.Color3 = v2.Color
+    LineHandleAdornment.AlwaysOnTop = true
+    LineHandleAdornment.Transparency = 0.5
+    LineHandleAdornment.Thickness = 2.5
+    LineHandleAdornment.ZIndex = 1
+    LineHandleAdornment.Adornee = Part
+    LineHandleAdornment.Parent = Part
+    v2.LineVisual = LineHandleAdornment
+    local ConeHandleAdornment = Instance.new("ConeHandleAdornment")
+    ConeHandleAdornment.Color3 = v2.Color
+    ConeHandleAdornment.AlwaysOnTop = true
+    ConeHandleAdornment.Transparency = 0.5
+    ConeHandleAdornment.Radius = 0.05
+    ConeHandleAdornment.Height = 0.25
+    ConeHandleAdornment.SizeRelativeOffset = Vector3.new(0, 0, 0.5)
+    ConeHandleAdornment.ZIndex = 1
+    ConeHandleAdornment.Adornee = Part
+    ConeHandleAdornment.Parent = Part
+    v2.ConeVisual = ConeHandleAdornment
+    local BoxHandleAdornment = Instance.new("BoxHandleAdornment")
+    BoxHandleAdornment.Color3 = v2.Color
+    BoxHandleAdornment.AlwaysOnTop = true
+    BoxHandleAdornment.Transparency = 0.5
+    BoxHandleAdornment.ZIndex = 0
+    BoxHandleAdornment.Adornee = Part
+    BoxHandleAdornment.Parent = Part
+    v2.BoxVisual = BoxHandleAdornment
+    local SphereHandleAdornment = Instance.new("SphereHandleAdornment")
+    SphereHandleAdornment.Color3 = v2.Color
+    SphereHandleAdornment.AlwaysOnTop = true
+    SphereHandleAdornment.Transparency = 0.5
+    SphereHandleAdornment.ZIndex = 0
+    SphereHandleAdornment.Adornee = Part
+    SphereHandleAdornment.Parent = Part
+    v2.SphereVisual = SphereHandleAdornment
+    return v2
+end
+
+return v1

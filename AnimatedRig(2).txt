@@ -1,0 +1,42 @@
+-- Path : ReplicatedStorage.Modules.Game.World.AnimatedRig
+-- Script path: ReplicatedStorage.Modules.Game.World.AnimatedRig
+-- Decompile time: 0.93 ms
+
+require(game.ReplicatedStorage.Modules.Core.Util)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Util = require(ReplicatedStorage.Modules.Core.Util)
+require(ReplicatedStorage.Modules.Core.State)
+local StatefulObject = require(ReplicatedStorage.Modules.Core.StatefulObject)
+local u27 = {}
+u27.class = StatefulObject.new_class(function() -- Line: 9
+    return {}
+end, script.Name)
+
+function u27.initiate() end
+
+function u27.loaded() -- Line: 19 -- upvalues: u27 (val), Util (val)
+    u27.class.hook(function(a1) -- Line: 20 -- upvalues: Util (upval)
+        local instance = a1.instance
+        local u6 = Util.wait_for_descendant(instance, "Idle")
+        local v1 = Util.wait_for_descendant(instance, "AnimationController")
+        local u16 = Util.wait_for_descendant(v1, "Animator")
+        local u17 = nil
+        a1.streamed.hook(function(a1) -- Line: 28 -- upvalues: u17 (ref), u16 (val), u6 (val)
+            if not a1 then
+                if u17 then
+                    u17:Stop()
+                    u17:Destroy()
+                    u17 = nil
+                end
+                return
+            end
+            u17 = u17 or u16:LoadAnimation(u6)
+            u17.Priority = Enum.AnimationPriority.Action
+            u17.Looped = true
+            u17:Play()
+        end)
+        return function() end
+    end)
+end
+
+return u27

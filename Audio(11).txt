@@ -1,0 +1,117 @@
+-- Path : Workspace.Vehicles.Stang.Scripts.Client.FX.Audio
+-- Script path: Workspace.Vehicles.Stang.Scripts.Client.FX.Audio
+-- Decompile time: 2.98 ms
+
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local Constants = require(script.Parent.Parent.Parent.Constants)
+local getAverageWheelSlip = require(script.Parent.getAverageWheelSlip)
+local getSuspensionLength = require(script.Parent.getSuspensionLength)
+local playRandomSound = require(script.Parent.playRandomSound)
+local Parent = script.Parent.Parent.Parent.Parent
+local Chassis = Parent.Chassis
+local Motors = Parent.Motors
+local EngineStartupSound = Chassis.EngineStartupSound
+local EngineShutdownSound = Chassis.EngineShutdownSound
+local EngineLoopSound = Chassis.EngineLoopSound
+local DistortionSoundEffect = EngineLoopSound.DistortionSoundEffect
+local TiresLoopSound = Chassis.TiresLoopSound
+local TiresSlidingLoopSound = Chassis.TiresSlidingLoopSound
+local Children = Chassis.SuspensionSounds:GetChildren()
+local Children_2 = Chassis.CollisionSounds:GetChildren()
+local Volume = EngineLoopSound.Volume
+local PlaybackSpeed = EngineLoopSound.PlaybackSpeed
+local Volume_2 = TiresLoopSound.Volume
+local Volume_3 = TiresSlidingLoopSound.Volume
+local u57 = false
+local u58 = 0
+local u60 = getSuspensionLength()
+local u62 = os.clock()
+local u63 = 0
+local Magnitude = Chassis.AssemblyLinearVelocity.Magnitude
+local u67 = os.clock()
+
+local function updateCollisionSounds() -- Line: 52
+    -- upvalues: Chassis (val), Magnitude (ref), u63 (ref), u67 (ref), playRandomSound (val), Children_2 (val)
+    local Magnitude_2 = Chassis.AssemblyLinearVelocity.Magnitude
+    local v1 = math.abs(Magnitude_2 - Magnitude)
+    Magnitude = Magnitude_2
+    u63 = u63 + v1
+    local v2 = os.clock() - u67
+    if v2 < 0.1 then
+        return
+    end
+    u67 = os.clock()
+    local v3 = u63 / v2
+    if v3 > 400 then
+        playRandomSound(Children_2, Chassis, v3 * 0.00125)
+    end
+    u63 = 0
+end
+
+local function updateSuspensionSounds() -- Line: 78
+    -- upvalues: getSuspensionLength (val), u60 (ref), u58 (ref), u62 (ref), playRandomSound (val), Children (val)
+    -- upvalues: Chassis (val)
+    local v1 = getSuspensionLength()
+    local v2 = math.abs(v1 - u60)
+    u60 = v1
+    u58 = u58 + v2
+    local v3 = os.clock() - u62
+    if v3 < 0.1 then
+        return
+    end
+    u62 = os.clock()
+    local v4 = u58 / v3
+    if v4 > 15 then
+        playRandomSound(Children, Chassis, v4 * 0.02)
+    end
+    u58 = 0
+end
+
+local function onHeartbeat(a1) -- Line: 101
+    -- upvalues: Chassis (val), Motors (val), Constants (val), PlaybackSpeed (val), EngineLoopSound (val)
+    -- upvalues: DistortionSoundEffect (val), Volume_2 (val), TiresLoopSound (val), getAverageWheelSlip (val)
+    -- upvalues: Volume_3 (val), TiresSlidingLoopSound (val), updateSuspensionSounds (val), updateCollisionSounds (val)
+    local v1 = math.abs((Chassis.CFrame:VectorToObjectSpace(Chassis.AssemblyLinearVelocity)).Z)
+    local v2 = math.max(v1, (Motors:GetAttribute(Constants.ENGINE_SPEED_ATTRIBUTE)))
+    local v3 = PlaybackSpeed + v2 * 0.0125
+    local v4 = v2 * 0.005
+    EngineLoopSound.PlaybackSpeed = v3
+    DistortionSoundEffect.Level = v4
+    TiresLoopSound.Volume = Volume_2 * v1 * 0.01
+    TiresSlidingLoopSound.Volume = Volume_3 * (getAverageWheelSlip()) * 0.0125
+    updateSuspensionSounds()
+    updateCollisionSounds()
+end
+
+local v1 = {
+    startupEngine = function() -- Line: 132
+        -- upvalues: u57 (ref), EngineStartupSound (val), EngineLoopSound (val), TweenService (val), Volume (val)
+        if u57 then
+            return
+        end
+        u57 = true
+        EngineStartupSound:Play()
+        EngineLoopSound.Volume = 0
+        EngineLoopSound:Play()
+        TweenService:Create(EngineLoopSound, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Volume = Volume}):Play()
+    end,
+    shutdownEngine = function() -- Line: 150 -- upvalues: u57 (ref), EngineShutdownSound (val), EngineLoopSound (val)
+        if not u57 then
+            return
+        end
+        u57 = false
+        EngineShutdownSound:Play()
+        EngineLoopSound:Stop()
+    end,
+    initialize = function() -- Line: 161
+        -- upvalues: TiresLoopSound (val), TiresSlidingLoopSound (val), RunService (val), onHeartbeat (val)
+        TiresLoopSound.Volume = 0
+        TiresSlidingLoopSound.Volume = 0
+        TiresLoopSound:Play()
+        TiresSlidingLoopSound:Play()
+        RunService.Heartbeat:Connect(onHeartbeat)
+    end,
+}
+v1.initialize()
+return v1

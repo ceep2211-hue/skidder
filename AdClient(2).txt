@@ -1,0 +1,13 @@
+-- Path : ReplicatedStorage.Modules.Game.Ads.AdClient
+-- Script path: ReplicatedStorage.Modules.Game.Ads.AdClient
+-- Decompile time: 0.27 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Util = require(ReplicatedStorage.Modules.Core.Util)
+require(ReplicatedStorage.Modules.Core.UI)
+return {
+    initiate = function() end,
+    loaded = function() -- Line: 12 -- upvalues: Util (val)
+        Util.watch_attribute(game.Players.LocalPlayer, "IsWatchingAd", function(a1) end)
+    end,
+}

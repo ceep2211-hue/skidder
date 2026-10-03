@@ -1,0 +1,18 @@
+-- Path : Workspace.Map.Tiles.PrestigeDealerAndHousing.PrestigeCarDealer.Interior.Crates.Car Crate.CrateOptions.Basic
+-- Script path: Workspace.Map.Tiles.PrestigeDealerAndHousing.PrestigeCarDealer.Interior.Crates.Car Crate.CrateOptions.Basic
+-- Decompile time: 0.21 ms
+
+return {
+    crate_name = script.Name,
+    crate_color_type = "Basic",
+    layout_order = 1,
+    items = {
+        {name = "Toilet Car", item_type = "car"},
+        {name = "Mobility Scooter", item_type = "car"},
+        {name = "Forklift", item_type = "car"},
+        {name = "Civic", item_type = "car"},
+        {name = "DirtBike", item_type = "bike"},
+        {name = "Mower", item_type = "car"},
+        {name = "ATV", item_type = "car"},
+    },
+}

@@ -1,0 +1,62 @@
+-- Path : ReplicatedStorage.Modules.Game.Inventory.BeaconUtil
+-- Script path: ReplicatedStorage.Modules.Game.Inventory.BeaconUtil
+-- Decompile time: 1.27 ms
+
+local Signal = require(game.ReplicatedStorage.Modules.Core.Signal)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+return {
+    init_beacon = function(a1) -- Line: 6 -- upvalues: Util (val), Signal (val)
+        local u5 = Util.wait_for_descendant(a1, "TouchPart")
+        local v1 = Signal.new()
+        local v2 = Signal.new()
+        local u12 = {}
+        local u13 = false
+        local u14 = {}
+        local u15 = {is_inside = false, on_enter = v1, on_leave = v2}
+
+        function u15.on_stream() -- Line: 24 -- upvalues: u14 (val)
+            u14.refresh()
+        end
+
+        function u14.refresh() -- Line: 30 -- upvalues: u12 (ref), u5 (val), u13 (ref), u15 (val)
+            for i, j in u12 do
+                j:Disconnect()
+            end
+            u12 = {}
+            table.insert(u12, (u5.Touched:Connect(function(a1) -- Line: 36 -- upvalues: u13 (upval), u15 (upval)
+                if not u13 and not u15.is_inside then
+                    local Character = game.Players.LocalPlayer.Character
+                    if not Character or a1 ~= Character.PrimaryPart then
+                        return
+                    end
+                    local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+                    if Humanoid and not Humanoid:GetAttribute("IsDead") then
+                        u15.is_inside = true
+                        u15.on_enter:Fire()
+                        return
+                    end
+                    return
+                end
+            end)))
+            table.insert(u12, (u5.TouchEnded:Connect(function(a1) -- Line: 50 -- upvalues: u15 (upval), u13 (upval)
+                if not u15.is_inside then
+                    return
+                end
+                local Character = game.Players.LocalPlayer.Character
+                if not Character then
+                    return
+                end
+                if a1 == Character.PrimaryPart then
+                    u13 = true
+                    task.delay(0.5, function() -- Line: 56 -- upvalues: u13 (upval)
+                        u13 = false
+                    end)
+                    u15.is_inside = false
+                    u15.on_leave:Fire()
+                end
+            end)))
+        end
+
+        return u15
+    end,
+}

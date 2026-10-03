@@ -1,0 +1,67 @@
+-- Path : ReplicatedStorage.Modules.Game.Character.AutomaticScalingEnabled
+-- Script path: ReplicatedStorage.Modules.Game.Character.AutomaticScalingEnabled
+-- Decompile time: 1.58 ms
+
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+require(game.ReplicatedStorage.Modules.Game.Ragdoll)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Ragdoll = require(ReplicatedStorage.Modules.Game.Ragdoll)
+return {
+    multi_animation_update = function(a1, a2) -- Line: 17 -- types: a1: table, a2: boolean
+        local Humanoid
+        for i, j in a1 do
+            Humanoid = j:FindFirstChildOfClass("Humanoid")
+            if Humanoid then
+                Humanoid.AutomaticScalingEnabled = a2
+            end
+        end
+    end,
+    multi_reenable_welds = function() -- Line: 27 -- upvalues: Ragdoll (val)
+        local Character = game.Players.LocalPlayer.Character
+        if Character then
+            local Weld
+            if Ragdoll.is_ragdolling.get() then
+                Ragdoll.is_ragdolling.wait()
+            end
+            task.wait(2)
+            for i, j in Character:GetChildren() do
+                if j:IsA("Accessory") then
+                    Weld = (j:FindFirstChild("Handle")):FindFirstChildOfClass("Weld")
+                    if Weld then
+                        Weld.Enabled = false
+                        task.wait()
+                        Weld.Enabled = true
+                    end
+                end
+            end
+        end
+    end,
+    initiate = function() end,
+    loaded = function() -- Line: 53 -- upvalues: Char (val), Net (val), Util (val)
+        Char.hook(function(a1) -- Line: 54 -- upvalues: Net (upval), Util (upval) -- types: a1: userdata
+            local update
+            local Humanoid = a1:WaitForChild("Humanoid")
+
+            function update() -- Line: 57 -- upvalues: Humanoid (val), Net (upval), update (val)
+                local Attribute = Humanoid:GetAttribute("ServerHipHeight")
+                local HipHeight = Humanoid.HipHeight
+                if game.Players.LocalPlayer:GetAttribute("InCharacterCreator") then
+                    return
+                end
+                if Attribute and HipHeight then
+                    if Attribute ~= HipHeight or HipHeight <= 0 then
+                        print("Server value: ", Attribute, " Client value: ", HipHeight)
+                        Net.get("fix_desync_hip_height")
+                        task.wait()
+                        update()
+                    end
+                end
+            end
+
+            Util.watch_property(Humanoid, "HipHeight", update)
+            Util.watch_attribute(Humanoid, "ServerHipHeight", update)
+        end)
+    end,
+}

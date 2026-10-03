@@ -1,0 +1,30 @@
+-- Path : ReplicatedStorage.Modules.Game.CarDealershipRotation
+-- Script path: ReplicatedStorage.Modules.Game.CarDealershipRotation
+-- Decompile time: 0.70 ms
+
+require(game.ReplicatedStorage.Modules.Core.Util)
+local Timer = require(game.ReplicatedStorage.Modules.Core.Timer)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+return {
+    initiate = function() end,
+    loaded = function() -- Line: 14 -- upvalues: State (val), Timer (val), Char (val)
+        local DealershipModel = game.ReplicatedStorage.DealershipModel
+        local u6 = State.new(nil)
+        u6.hook(function(a1, a2) -- Line: 19 -- upvalues: DealershipModel (val)
+            if a2 then
+                a2.Parent = DealershipModel
+            end
+            if a1 then
+                a1.Parent = game.Workspace
+            end
+        end)
+        Timer.new(120, function() -- Line: 28 -- upvalues: u6 (val), Char (upval), DealershipModel (val)
+            local v1 = u6.get()
+            if v1 == nil or 100 < (Char.get_hrp().Position - v1:GetPivot().Position).Magnitude then
+                local Children = DealershipModel:GetChildren()
+                u6.set(Children[math.random(#Children)])
+            end
+        end)
+    end,
+}

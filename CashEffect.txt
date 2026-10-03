@@ -1,0 +1,96 @@
+-- Path : ReplicatedStorage.Modules.Game.CashEffect
+-- Script path: ReplicatedStorage.Modules.Game.CashEffect
+-- Decompile time: 3.10 ms
+
+require(game.ReplicatedStorage.Modules.Core.Net)
+local Audio = require(game.ReplicatedStorage.Modules.Core.Audio)
+local MoneyUI = require(game.ReplicatedStorage.Modules.Game.MoneyUI)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+require(game.ReplicatedStorage.Modules.Core.Char)
+require(game.ReplicatedStorage.Modules.Core.Input)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local v1 = {}
+local LocalPlayer = game.Players.LocalPlayer
+
+function v1.animate_cash_to_ui(a1, a2, a3, a4) -- Line: 19 -- upvalues: UI (val), MoneyUI (val), Util (val), Audio (val)
+    local CurrentCamera = workspace.CurrentCamera
+    local v1, v2 = CurrentCamera:WorldToViewportPoint(a1)
+    local u24 = if v2 then Vector2.new(v1.X, v1.Y) else Vector2.new(CurrentCamera.ViewportSize.X / 2, CurrentCamera.ViewportSize.Y / 2)
+    local v3, v4 = CurrentCamera:WorldToViewportPoint(a1 + a2 * 0.03333333333333333)
+    v3 = if v4 then Vector2.new(v3.X, v3.Y) else u24
+    local u45 = (v3 - u24) / 0.03333333333333333
+    local PlayerGui = a3:FindFirstChildOfClass("PlayerGui")
+    if not PlayerGui then
+        return
+    end
+    local CashGui = PlayerGui:FindFirstChild("CashGui")
+    if not CashGui then
+        CashGui = Instance.new("ScreenGui")
+        CashGui.Name = "CashGui"
+        CashGui.DisplayOrder = -3
+        CashGui.ResetOnSpawn = false
+        CashGui.IgnoreGuiInset = false
+        CashGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+        CashGui.Parent = PlayerGui
+    end
+    local MoneyViewport = UI.get("MoneyViewport")
+    local AbsoluteSize = MoneyViewport.AbsoluteSize
+    local u72 = MoneyViewport.AbsolutePosition + AbsoluteSize / 2
+    local ViewportFrame = Instance.new("ViewportFrame")
+    ViewportFrame.Ambient = Color3.fromRGB(200, 200, 200)
+    ViewportFrame.LightColor = Color3.new(1, 1, 1)
+    ViewportFrame.LightDirection = Vector3.new(-1, -1, -1)
+    ViewportFrame.Size = UDim2.fromOffset(AbsoluteSize.X * 0.7, AbsoluteSize.Y * 0.7)
+    ViewportFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    ViewportFrame.Position = UDim2.new(0, u24.X, 0, u24.Y)
+    ViewportFrame.BackgroundTransparency = 1
+    ViewportFrame.Parent = CashGui
+    local u110 = script.CashPart:Clone()
+    u110.CFrame = CFrame.new(0, 0, 0)
+    u110.Size = Vector3.new(2, math.min(0.8, u110.Size.Y * a4 / 3), 4)
+    u110.Parent = ViewportFrame
+    local Camera = Instance.new("Camera")
+    Camera.CFrame = CFrame.new(Vector3.new(0, 0, -5), (Vector3.new(0, 0, 0)))
+    Camera.Parent = ViewportFrame
+    ViewportFrame.CurrentCamera = Camera
+    local u146 = Vector3.new(math.random(), math.random(), (math.random())) * 2 * 3.141592653589793
+    local u148 = tick()
+    local u149 = false
+    local u155 = MoneyUI.adjust_money_signal:Once(function() -- Line: 99 -- upvalues: u149 (ref)
+        u149 = true
+    end)
+    local u156 = nil
+    local v5 = (game:GetService("RunService")).RenderStepped:Connect(function(a1) -- Line: 105
+        -- upvalues: u148 (val), u72 (val), u24 (ref), u45 (ref), ViewportFrame (val), u146 (val), u110 (val)
+        -- upvalues: u156 (ref), Util (upval), Audio (upval), MoneyUI (upval), u149 (ref), a4 (val), u155 (val)
+        local v1 = tick() - u148
+        local v2 = u72 - u24
+        local Magnitude = v2.Magnitude
+        local v3 = v2.Unit * 4500
+        u45 = u45 + v3 * a1 - u45 * a1 * 6
+        u24 = u24 + u45 * a1
+        ViewportFrame.Position = UDim2.new(0, u24.X, 0, u24.Y)
+        u110.CFrame = (CFrame.Angles(u146.X * v1, u146.Y * v1, u146.Z * v1))
+        if (u24 - u72).Magnitude <= 10 then
+            u156:Disconnect()
+            ViewportFrame:Destroy()
+            if Util.rand(0, 1, true) ~= 0 then
+                Audio.play(88735612457723, Util.rand(0.4, 0.6), Util.rand(0.9, 1.1))
+            else
+                Audio.play(138407188519259, Util.rand(0.4, 0.6), Util.rand(0.9, 1.1))
+            end
+            MoneyUI.apply_effect()
+            if not u149 then
+                MoneyUI.change_money_visual(MoneyUI.visual_money_amount.r + a4, a4)
+                return
+            end
+            u155:Disconnect()
+        end
+    end)
+end
+
+function v1.initiate() end
+
+function v1.loaded() end
+
+return v1

@@ -1,0 +1,20 @@
+-- Path : Workspace.Map.Tiles.GasStationTile.Quick11.Interior.ShelfStockingJob.GoldenBox.AccessCheck
+-- Script path: Workspace.Map.Tiles.GasStationTile.Quick11.Interior.ShelfStockingJob.GoldenBox.AccessCheck
+-- Decompile time: 0.36 ms
+
+require(game.ReplicatedStorage.Modules.Core.Data)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+game:GetService("RunService")
+require(game.ReplicatedStorage.Modules.Game.Skills.SkillsList)
+require(game.ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local v1 = {}
+require(ReplicatedStorage.Modules.Game.Jobs.JobData)
+
+function v1.can_access(a1) -- Line: 12
+    if a1.playtime ~= nil and not (a1.playtime < 500) then
+        return true
+    end
+    return false, "You must have at least 5 minutes playtime to access this box"
+end
+
+return v1

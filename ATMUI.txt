@@ -1,0 +1,270 @@
+-- Path : ReplicatedStorage.Modules.Game.ATM.ATMUI
+-- Script path: ReplicatedStorage.Modules.Game.ATM.ATMUI
+-- Decompile time: 7.56 ms
+
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local Audio = require(game.ReplicatedStorage.Modules.Core.Audio)
+require(game.ReplicatedStorage.Modules.Game.MoneyUI)
+local UIFX = require(game.ReplicatedStorage.Modules.Core.UIFX)
+local Data = require(game.ReplicatedStorage.Modules.Core.Data)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local SubMenuBackground = require(game.ReplicatedStorage.Modules.Game.UI.SubMenuBackground)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local UISlider = require(ReplicatedStorage.Modules.Game.UI.UISlider)
+local ItemUtils = require(ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+local u88 = {}
+u88.enabled = State.new(false)
+u88.transfer_from = State.new("")
+u88.transfer_to = State.new("")
+u88.active_page = State.new(nil)
+u88.valid_hack_tools = {}
+local u102 = nil
+local u103 = {}
+local u104 = nil
+local u105 = nil
+local u106 = nil
+local u107 = nil
+local u108 = nil
+local u109 = nil
+local u110 = nil
+local u111 = nil
+local u112 = nil
+local u113 = nil
+local u114 = nil
+local u115 = nil
+
+local function get_valid_hack_tools() -- Line: 40
+    local v1 = {}
+    for i, j in (game.ReplicatedStorage:WaitForChild("Items")):WaitForChild("misc"):GetChildren() do
+        if j:HasTag("ATMHackTool") then
+            table.insert(v1, j)
+        end
+    end
+    return v1
+end
+
+u88.page_name = State.new(function() -- Line: 50 -- upvalues: u88 (val), u111 (ref)
+    if u88.active_page.get() == u111 then
+        return "Transfer Money"
+    end
+    if u88.transfer_from.get() == "hand" then
+        return "Deposit Money"
+    end
+    return "Withdraw Money"
+end)
+
+local function convert_to_visual_money(a1) -- Line: 61 -- types: a1: number
+    return "$" .. tostring(a1)
+end
+
+function u88.initiate() end
+
+local function init_home_page() -- Line: 69
+    -- upvalues: UI (val), Audio (val), u88 (val), u110 (ref), get_valid_hack_tools (val)
+    UI.on_click("ATMWithdrawButton", function() -- Line: 70 -- upvalues: Audio (upval), u88 (upval), u110 (upval)
+        Audio.play(89483314492121)
+        u88.transfer_from.set("bank")
+        u88.transfer_to.set("hand")
+        u88.active_page.set(u110)
+    end)
+    UI.on_click("ATMDepositButton", function() -- Line: 77 -- upvalues: Audio (upval), u88 (upval), u110 (upval)
+        Audio.play(89483314492121)
+        u88.transfer_from.set("hand")
+        u88.transfer_to.set("bank")
+        u88.active_page.set(u110)
+    end)
+    u88.valid_hack_tools = get_valid_hack_tools()
+end
+
+local function init_transfer_page() -- Line: 87
+    -- upvalues: u102 (ref), UISlider (val), u105 (ref), u88 (val), Data (val), State (val), u106 (ref), u107 (ref)
+    -- upvalues: u108 (ref), Util (val), UI (val), Audio (val), Net (val), u111 (ref)
+    u102 = UISlider.setup_slider(u105, 0)
+    u102.set(0)
+
+    local function u9() -- Line: 91 -- upvalues: u102 (upval), u88 (upval), Data (upval)
+        local v1 = u102.get()
+        local v2 = u88.transfer_from.get()
+        local money = Data.money and Data.money[v2]
+        if not money then
+            return 0
+        end
+        if v1 ~= v1 then
+            v1 = 0
+        end
+        local v3 = math.map(v1, 0, 1, 0, money)
+        if v3 ~= v3 then
+            v3 = 0
+        end
+        return (math.round(v3))
+    end
+
+    local u13 = State.new(u9)
+    u13.hook(function(a1) -- Line: 105 -- upvalues: u106 (upval), u107 (upval), u108 (upval)
+        u106.Text = a1 or 0
+        u107.BackgroundTransparency = if not (a1 <= 0) then 0 else 0.5
+        u108.Visible = a1 <= 0
+    end)
+    Util.watch_property(u106, "Text", function(a1) -- Line: 115 -- upvalues: u88 (upval), Data (upval), u102 (upval), u13 (val), u9 (val) -- types: a1: string
+        local v1 = tonumber(a1) or 0
+        local v2 = u88.transfer_from.get()
+        local money = Data.money and Data.money[v2]
+        if money then
+            local v3 = math.clamp(math.map(v1, 0, money, 0, 1), 0, 1)
+            if v3 ~= v3 then
+                v3 = 0
+            end
+            u102.set(v3, true)
+            u13.set(u9(), true)
+        end
+    end)
+    UI.on_click("ATMActionConfirm", function() -- Line: 127 -- upvalues: u13 (val), Audio (upval), Net (upval), u88 (upval), u111 (upval)
+        if u13.get() <= 0 then
+            return
+        end
+        Audio.play(89483314492121)
+        local v1 = u13.get()
+        local v2 = Net.get("transfer_funds", u88.transfer_from.get(), u88.transfer_to.get(), v1)
+        if not v2 then
+            Audio.error()
+        else
+            Audio.play(132052040942107)
+        end
+        u88.active_page.set(u111)
+        print("Transferred? ", v2, v1)
+    end)
+    u88.active_page.hook(function() -- Line: 149 -- upvalues: u102 (upval)
+        u102.set(0)
+    end)
+end
+
+local function init_hacking_page() -- Line: 155 -- upvalues: Data (val), u88 (val), ItemUtils (val), u112 (ref)
+    Data.hook("items", function() -- Line: 156 -- upvalues: u88 (upval), ItemUtils (upval), Data (upval), u112 (upval)
+        local v1 = false
+        for i, j in u88.valid_hack_tools do
+            if 0 < (ItemUtils.get_item_count(Data, "misc", j.Name)) then
+                v1 = true
+                break
+            end
+        end
+        u112.Visible = v1
+    end)
+end
+
+local function track_leaving_atm_radius() -- Line: 168 -- upvalues: Char (val), Util (val), u88 (val)
+    local Magnitude
+    local v1 = Char.get_hrp()
+    local v2 = Util.get_closest_tagged_instance("ATM", v1.Position)
+    local ExtentsSize = v2:GetExtentsSize()
+    while true do
+        task.wait()
+        if not u88.enabled.get() then
+            break
+        end
+        if not v1 then
+            u88.enabled.set(false)
+            return
+        end
+        Magnitude = (v1.Position - (v2:GetPivot()).Position).Magnitude
+        if ExtentsSize.Magnitude * 1.1 < Magnitude then
+            u88.enabled.set(false)
+            return
+        end
+    end
+end
+
+function u88.loaded() -- Line: 192
+    -- upvalues: u104 (ref), UI (val), u105 (ref), u106 (ref), u107 (ref), u108 (ref), u109 (ref), u110 (ref)
+    -- upvalues: u111 (ref), u112 (ref), u113 (ref), u114 (ref), u115 (ref), u103 (val), init_home_page (val)
+    -- upvalues: init_transfer_page (val), Data (val), u88 (val), ItemUtils (val), SubMenuBackground (val), UIFX (val)
+    -- upvalues: track_leaving_atm_radius (val), Char (val), Util (val)
+    u104 = UI.get("ATM", true)
+    u105 = UI.get("ATMActionSlider", true)
+    u106 = UI.get("ATMCashAmount", true)
+    u107 = UI.get("ATMActionConfirm", true)
+    u108 = UI.get("ATMSelectValidAmount", true)
+    u109 = UI.get("ATMHolder", true)
+    u110 = UI.get("ATMActionPage", true)
+    u111 = UI.get("ATMHomePage", true)
+    u112 = UI.get("ATMHackButton", true)
+    u113 = UI.get("BankBalanceLabel", true)
+    u114 = UI.get("HandBalanceLabel", true)
+    u115 = UI.get("ATMActionPageTitle", true)
+    table.insert(u103, u110)
+    table.insert(u103, u111)
+    init_home_page()
+    init_transfer_page()
+    Data.hook("items", function() -- Line: 156 -- upvalues: u88 (upval), ItemUtils (upval), Data (upval), u112 (upval)
+        local v1 = false
+        for i, j in u88.valid_hack_tools do
+            if 0 < (ItemUtils.get_item_count(Data, "misc", j.Name)) then
+                v1 = true
+                break
+            end
+        end
+        u112.Visible = v1
+    end)
+    u88.enabled.hook(function(a1, a2) -- Line: 213
+        -- upvalues: SubMenuBackground (upval), u88 (upval), u111 (upval), u104 (upval), UIFX (upval), u109 (upval)
+        -- upvalues: track_leaving_atm_radius (upval)
+        if a1 == a2 then
+            return
+        end
+        if not SubMenuBackground.can_open() then
+            u88.enabled.set(false)
+            return
+        end
+        if a1 then
+            u88.active_page.set(u111)
+            SubMenuBackground.open(u88.enabled, u104)
+            UIFX.scale_open(u109)
+            task.spawn(track_leaving_atm_radius)
+            return
+        end
+        SubMenuBackground.close()
+        if u111.Visible then
+            UIFX.scale_close(u109)
+            return
+        end
+        u88.active_page.set(u111)
+        task.defer(function() -- Line: 233 -- upvalues: u88 (upval)
+            u88.enabled.set(true)
+        end)
+    end)
+    Data.hook("money", function(a1) -- Line: 241 -- upvalues: u113 (upval), u114 (upval)
+        local bank = a1.bank
+        local hand = a1.hand
+        u113.Text = ("Bank Balance: %*"):format("$" .. (tostring(bank)))
+        u114.Text = ("Hand Balance: %*"):format("$" .. (tostring(hand)))
+    end)
+    UI.on_click("ATMCloseButton", function() -- Line: 249 -- upvalues: u88 (upval)
+        u88.enabled.set(false)
+    end)
+    u88.active_page.hook(function(a1) -- Line: 253 -- upvalues: u103 (upval)
+        for i, j in u103 do
+            if j ~= a1 then
+                j.Visible = false
+            else
+                j.Visible = true
+            end
+        end
+    end)
+    u88.page_name.hook(function(a1) -- Line: 263 -- upvalues: u115 (upval)
+        u115.Text = a1
+    end)
+    Char.current_hum.hook(function(a1) -- Line: 267 -- upvalues: Util (upval), u88 (upval) -- types: a1: userdata
+        if not a1 then
+            return
+        end
+        Util.watch_attribute(a1, "IsDead", function(a1) -- Line: 270 -- upvalues: u88 (upval)
+            if a1 and u88.enabled.get() then
+                u88.enabled.set(false)
+            end
+        end)
+    end)
+end
+
+return u88

@@ -1,0 +1,670 @@
+-- Path : Players.DyFive_13075.PlayerScripts.PlayerModule.CameraModule.BaseCamera
+-- Script path: Players.DyFive_13075.PlayerScripts.PlayerModule.CameraModule.BaseCamera
+-- Decompile time: 14.88 ms
+
+local CommonUtils = script.Parent.Parent:WaitForChild("CommonUtils")
+local FlagUtil = require(CommonUtils:WaitForChild("FlagUtil"))
+local success, result = pcall(function() -- Line: 15
+    return UserSettings():IsUserFeatureEnabled("UserFixGamepadMaxZoom")
+end)
+local u18 = success and result
+local UserFixCameraOffsetJitter2 = FlagUtil.getUserFlag("UserFixCameraOffsetJitter2")
+Vector2.new(0.2617993877991494, 0)
+Vector2.new(0.7853981633974483, 0)
+Vector2.new(0, 0)
+local CameraUtils = require(script.Parent:WaitForChild("CameraUtils"))
+local ZoomController = require(script.Parent:WaitForChild("ZoomController"))
+local CameraToggleStateController = require(script.Parent:WaitForChild("CameraToggleStateController"))
+local CameraInput = require(script.Parent:WaitForChild("CameraInput"))
+local CameraUI = require(script.Parent:WaitForChild("CameraUI"))
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+game:GetService("StarterGui")
+local VRService = game:GetService("VRService")
+local UserGameSettings = UserSettings():GetService("UserGameSettings")
+local LocalPlayer = Players.LocalPlayer
+local u101 = {}
+u101.__index = u101
+
+function u101.new() -- Line: 72 -- upvalues: u101 (val), LocalPlayer (val), UserGameSettings (val)
+    local u3 = setmetatable({}, u101)
+    u3.gamepadZoomLevels = {0, 10, 20}
+    u3.FIRST_PERSON_DISTANCE_THRESHOLD = 1
+    u3.cameraType = nil
+    u3.cameraMovementMode = nil
+    u3.lastCameraTransform = nil
+    u3.lastUserPanCamera = tick()
+    u3.humanoidRootPart = nil
+    u3.humanoidCache = {}
+    u3.lastSubject = nil
+    u3.lastSubjectPosition = Vector3.new(0, 5, 0)
+    u3.lastSubjectCFrame = CFrame.new(u3.lastSubjectPosition)
+    u3.currentSubjectDistance = math.clamp(12.5, LocalPlayer.CameraMinZoomDistance, LocalPlayer.CameraMaxZoomDistance)
+    u3.inFirstPerson = false
+    u3.inMouseLockedMode = false
+    u3.portraitMode = false
+    u3.isSmallTouchScreen = false
+    u3.resetCameraAngle = true
+    u3.enabled = false
+    u3.PlayerGui = nil
+    u3.cameraChangedConn = nil
+    u3.viewportSizeChangedConn = nil
+    u3.shouldUseVRRotation = false
+    u3.VRRotationIntensityAvailable = false
+    u3.lastVRRotationIntensityCheckTime = 0
+    u3.lastVRRotationTime = 0
+    u3.vrRotateKeyCooldown = {}
+    u3.cameraTranslationConstraints = Vector3.new(1, 1, 1)
+    u3.humanoidJumpOrigin = nil
+    u3.trackingHumanoid = nil
+    u3.cameraFrozen = false
+    u3.subjectStateChangedConn = nil
+    u3.gamepadZoomPressConnection = nil
+    u3.mouseLockOffset = Vector3.new(0, 0, 0)
+    if LocalPlayer.Character then
+        u3:OnCharacterAdded(LocalPlayer.Character)
+    end
+    LocalPlayer.CharacterAdded:Connect(function(a1) -- Line: 137 -- upvalues: u3 (val)
+        u3:OnCharacterAdded(a1)
+    end)
+    if u3.playerCameraModeChangeConn then
+        u3.playerCameraModeChangeConn:Disconnect()
+    end
+    u3.playerCameraModeChangeConn = (LocalPlayer:GetPropertyChangedSignal("CameraMode")):Connect(function() -- Line: 142 -- upvalues: u3 (val)
+        u3:OnPlayerCameraPropertyChange()
+    end)
+    if u3.minDistanceChangeConn then
+        u3.minDistanceChangeConn:Disconnect()
+    end
+    u3.minDistanceChangeConn = (LocalPlayer:GetPropertyChangedSignal("CameraMinZoomDistance")):Connect(function() -- Line: 147 -- upvalues: u3 (val)
+        u3:OnPlayerCameraPropertyChange()
+    end)
+    if u3.maxDistanceChangeConn then
+        u3.maxDistanceChangeConn:Disconnect()
+    end
+    u3.maxDistanceChangeConn = (LocalPlayer:GetPropertyChangedSignal("CameraMaxZoomDistance")):Connect(function() -- Line: 152 -- upvalues: u3 (val)
+        u3:OnPlayerCameraPropertyChange()
+    end)
+    if u3.playerDevTouchMoveModeChangeConn then
+        u3.playerDevTouchMoveModeChangeConn:Disconnect()
+    end
+    u3.playerDevTouchMoveModeChangeConn = (LocalPlayer:GetPropertyChangedSignal("DevTouchMovementMode")):Connect(function() -- Line: 157 -- upvalues: u3 (val)
+        u3:OnDevTouchMovementModeChanged()
+    end)
+    u3:OnDevTouchMovementModeChanged()
+    if u3.gameSettingsTouchMoveMoveChangeConn then
+        u3.gameSettingsTouchMoveMoveChangeConn:Disconnect()
+    end
+    u3.gameSettingsTouchMoveMoveChangeConn = (UserGameSettings:GetPropertyChangedSignal("TouchMovementMode")):Connect(function() -- Line: 163 -- upvalues: u3 (val)
+        u3:OnGameSettingsTouchMovementModeChanged()
+    end)
+    u3:OnGameSettingsTouchMovementModeChanged()
+    UserGameSettings:SetCameraYInvertVisible()
+    UserGameSettings:SetGamepadCameraSensitivityVisible()
+    u3.hasGameLoaded = game:IsLoaded()
+    if not u3.hasGameLoaded then
+        u3.gameLoadedConn = game.Loaded:Connect(function() -- Line: 173 -- upvalues: u3 (val)
+            u3.hasGameLoaded = true
+            u3.gameLoadedConn:Disconnect()
+            u3.gameLoadedConn = nil
+        end)
+    end
+    u3:OnPlayerCameraPropertyChange()
+    return u3
+end
+
+function u101.GetModuleName(a1) -- Line: 185
+    return "BaseCamera"
+end
+
+function u101:OnCharacterAdded(a2) -- Line: 189 -- upvalues: UserInputService (val), LocalPlayer (val)
+    local resetCameraAngle = self.resetCameraAngle or self:GetEnabled()
+    self.resetCameraAngle = resetCameraAngle
+    self.humanoidRootPart = nil
+    if UserInputService.TouchEnabled then
+        self.PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+        for i, v in ipairs(a2:GetChildren()) do
+            if v:IsA("Tool") then
+                self.isAToolEquipped = true
+            end
+        end
+        a2.ChildAdded:Connect(function(a1) -- Line: 199 -- upvalues: self (val)
+            if a1:IsA("Tool") then
+                self.isAToolEquipped = true
+            end
+        end)
+        a2.ChildRemoved:Connect(function(a1) -- Line: 204 -- upvalues: self (val)
+            if a1:IsA("Tool") then
+                self.isAToolEquipped = false
+            end
+        end)
+    end
+end
+
+function u101.GetHumanoidRootPart(a1) -- Line: 212 -- upvalues: LocalPlayer (val)
+    if not a1.humanoidRootPart and LocalPlayer.Character then
+        local Humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if Humanoid then
+            a1.humanoidRootPart = Humanoid.RootPart
+        end
+    end
+    return a1.humanoidRootPart
+end
+
+function u101.GetBodyPartToFollow(a1, a2, a3) -- Line: 224 -- types: a1: table, a2: userdata, a3: boolean
+    if (a2:GetState()) == Enum.HumanoidStateType.Dead then
+        local Parent = a2.Parent
+        if Parent and Parent:IsA("Model") then
+            return Parent:FindFirstChild("Head") or a2.RootPart
+        end
+    end
+    return a2.RootPart
+end
+
+function u101.GetSubjectCFrame(a1) -- Line: 236 -- upvalues: UserFixCameraOffsetJitter2 (val)
+    local lastSubjectCFrame = a1.lastSubjectCFrame
+    local CurrentCamera = workspace.CurrentCamera
+    local CameraSubject = CurrentCamera and CurrentCamera.CameraSubject
+    if not CameraSubject then
+        return lastSubjectCFrame
+    end
+    if CameraSubject:IsA("Humanoid") then
+        local v1 = (CameraSubject:GetState()) == Enum.HumanoidStateType.Dead
+        local CameraOffset = CameraSubject.CameraOffset
+        if UserFixCameraOffsetJitter2 and a1:GetIsMouseLocked() then
+            CameraOffset = Vector3.new()
+        end
+        local RootPart = CameraSubject.RootPart
+        if v1 and CameraSubject.Parent and CameraSubject.Parent:IsA("Model") then
+            RootPart = CameraSubject.Parent:FindFirstChild("Head") or RootPart
+        end
+        if RootPart and RootPart:IsA("BasePart") then
+            local v2
+            if CameraSubject.RigType ~= Enum.HumanoidRigType.R15 then
+                v2 = Vector3.new(0, 1.5, 0)
+            elseif not CameraSubject.AutomaticScalingEnabled then
+                v2 = Vector3.new(0, 2, 0)
+            else
+                v2 = Vector3.new(0, 1.5, 0)
+                local RootPart_2 = CameraSubject.RootPart
+                if RootPart == RootPart_2 then
+                    v2 = v2 + Vector3.new(0, (RootPart_2.Size.Y - 2) / 2, 0)
+                end
+            end
+            if v1 then
+                v2 = Vector3.new(0, 0, 0)
+            end
+            lastSubjectCFrame = RootPart.CFrame * CFrame.new(v2 + CameraOffset)
+        end
+    elseif CameraSubject:IsA("BasePart") then
+        lastSubjectCFrame = CameraSubject.CFrame
+    elseif CameraSubject:IsA("Model") then
+        lastSubjectCFrame = if not CameraSubject.PrimaryPart then CFrame.new() else CameraSubject:GetPrimaryPartCFrame()
+    end
+    if lastSubjectCFrame then
+        a1.lastSubjectCFrame = lastSubjectCFrame
+    end
+    return lastSubjectCFrame
+end
+
+function u101.GetSubjectVelocity(a1) -- Line: 310
+    local CurrentCamera = workspace.CurrentCamera
+    local CameraSubject = CurrentCamera and CurrentCamera.CameraSubject
+    if not CameraSubject then
+        return (Vector3.new(0, 0, 0))
+    end
+    if CameraSubject:IsA("BasePart") then
+        return CameraSubject.Velocity
+    end
+    if CameraSubject:IsA("Humanoid") then
+        local RootPart = CameraSubject.RootPart
+        if RootPart then
+            return RootPart.Velocity
+        end
+        return (Vector3.new(0, 0, 0))
+    end
+    if CameraSubject:IsA("Model") then
+        local PrimaryPart = CameraSubject.PrimaryPart
+        if PrimaryPart then
+            return PrimaryPart.Velocity
+        end
+    end
+    return (Vector3.new(0, 0, 0))
+end
+
+function u101.GetSubjectRotVelocity(a1) -- Line: 339
+    local CurrentCamera = workspace.CurrentCamera
+    local CameraSubject = CurrentCamera and CurrentCamera.CameraSubject
+    if not CameraSubject then
+        return (Vector3.new(0, 0, 0))
+    end
+    if CameraSubject:IsA("BasePart") then
+        return CameraSubject.RotVelocity
+    end
+    if CameraSubject:IsA("Humanoid") then
+        local RootPart = CameraSubject.RootPart
+        if RootPart then
+            return RootPart.RotVelocity
+        end
+        return (Vector3.new(0, 0, 0))
+    end
+    if CameraSubject:IsA("Model") then
+        local PrimaryPart = CameraSubject.PrimaryPart
+        if PrimaryPart then
+            return PrimaryPart.RotVelocity
+        end
+    end
+    return (Vector3.new(0, 0, 0))
+end
+
+function u101.StepZoom(a1) -- Line: 368 -- upvalues: CameraInput (val), ZoomController (val)
+    local currentSubjectDistance = a1.currentSubjectDistance
+    local v1 = CameraInput.getZoomDelta()
+    local v2 = math.abs(v1)
+    if v2 > 0 then
+        v2 = if not (v1 > 0) then math.max((currentSubjectDistance + v1) / (1 - v1 * 0.5), 0.5) else math.max(currentSubjectDistance + v1 * (currentSubjectDistance * 0.5 + 1), a1.FIRST_PERSON_DISTANCE_THRESHOLD)
+        if v2 < a1.FIRST_PERSON_DISTANCE_THRESHOLD then
+            v2 = 0.5
+        end
+        a1:SetCameraToSubjectDistance(v2)
+    end
+    return ZoomController.GetZoomRadius()
+end
+
+function u101:GetSubjectPosition() -- Line: 393 -- upvalues: UserFixCameraOffsetJitter2 (val)
+    local lastSubjectPosition = self.lastSubjectPosition
+    local CurrentCamera = game.Workspace.CurrentCamera
+    local CameraSubject = CurrentCamera and CurrentCamera.CameraSubject
+    if not CameraSubject then
+        return nil
+    end
+    if CameraSubject:IsA("Humanoid") then
+        local v1 = (CameraSubject:GetState()) == Enum.HumanoidStateType.Dead
+        local CameraOffset = CameraSubject.CameraOffset
+        if not UserFixCameraOffsetJitter2 then end
+        local v2 = Vector3.new()
+        local RootPart = CameraSubject.RootPart
+        if v1 and CameraSubject.Parent and CameraSubject.Parent:IsA("Model") then
+            RootPart = CameraSubject.Parent:FindFirstChild("Head") or RootPart
+        end
+        if RootPart and RootPart:IsA("BasePart") then
+            local v3
+            if CameraSubject.RigType ~= Enum.HumanoidRigType.R15 then
+                v3 = Vector3.new(0, 1.5, 0)
+            elseif not CameraSubject.AutomaticScalingEnabled then
+                v3 = Vector3.new(0, 2, 0)
+            else
+                v3 = Vector3.new(0, 1.5, 0)
+                if RootPart == CameraSubject.RootPart then
+                    v3 = v3 + Vector3.new(0, CameraSubject.RootPart.Size.Y / 2 - 1, 0)
+                end
+            end
+            if v1 then
+                v3 = Vector3.new(0, 0, 0)
+            end
+            lastSubjectPosition = RootPart.CFrame.p + RootPart.CFrame:vectorToWorldSpace(v3 + v2)
+        end
+    elseif CameraSubject:IsA("VehicleSeat") then
+        lastSubjectPosition = CameraSubject.CFrame.p + CameraSubject.CFrame:vectorToWorldSpace((Vector3.new(0, 5, 0)))
+    elseif CameraSubject:IsA("SkateboardPlatform") then
+        lastSubjectPosition = CameraSubject.CFrame.p + Vector3.new(0, 5, 0)
+    elseif CameraSubject:IsA("BasePart") then
+        lastSubjectPosition = CameraSubject.CFrame.p
+    elseif CameraSubject:IsA("Model") then
+        lastSubjectPosition = if not CameraSubject.PrimaryPart then CameraSubject:GetModelCFrame().p else CameraSubject:GetPrimaryPartCFrame().p
+    end
+    self.lastSubject = CameraSubject
+    self.lastSubjectPosition = lastSubjectPosition
+    return lastSubjectPosition
+end
+
+function u101:OnViewportSizeChanged() -- Line: 470 -- upvalues: UserInputService (val)
+    local ViewportSize = game.Workspace.CurrentCamera.ViewportSize
+    self.portraitMode = ViewportSize.X < ViewportSize.Y
+    local TouchEnabled = UserInputService.TouchEnabled
+    if TouchEnabled then
+        TouchEnabled = true
+        if not (ViewportSize.Y < 500) then
+            TouchEnabled = ViewportSize.X < 700
+        end
+    end
+    self.isSmallTouchScreen = TouchEnabled
+end
+
+function u101:OnCurrentCameraChanged() -- Line: 478 -- upvalues: UserInputService (val)
+    if UserInputService.TouchEnabled then
+        if self.viewportSizeChangedConn then
+            self.viewportSizeChangedConn:Disconnect()
+            self.viewportSizeChangedConn = nil
+        end
+        local CurrentCamera = game.Workspace.CurrentCamera
+        if CurrentCamera then
+            self:OnViewportSizeChanged()
+            self.viewportSizeChangedConn = (CurrentCamera:GetPropertyChangedSignal("ViewportSize")):Connect(function() -- Line: 489 -- upvalues: self (val)
+                self:OnViewportSizeChanged()
+            end)
+        end
+    end
+    if self.cameraSubjectChangedConn then
+        self.cameraSubjectChangedConn:Disconnect()
+        self.cameraSubjectChangedConn = nil
+    end
+    local CurrentCamera_2 = game.Workspace.CurrentCamera
+    if CurrentCamera_2 then
+        self.cameraSubjectChangedConn = (CurrentCamera_2:GetPropertyChangedSignal("CameraSubject")):Connect(function() -- Line: 503 -- upvalues: self (val)
+            self:OnNewCameraSubject()
+        end)
+        self:OnNewCameraSubject()
+    end
+end
+
+function u101:OnDynamicThumbstickEnabled() -- Line: 510 -- upvalues: UserInputService (val)
+    if UserInputService.TouchEnabled then
+        self.isDynamicThumbstickEnabled = true
+    end
+end
+
+function u101:OnDynamicThumbstickDisabled() -- Line: 516
+    self.isDynamicThumbstickEnabled = false
+end
+
+function u101:OnGameSettingsTouchMovementModeChanged() -- Line: 520
+    -- upvalues: LocalPlayer (val), UserGameSettings (val)
+    if LocalPlayer.DevTouchMovementMode ~= Enum.DevTouchMovementMode.UserChoice then
+        return
+    end
+    if UserGameSettings.TouchMovementMode ~= Enum.TouchMovementMode.DynamicThumbstick
+        and UserGameSettings.TouchMovementMode ~= Enum.TouchMovementMode.Default then
+        self:OnDynamicThumbstickDisabled()
+        return
+    end
+    self:OnDynamicThumbstickEnabled()
+end
+
+function u101:OnDevTouchMovementModeChanged() -- Line: 531 -- upvalues: LocalPlayer (val)
+    if LocalPlayer.DevTouchMovementMode == Enum.DevTouchMovementMode.DynamicThumbstick then
+        self:OnDynamicThumbstickEnabled()
+        return
+    end
+    self:OnGameSettingsTouchMovementModeChanged()
+end
+
+function u101:OnPlayerCameraPropertyChange() -- Line: 539
+    self:SetCameraToSubjectDistance(self.currentSubjectDistance)
+end
+
+function u101.InputTranslationToCameraAngleChange(a1, a2, a3) -- Line: 544
+    return a2 * a3
+end
+
+function u101:GamepadZoomPress() -- Line: 550 -- upvalues: LocalPlayer (val), u18 (ref)
+    local CameraMinZoomDistance
+    local CameraToSubjectDistance = self:GetCameraToSubjectDistance()
+    local CameraMaxZoomDistance = LocalPlayer.CameraMaxZoomDistance
+    for i = #self.gamepadZoomLevels, 1, -1 do
+        CameraMinZoomDistance = self.gamepadZoomLevels[i]
+        if not (CameraMaxZoomDistance < CameraMinZoomDistance) then
+            if CameraMinZoomDistance < LocalPlayer.CameraMinZoomDistance then
+                CameraMinZoomDistance = LocalPlayer.CameraMinZoomDistance
+                if u18 and CameraMaxZoomDistance == CameraMinZoomDistance then
+                    break
+                end
+            end
+            if not u18 and CameraMaxZoomDistance == CameraMinZoomDistance then
+                break
+            end
+            if CameraMinZoomDistance + (CameraMaxZoomDistance - CameraMinZoomDistance) / 2 < CameraToSubjectDistance then
+                self:SetCameraToSubjectDistance(CameraMinZoomDistance)
+                return
+            end
+        end
+    end
+    self:SetCameraToSubjectDistance(self.gamepadZoomLevels[#self.gamepadZoomLevels])
+end
+
+function u101.Enable(a1, a2) -- Line: 595 -- types: a1: table, a2: boolean
+    if a1.enabled ~= a2 then
+        a1.enabled = a2
+        a1:OnEnabledChanged()
+    end
+end
+
+function u101:OnEnabledChanged() -- Line: 603 -- upvalues: CameraInput (val), LocalPlayer (val)
+    if not self.enabled then
+        CameraInput.setInputEnabled(false)
+        if self.gamepadZoomPressConnection then
+            self.gamepadZoomPressConnection:Disconnect()
+            self.gamepadZoomPressConnection = nil
+        end
+        self:Cleanup()
+        return
+    end
+    CameraInput.setInputEnabled(true)
+    self.gamepadZoomPressConnection = CameraInput.gamepadZoomPress:Connect(function() -- Line: 607 -- upvalues: self (val)
+        self:GamepadZoomPress()
+    end)
+    if LocalPlayer.CameraMode == Enum.CameraMode.LockFirstPerson then
+        self.currentSubjectDistance = 0.5
+        if not self.inFirstPerson then
+            self:EnterFirstPerson()
+        end
+    end
+    if self.cameraChangedConn then
+        self.cameraChangedConn:Disconnect()
+        self.cameraChangedConn = nil
+    end
+    self.cameraChangedConn = (workspace:GetPropertyChangedSignal("CurrentCamera")):Connect(function() -- Line: 619 -- upvalues: self (val)
+        self:OnCurrentCameraChanged()
+    end)
+    self:OnCurrentCameraChanged()
+end
+
+function u101:GetEnabled() -- Line: 635
+    return self.enabled
+end
+
+function u101:Cleanup() -- Line: 639 -- upvalues: CameraUtils (val)
+    if self.subjectStateChangedConn then
+        self.subjectStateChangedConn:Disconnect()
+        self.subjectStateChangedConn = nil
+    end
+    if self.viewportSizeChangedConn then
+        self.viewportSizeChangedConn:Disconnect()
+        self.viewportSizeChangedConn = nil
+    end
+    if self.cameraChangedConn then
+        self.cameraChangedConn:Disconnect()
+        self.cameraChangedConn = nil
+    end
+    self.lastCameraTransform = nil
+    self.lastSubjectCFrame = nil
+    CameraUtils.restoreMouseBehavior()
+end
+
+function u101:UpdateMouseBehavior() -- Line: 660
+    -- upvalues: UserGameSettings (val), CameraUI (val), CameraInput (val), CameraToggleStateController (val)
+    -- upvalues: CameraUtils (val)
+    local v1 = UserGameSettings.ComputerMovementMode == Enum.ComputerMovementMode.ClickToMove
+    if self.isCameraToggle and not v1 then
+        CameraUI.setCameraModeToastEnabled(true)
+        CameraInput.enableCameraToggleInput()
+        CameraToggleStateController(self.inFirstPerson)
+        return
+    end
+    CameraUI.setCameraModeToastEnabled(false)
+    CameraInput.disableCameraToggleInput()
+    if not self.inFirstPerson and not self.inMouseLockedMode then
+        CameraUtils.restoreRotationType()
+        if CameraInput.getRotationActivated() then
+            CameraUtils.setMouseBehaviorOverride(Enum.MouseBehavior.LockCurrentPosition)
+            return
+        end
+        CameraUtils.restoreMouseBehavior()
+        return
+    end
+    CameraUtils.setRotationTypeOverride(Enum.RotationType.CameraRelative)
+    CameraUtils.setMouseBehaviorOverride(Enum.MouseBehavior.LockCenter)
+end
+
+function u101.UpdateForDistancePropertyChange(a1) -- Line: 688
+    a1:SetCameraToSubjectDistance(a1.currentSubjectDistance)
+end
+
+function u101:SetCameraToSubjectDistance(a2) -- Line: 694
+    -- upvalues: LocalPlayer (val), ZoomController (val)
+    local currentSubjectDistance = self.currentSubjectDistance
+    if LocalPlayer.CameraMode ~= Enum.CameraMode.LockFirstPerson then
+        local v1 = math.clamp(a2, LocalPlayer.CameraMinZoomDistance, LocalPlayer.CameraMaxZoomDistance)
+        if not (v1 < 1) then
+            self.currentSubjectDistance = v1
+            if self.inFirstPerson then
+                self:LeaveFirstPerson()
+            end
+        else
+            self.currentSubjectDistance = 0.5
+            if not self.inFirstPerson then
+                self:EnterFirstPerson()
+            end
+        end
+    else
+        self.currentSubjectDistance = 0.5
+        if not self.inFirstPerson then
+            self:EnterFirstPerson()
+        end
+    end
+    ZoomController.SetZoomParameters(self.currentSubjectDistance, (math.sign(a2 - currentSubjectDistance)))
+    return self.currentSubjectDistance
+end
+
+function u101.SetCameraType(a1, a2) -- Line: 728
+    a1.cameraType = a2
+end
+
+function u101.GetCameraType(a1) -- Line: 733
+    return a1.cameraType
+end
+
+function u101.SetCameraMovementMode(a1, a2) -- Line: 738
+    a1.cameraMovementMode = a2
+end
+
+function u101.GetCameraMovementMode(a1) -- Line: 742
+    return a1.cameraMovementMode
+end
+
+function u101.SetIsMouseLocked(a1, a2) -- Line: 746 -- types: a1: table, a2: boolean
+    a1.inMouseLockedMode = a2
+end
+
+function u101:GetIsMouseLocked() -- Line: 750
+    return self.inMouseLockedMode
+end
+
+function u101.SetMouseLockOffset(a1, a2) -- Line: 754
+    a1.mouseLockOffset = a2
+end
+
+function u101.GetMouseLockOffset(a1) -- Line: 758
+    return a1.mouseLockOffset
+end
+
+function u101.InFirstPerson(a1) -- Line: 762
+    return a1.inFirstPerson
+end
+
+function u101:EnterFirstPerson() -- Line: 766
+    self.inFirstPerson = true
+    self:UpdateMouseBehavior()
+end
+
+function u101:LeaveFirstPerson() -- Line: 771
+    self.inFirstPerson = false
+    self:UpdateMouseBehavior()
+end
+
+function u101:GetCameraToSubjectDistance() -- Line: 777
+    return self.currentSubjectDistance
+end
+
+function u101.GetMeasuredDistanceToFocus(a1) -- Line: 784
+    local CurrentCamera = game.Workspace.CurrentCamera
+    if CurrentCamera then
+        return (CurrentCamera.CoordinateFrame.p - CurrentCamera.Focus.p).magnitude
+    end
+    return nil
+end
+
+function u101.GetCameraLookVector(a1) -- Line: 792
+    return game.Workspace.CurrentCamera and game.Workspace.CurrentCamera.CFrame.LookVector or Vector3.new(0, 0, 1)
+end
+
+function u101:CalculateNewLookCFrameFromArg(a2, a3) -- Line: 796 -- types: self: table, a2: vector?, a3: userdata
+    local CameraLookVector = a2 or self:GetCameraLookVector()
+    local v1 = math.asin(CameraLookVector.Y)
+    local v2 = Vector2.new(a3.X, (math.clamp(a3.Y, v1 + -1.3962634015954636, v1 + 1.3962634015954636)))
+    local v3 = CFrame.new(Vector3.new(0, 0, 0), CameraLookVector)
+    return CFrame.Angles(0, -v2.X, 0) * v3 * CFrame.Angles(-v2.Y, 0, 0)
+end
+
+function u101.CalculateNewLookVectorFromArg(a1, a2, a3) -- Line: 806 -- types: a1: table, a2: vector?, a3: userdata
+    return a1:CalculateNewLookCFrameFromArg(a2, a3).LookVector
+end
+
+function u101.CalculateNewLookVectorVRFromArg(a1, a2) -- Line: 811 -- types: a1: table, a2: userdata
+    local unit = (((a1:GetSubjectPosition()) - game.Workspace.CurrentCamera.CFrame.p) * Vector3.new(1, 0, 1)).unit
+    local v1 = Vector2.new(a2.X, 0)
+    local v2 = CFrame.new(Vector3.new(0, 0, 0), unit)
+    return ((CFrame.Angles(0, -v1.X, 0) * v2 * CFrame.Angles(-v1.Y, 0, 0)).LookVector * Vector3.new(1, 0, 1)).unit
+end
+
+function u101.GetHumanoid(a1) -- Line: 821 -- upvalues: LocalPlayer (val)
+    local Character = LocalPlayer and LocalPlayer.Character
+    if not Character then
+        return nil
+    end
+    local v1 = a1.humanoidCache[LocalPlayer]
+    if v1 and v1.Parent == Character then
+        return v1
+    end
+    a1.humanoidCache[LocalPlayer] = nil
+    local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+    if Humanoid then
+        a1.humanoidCache[LocalPlayer] = Humanoid
+    end
+    return Humanoid
+end
+
+function u101.GetHumanoidPartToFollow(a1, a2, a3) -- Line: 839 -- types: a1: table, a2: userdata
+    if a3 ~= Enum.HumanoidStateType.Dead then
+        return a2.Torso
+    end
+    local Parent = a2.Parent
+    if Parent then
+        return Parent:FindFirstChild("Head") or a2.Torso
+    end
+    return a2.Torso
+end
+
+function u101:OnNewCameraSubject() -- Line: 853
+    if self.subjectStateChangedConn then
+        self.subjectStateChangedConn:Disconnect()
+        self.subjectStateChangedConn = nil
+    end
+end
+
+function u101.IsInFirstPerson(a1) -- Line: 860
+    return a1.inFirstPerson
+end
+
+function u101.Update(a1, a2) -- Line: 864
+    error("BaseCamera:Update() This is a virtual function that should never be getting called.", 2)
+end
+
+function u101.GetCameraHeight(a1) -- Line: 868 -- upvalues: VRService (val)
+    if VRService.VREnabled and not a1.inFirstPerson then
+        return 0.25881904510252074 * a1.currentSubjectDistance
+    end
+    return 0
+end
+
+return u101

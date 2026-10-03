@@ -1,0 +1,377 @@
+-- Path : ReplicatedStorage.Modules.Core.CatmullRomSpline
+-- Script path: ReplicatedStorage.Modules.Core.CatmullRomSpline
+-- Decompile time: 11.22 ms
+
+local TweenService = game:GetService("TweenService")
+local u5 = {}
+u5.__index = u5
+
+function u5.new(a1, a2) -- Line: 22 -- upvalues: u5 (val) -- types: a1: table?, a2: number?
+    local v1 = setmetatable({}, u5)
+    v1.Tension = a2 or 0.5
+    v1.Points = {}
+    v1.LengthIterations = 1000
+    v1.LengthIndeces = {}
+    v1.Length = 0
+    v1.ConnectedSplines = {}
+    v1._connections = {}
+    if a1 ~= nil then
+        for k, v in pairs(a1) do
+            u5.AddPoint(v1, v)
+        end
+    end
+    return v1
+end
+
+function u5:ChangeTension(a2) -- Line: 50 -- upvalues: u5 (val) -- types: self: table, a2: number
+    if type(a2) ~= "number" then
+        error("CatmullRomSpline:ChangeTension() expected a number as an input, got " .. (tostring(a2)) .. "!")
+    end
+    self.Tension = a2
+    u5.UpdateLength(self)
+end
+
+function u5.ChangeAllSplineTensions(a1, a2) -- Line: 63 -- upvalues: u5 (val) -- types: a1: table, a2: number
+    if type(a2) ~= "number" then
+        error("CatmullRomSpline:ChangeAllSplineTensions() expected a number as an input, got " .. (tostring(a2)) .. "!")
+    end
+    for k, v in pairs((u5.GetSplines(a1))) do
+        v:ChangeTension(a2)
+    end
+end
+
+function u5.AddPoint(a1, a2, a3) -- Line: 79 -- upvalues: u5 (val) -- types: a1: table, a3: number?
+    local Points = a1.Points
+
+    local function checkIfPointsMatch(a1_2) -- Line: 82 -- upvalues: u5 (upval), a1 (val)
+        for k, v in pairs((u5.GetPoints(a1))) do
+            if (typeof(v)) ~= typeof(a1_2) then
+                return false
+            end
+        end
+        return true
+    end
+
+    if #Points ~= 4 then
+        if typeof(a2) ~= "number" then
+            if typeof(a2) ~= "Vector3" then
+                if not a2:IsA("BasePart") then
+                    error("Invalid input received for CatmullRomSpline:AddPoint(), expected Vector3 or BasePart, got " .. (tostring(a2)) .. "!")
+                elseif checkIfPointsMatch(a2.Position) then
+                    table.insert(Points, a3 or #Points + 1, a2)
+                    a1._connections[a2] = (a2.Changed:Connect(function(a1_2) -- Line: 120 -- upvalues: u5 (upval), a1 (val)
+                        if a1_2 == "Position" then
+                            u5.UpdateLength(a1)
+                        end
+                    end))
+                end
+            elseif checkIfPointsMatch(a2) then
+                table.insert(Points, a3 or #Points + 1, a2)
+            end
+        elseif checkIfPointsMatch(a2) then
+            table.insert(Points, a3 or #Points + 1, a2)
+        end
+    else
+        local v1, v2, v3
+        if typeof(a2) == "number" then
+            if checkIfPointsMatch(a2) then
+                v1 = u5.GetSplines(a1)
+                v2 = v1[#v1]
+                v3 = u5.new({v2.Points[2], v2.Points[3], v2.Points[4], a2}, v2.Tension)
+                u5.ConnectSpline(a1, v3)
+            end
+        elseif typeof(a2) ~= "Vector3" then
+            if a2:IsA("BasePart") and checkIfPointsMatch(a2.Position) then
+                v1 = u5.GetSplines(a1)
+                v2 = v1[#v1]
+                v3 = u5.new({v2.Points[2], v2.Points[3], v2.Points[4], a2}, v2.Tension)
+                u5.ConnectSpline(a1, v3)
+            end
+        elseif checkIfPointsMatch(a2) then
+            v1 = u5.GetSplines(a1)
+            v2 = v1[#v1]
+            v3 = u5.new({v2.Points[2], v2.Points[3], v2.Points[4], a2}, v2.Tension)
+            u5.ConnectSpline(a1, v3)
+        end
+    end
+    if #Points == 4 then
+        u5.UpdateLength(a1)
+    end
+end
+
+function u5.RemovePoint(a1, a2) -- Line: 139 -- types: a1: table, a2: number
+    if type(p) ~= "number" then
+        error("CatmullRomSpline:RemovePoint() expected a number as the input, got " .. (tostring(a2)) .. "!")
+    end
+    local v1 = table.remove(a1.Points, a2)
+    if v1 ~= nil and typeof(v1) == "Instance" and v1:IsA("BasePart") and a1._connections[v1] then
+        a1._connections[v1]:Disconnect()
+        a1._connections[v1] = nil
+    end
+end
+
+function u5:GetPoints() -- Line: 159
+    local Position
+    local v1 = {}
+    local v2 = #self.Points
+    local v3 = self
+    for i = 1, v2 do
+        Position = not (typeof(v3.Points[i]) ~= "Instance") and v3.Points[i].Position or v3.Points[i]
+        v1[i] = Position
+    end
+    return v1
+end
+
+function u5.ConnectSpline(a1, a2) -- Line: 176 -- upvalues: u5 (val)
+    local Points = a2.Points
+    local v1 = u5.GetSplines(a1)
+    local Points_2 = v1[#v1].Points
+
+    local function v2(a1_2) -- Line: 184 -- upvalues: u5 (upval), a1 (val)
+        for k, v in pairs((u5.GetPoints(a1))) do
+            if (typeof(v)) ~= typeof(a1_2) then
+                return false
+            end
+        end
+        return true
+    end
+
+    local Position = if typeof(Points_2[1]) == "number" then Points_2[1] or Points_2[1].Position else not (typeof(Points_2[1]) ~= "Vector3") and Points_2[1] or Points_2[1].Position
+    if not v2(Position) then
+        error("Cannot connect the spline because the splines do not have the same types of points!")
+    end
+    if Points_2[2] == Points[1] and Points_2[3] == Points[2] and Points_2[4] == Points[3] then
+        table.insert(a1.ConnectedSplines, a2)
+        u5.UpdateLength(a1)
+        return
+    end
+    error("Cannot connect the spline because the splines do not share 3 common points!")
+end
+
+function u5.GetSplines(a1) -- Line: 207
+    local v1 = {a1}
+    local v2 = #a1.ConnectedSplines
+    for i = 1, v2 do
+        table.insert(v1, a1.ConnectedSplines[i])
+    end
+    return v1
+end
+
+function u5.GetSplineAt(a1, a2) -- Line: 219 -- upvalues: u5 (val) -- types: a1: table, a2: number
+    local v1 = u5.GetSplines(a1)
+
+    local function percentage(a1, a2, a3) -- Line: 224 -- types: a1: number, a2: number, a3: number
+        local v1 = 1 / (a3 - a2)
+        return v1 * a1 - v1 * a3 + 1
+    end
+
+    if type(a2) ~= "number" then
+        error("CatmullRomSpline:GetSplineAt() expected a number as an input, got " .. (tostring(a2)) .. "!")
+    end
+    if #v1 == 1 then
+        return a1, a2
+    end
+    local v2 = 1 / #v1
+    if a2 <= 0 then
+        return a1, a2 * v2
+    end
+    if a2 >= 1 then
+        return v1[#v1], (a2 - 1) * v2 + 1
+    end
+    local v3 = math.ceil(a2 * #v1)
+    local v4 = v1[v3]
+    local v5 = (v3 - 1) * v2
+    local v6 = v3 * v2
+    local v7 = 1 / (v6 - v5)
+    return v4, v7 * a2 - v7 * v6 + 1
+end
+
+function u5.UpdateLength(a1) -- Line: 254 -- upvalues: u5 (val)
+    local Points, v1
+    local v2 = 0
+    local v3 = {}
+    local v4 = a1
+    for k, v in pairs((u5.GetSplines(a1))) do
+        Points = v:GetPoints()
+        if #Points ~= 4 then
+            error("Cannot get the length of the CatmullRomSpline object, expected 4 control points for all splines, got " .. (tostring(#v3)) .. " points for spline " .. (tostring(k)) .. "!")
+        end
+        for k2, i in pairs(Points) do
+            table.insert(v3, i)
+        end
+    end
+    local LengthIterations = v4.LengthIterations
+    local v5 = {}
+    for j = 1, LengthIterations do
+        v1 = u5.CalculateDerivativeAt(v4, (j - 1) / (LengthIterations - 1))
+        v2 = v2 + v1.Magnitude * (1 / LengthIterations)
+        table.insert(v5, {(j - 1) / (LengthIterations - 1), v2, v1})
+    end
+    v4.Length = v2
+    v4.LengthIndeces = v5
+end
+
+function u5.CalculatePositionAt(a1, a2) -- Line: 286 -- upvalues: u5 (val) -- types: a1: table, a2: number
+    if type(a2) ~= "number" then
+        error("The given t value in CatmullRomSpline:CalculatePositionAt() was not between 0 and 1, got " .. (tostring(a2)) .. "!")
+    end
+    local v1, v2 = u5.GetSplineAt(a1, a2)
+    local v3 = v1
+    local v4 = v2
+    v1 = u5.GetPoints(v3)
+    if #v1 ~= 4 then
+        error("The CatmullRomSpline object has an invalid number of points (" .. (tostring(#v1)) .. "), expected 4 points!")
+    end
+    local Tension = v3.Tension
+    local v5 = v1[2]
+    local v6 = Tension * (v1[3] - v1[1])
+    local v7 = 3 * (v1[3] - v1[2]) - Tension * (v1[4] - v1[2]) - 2 * Tension * (v1[3] - v1[1])
+    local v8 = -2 * (v1[3] - v1[2]) + Tension * (v1[4] - v1[2]) + Tension * (v1[3] - v1[1])
+    return v5 + v6 * v4 + v7 * v4 ^ 2 + v8 * v4 ^ 3
+end
+
+function u5.CalculatePositionRelativeToLength(a1, a2) -- Line: 315 -- upvalues: u5 (val) -- types: a1: table, a2: number
+    local v1, v2
+    if type(a2) ~= "number" then
+        error("CatmullRomSpline:CalculatePositionRelativeToLength() only accepts a number, got " .. (tostring(a2)) .. "!")
+    end
+    local Points = a1.Points
+    if #Points ~= 4 then
+        error("The CatmullRomSpline object has an invalid number of points (" .. (tostring(#Points)) .. "), expected 4 points!")
+        return
+    end
+    local Length = a1.Length
+    local LengthIndeces = a1.LengthIndeces
+    local LengthIterations = a1.LengthIterations
+    u5.GetPoints(a1)
+    local v3 = Length * a2
+    local v4 = nil
+    local v5 = nil
+    for i, v in ipairs(LengthIndeces) do
+        if v3 - v[2] <= 0 or i == #LengthIndeces then
+            v4 = i
+            v5 = v
+            break
+        end
+    end
+    if not LengthIndeces[v4 - 1] then
+        v1 = u5.CalculatePositionAt(a1, v5[1])
+        v2 = u5.CalculatePositionAt(a1, LengthIndeces[v4 + 1][1])
+    else
+        v1 = u5.CalculatePositionAt(a1, LengthIndeces[v4 - 1][1])
+        v2 = u5.CalculatePositionAt(a1, v5[1])
+    end
+    local v6 = (v5[2] - v3) / (v2 - v1).Magnitude
+    return v1 + (v2 - v1) * (1 - v6)
+end
+
+function u5.CalculateDerivativeAt(a1, a2) -- Line: 364 -- upvalues: u5 (val) -- types: a1: table, a2: number
+    if type(a2) ~= "number" then
+        error("The given t value in CatmullRomSpline:CalculateDerivativeAt() was not between 0 and 1, got " .. (tostring(a2)) .. "!")
+    end
+    local v1, v2 = u5.GetSplineAt(a1, a2)
+    local v3 = v1
+    local v4 = v2
+    v1 = u5.GetPoints(v3)
+    if #v1 ~= 4 then
+        error("The CatmullRomSpline object has an invalid number of points (" .. (tostring(#v1)) .. "), expected 4 points!")
+    end
+    local Tension = v3.Tension
+    local v5 = Tension * (v1[3] - v1[1])
+    local v6 = 3 * (v1[3] - v1[2]) - Tension * (v1[4] - v1[2]) - 2 * Tension * (v1[3] - v1[1])
+    local v7 = -2 * (v1[3] - v1[2]) + Tension * (v1[4] - v1[2]) + Tension * (v1[3] - v1[1])
+    return v5 + 2 * v6 * v4 + 3 * v7 * v4 ^ 2
+end
+
+function u5.CalculateDerivativeRelativeToLength(a1, a2) -- Line: 392
+    -- upvalues: u5 (val)
+    local v1, v2
+    if type(a2) ~= "number" then
+        error("CatmullRomSpline:CalculateDerivativeRelativeToLength() only accepts a number, got " .. (tostring(a2)) .. "!")
+    end
+    local Points = a1.Points
+    if #Points ~= 4 then
+        error("The CatmullRomSpline object has an invalid number of points (" .. (tostring(#Points)) .. "), expected 4 points!")
+        return
+    end
+    local Length = a1.Length
+    local LengthIndeces = a1.LengthIndeces
+    local LengthIterations = a1.LengthIterations
+    u5.GetPoints(a1)
+    local v3 = Length * a2
+    local v4 = nil
+    local v5 = nil
+    for i, v in ipairs(LengthIndeces) do
+        if v3 - v[2] <= 0 or i == #LengthIndeces then
+            v4 = i
+            v5 = v
+            break
+        end
+    end
+    if not LengthIndeces[v4 - 1] then
+        v1 = u5.CalculateDerivativeAt(a1, v5[1])
+        v2 = u5.CalculateDerivativeAt(a1, LengthIndeces[v4 + 1][1])
+    else
+        v1 = u5.CalculateDerivativeAt(a1, LengthIndeces[v4 - 1][1])
+        v2 = u5.CalculateDerivativeAt(a1, v5[1])
+    end
+    local v6 = (v5[2] - v3) / (v2 - v1).Magnitude
+    return v1 + (v2 - v1) * (1 - v6)
+end
+
+function u5.CreateTween(a1, a2, a3, a4, a5) -- Line: 445
+    -- upvalues: TweenService (val), u5 (val)
+    local result, success
+    if typeof(a2) ~= "Instance" then
+        error("CatmullRomSplineObject:CreateTween() expected an instance as the first input, got " .. (tostring(a2)) .. "!")
+    end
+    if typeof(a3) ~= "TweenInfo" then
+        error("CatmullRomSplineObject:CreateTween() expected a TweenInfo object as the second input, got " .. (tostring(a3)) .. "!")
+    end
+    local v1 = true
+    for k, v in pairs(a4) do
+        success, result = pcall(function() -- Line: 459 -- upvalues: a2 (val), v (val)
+            return a2[v]
+        end)
+        if not success or result == nil then
+            v1 = false
+        end
+    end
+    if not v1 then
+        error("CatmullRomSplineObject:CreateTween() was given properties in the property table that do not belong to the instance!")
+    end
+    local NumberValue = Instance.new("NumberValue")
+    local u58 = TweenService:Create(NumberValue, a3, {Value = 1})
+    local u59 = nil
+    u58.Changed:Connect(function(a1_2) -- Line: 474
+        -- upvalues: u58 (val), u59 (ref), NumberValue (val), a4 (val), a5 (val), u5 (upval), a1 (val), a2 (val)
+        if a1_2 == "PlaybackState" then
+            if u58.PlaybackState == Enum.PlaybackState.Playing then
+                u59 = NumberValue.Changed:Connect(function(a1_2) -- Line: 478 -- upvalues: a4 (upval), a5 (upval), u5 (upval), a1 (upval), a2 (upval)
+                    local v1, v2, v3
+                    local v4 = a1_2
+                    for k, v in pairs(a4) do
+                        v1 = a5 and u5.CalculatePositionRelativeToLength(a1, v4) or u5.CalculatePositionAt(a1, v4)
+                        v2 = a5 and u5.CalculateDerivativeRelativeToLength(a1, v4) or u5.CalculateDerivativeAt(a1, v4)
+                        v3 = not (typeof(v1) ~= "Vector3") and not (typeof(v2) ~= "Vector3") and CFrame.new(v1, v1 + v2) or v1
+                        if typeof(a2[v]) == "number" or typeof(a2[v]) == "CFrame" then
+                            a2[v] = v3
+                        elseif not typeof(a2[v] == "Vector3") then
+                            error("CatmullRomSplineObject:CreateTween() could not set the value of the instance property " .. (tostring(v)) .. ", not a numerical value!")
+                        else
+                            a2[v] = v3.Position
+                        end
+                    end
+                end)
+                return
+            end
+            if u59 ~= nil then
+                u59:Disconnect()
+                u59 = nil
+            end
+        end
+    end)
+    return u58
+end
+
+return u5

@@ -1,0 +1,645 @@
+-- Path : Workspace.Estayarchy3729.Animate
+-- Script path: Workspace.Estayarchy3729.Animate
+-- Decompile time: 15.91 ms
+
+local v1
+local Parent = script.Parent
+local Humanoid = Parent:WaitForChild("Humanoid")
+local u6 = "Standing"
+local success, result = pcall(function() -- Line: 9
+    return UserSettings():IsUserFeatureEnabled("UserNoUpdateOnLoop")
+end)
+local u11 = success and result
+local success_2, result_2 = pcall(function() -- Line: 12
+    return UserSettings():IsUserFeatureEnabled("UserAnimateScaleRun")
+end)
+local u16 = success_2 and result_2
+
+local function getRigScale() -- Line: 15 -- upvalues: u16 (val), Parent (val)
+    if u16 then
+        return Parent:GetScale()
+    end
+    return 1
+end
+
+local ScaleDampeningPercent = script:FindFirstChild("ScaleDampeningPercent")
+local u23 = ""
+local u24 = nil
+local u25 = nil
+local u26 = nil
+local u27 = 1
+local u28 = nil
+local u29 = nil
+local u30 = {}
+local u31 = {}
+local u32 = {
+    idle = {
+        {id = "http://www.roblox.com/asset/?id=507766666", weight = 1},
+        {id = "http://www.roblox.com/asset/?id=507766951", weight = 1},
+        {id = "http://www.roblox.com/asset/?id=507766388", weight = 9},
+    },
+    walk = {{id = "http://www.roblox.com/asset/?id=91882359117967", weight = 10}},
+    run = {{id = "http://www.roblox.com/asset/?id=92918956401010", weight = 10}},
+    swim = {{id = "http://www.roblox.com/asset/?id=507784897", weight = 10}},
+    swimidle = {{id = "http://www.roblox.com/asset/?id=507785072", weight = 10}},
+    jump = {{id = "http://www.roblox.com/asset/?id=116387924658702", weight = 10}},
+    fall = {{id = "http://www.roblox.com/asset/?id=93288232665716", weight = 10}},
+    climb = {{id = "http://www.roblox.com/asset/?id=507765644", weight = 10}},
+    sit = {{id = "http://www.roblox.com/asset/?id=2506281703", weight = 10}},
+    toolslash = {{id = "http://www.roblox.com/asset/?id=522635514", weight = 10}},
+    toollunge = {{id = "http://www.roblox.com/asset/?id=522638767", weight = 10}},
+    wave = {{id = "http://www.roblox.com/asset/?id=507770239", weight = 10}},
+    point = {{id = "http://www.roblox.com/asset/?id=507770453", weight = 10}},
+    dance = {
+        {id = "http://www.roblox.com/asset/?id=507771019", weight = 10},
+        {id = "http://www.roblox.com/asset/?id=507771955", weight = 10},
+        {id = "http://www.roblox.com/asset/?id=507772104", weight = 10},
+    },
+    dance2 = {
+        {id = "http://www.roblox.com/asset/?id=507776043", weight = 10},
+        {id = "http://www.roblox.com/asset/?id=507776720", weight = 10},
+        {id = "http://www.roblox.com/asset/?id=507776879", weight = 10},
+    },
+    dance3 = {
+        {id = "http://www.roblox.com/asset/?id=507777268", weight = 10},
+        {id = "http://www.roblox.com/asset/?id=507777451", weight = 10},
+        {id = "http://www.roblox.com/asset/?id=507777623", weight = 10},
+    },
+    laugh = {{id = "http://www.roblox.com/asset/?id=507770818", weight = 10}},
+    cheer = {{id = "http://www.roblox.com/asset/?id=507770677", weight = 10}},
+}
+local u77 = {
+    wave = false,
+    point = false,
+    dance = true,
+    dance2 = true,
+    dance3 = true,
+    laugh = false,
+    cheer = false,
+}
+math.randomseed(tick())
+
+function findExistingAnimationInSet(a1, a2) -- Line: 113
+    if a1 ~= nil and a2 ~= nil then
+        local count = a1.count
+        for i = 1, count do
+            if a1[i].anim.AnimationId == a2.AnimationId then
+                return i
+            end
+        end
+        return 0
+    end
+    return 0
+end
+
+function configureAnimationSet(a1, a2) -- Line: 127 -- upvalues: u31 (val), u30 (val), Humanoid (val)
+    local count_2
+    if u31[a1] ~= nil then
+        for k, v in pairs(u31[a1].connections) do
+            v:disconnect()
+        end
+    end
+    u31[a1] = {}
+    local v1 = u31[a1]
+    v1.count = 0
+    v1 = u31[a1]
+    v1.totalWeight = 0
+    v1 = u31[a1]
+    v1.connections = {}
+    local u39 = true
+    if not (pcall(function() -- Line: 140 -- upvalues: u39 (ref)
+        local v0, v1
+        u39 = game:GetService("StarterPlayer").AllowCustomAnimations
+        return
+    end)) then
+        u39 = true
+    end
+    local v2 = script:FindFirstChild(a1)
+    if u39 and v2 ~= nil then
+        local Value, Weight, count, v3
+        table.insert(u31[a1].connections, (v2.ChildAdded:connect(function(a1_2) -- Line: 148 -- upvalues: a1 (val), a2 (val)
+            configureAnimationSet(a1, a2)
+        end)))
+        table.insert(u31[a1].connections, (v2.ChildRemoved:connect(function(a1_2) -- Line: 149 -- upvalues: a1 (val), a2 (val)
+            configureAnimationSet(a1, a2)
+        end)))
+        for k2, i in pairs(v2:GetChildren()) do
+            if i:IsA("Animation") then
+                Value = 1
+                Weight = i:FindFirstChild("Weight")
+                if Weight ~= nil then
+                    Value = Weight.Value
+                end
+                v3 = u31[a1]
+                v3.count = u31[a1].count + 1
+                count = u31[a1].count
+                v3 = u31[a1]
+                v3[count] = {}
+                u31[a1][count].anim = i
+                u31[a1][count].weight = Value
+                v3 = u31[a1]
+                v3.totalWeight = u31[a1].totalWeight + u31[a1][count].weight
+                table.insert(u31[a1].connections, (i.Changed:connect(function(a1_2) -- Line: 165 -- upvalues: a1 (val), a2 (val)
+                    configureAnimationSet(a1, a2)
+                end)))
+                table.insert(u31[a1].connections, (i.ChildAdded:connect(function(a1_2) -- Line: 166 -- upvalues: a1 (val), a2 (val)
+                    configureAnimationSet(a1, a2)
+                end)))
+                table.insert(u31[a1].connections, (i.ChildRemoved:connect(function(a1_2) -- Line: 167 -- upvalues: a1 (val), a2 (val)
+                    configureAnimationSet(a1, a2)
+                end)))
+            end
+        end
+    end
+    if u31[a1].count <= 0 then
+        local v4
+        for k3, j in pairs(a2) do
+            v4 = u31[a1]
+            v4[k3] = {}
+            v4 = u31[a1][k3]
+            v4.anim = Instance.new("Animation")
+            u31[a1][k3].anim.Name = a1
+            u31[a1][k3].anim.AnimationId = j.id
+            v4 = u31[a1][k3]
+            v4.weight = j.weight
+            v4 = u31[a1]
+            v4.count = u31[a1].count + 1
+            v4 = u31[a1]
+            v4.totalWeight = u31[a1].totalWeight + j.weight
+        end
+    end
+    for k4, k5 in pairs(u31) do
+        count_2 = k5.count
+        for n = 1, count_2 do
+            if u30[k5[n].anim.AnimationId] == nil then
+                Humanoid:LoadAnimation(k5[n].anim)
+                u30[k5[n].anim.AnimationId] = true
+            end
+        end
+    end
+end
+
+function configureAnimationSetOld(a1, a2) -- Line: 198 -- upvalues: u31 (val), Humanoid (val)
+    local count
+    if u31[a1] ~= nil then
+        for k, v in pairs(u31[a1].connections) do
+            v:disconnect()
+        end
+    end
+    u31[a1] = {}
+    local v1 = u31[a1]
+    v1.count = 0
+    v1 = u31[a1]
+    v1.totalWeight = 0
+    v1 = u31[a1]
+    v1.connections = {}
+    local u39 = true
+    if not (pcall(function() -- Line: 211 -- upvalues: u39 (ref)
+        local v0, v1
+        u39 = game:GetService("StarterPlayer").AllowCustomAnimations
+        return
+    end)) then
+        u39 = true
+    end
+    local v2 = script:FindFirstChild(a1)
+    if u39 and v2 ~= nil then
+        local Weight, v3, v4
+        table.insert(u31[a1].connections, (v2.ChildAdded:connect(function(a1_2) -- Line: 219 -- upvalues: a1 (val), a2 (val)
+            configureAnimationSet(a1, a2)
+        end)))
+        table.insert(u31[a1].connections, (v2.ChildRemoved:connect(function(a1_2) -- Line: 220 -- upvalues: a1 (val), a2 (val)
+            configureAnimationSet(a1, a2)
+        end)))
+        local v5 = 1
+        for k2, i in pairs(v2:GetChildren()) do
+            if i:IsA("Animation") then
+                table.insert(u31[a1].connections, (i.Changed:connect(function(a1_2) -- Line: 224 -- upvalues: a1 (val), a2 (val)
+                    configureAnimationSet(a1, a2)
+                end)))
+                v3 = u31[a1]
+                v3[v5] = {}
+                u31[a1][v5].anim = i
+                Weight = i:FindFirstChild("Weight")
+                if Weight ~= nil then
+                    v4 = u31[a1][v5]
+                    v4.weight = Weight.Value
+                else
+                    v4 = u31[a1][v5]
+                    v4.weight = 1
+                end
+                v4 = u31[a1]
+                v4.count = u31[a1].count + 1
+                v4 = u31[a1]
+                v4.totalWeight = u31[a1].totalWeight + u31[a1][v5].weight
+                v5 = v5 + 1
+            end
+        end
+    end
+    if u31[a1].count <= 0 then
+        local v6
+        for k3, j in pairs(a2) do
+            v6 = u31[a1]
+            v6[k3] = {}
+            v6 = u31[a1][k3]
+            v6.anim = Instance.new("Animation")
+            u31[a1][k3].anim.Name = a1
+            u31[a1][k3].anim.AnimationId = j.id
+            v6 = u31[a1][k3]
+            v6.weight = j.weight
+            v6 = u31[a1]
+            v6.count = u31[a1].count + 1
+            v6 = u31[a1]
+            v6.totalWeight = u31[a1].totalWeight + j.weight
+        end
+    end
+    for k4, k5 in pairs(u31) do
+        count = k5.count
+        for n = 1, count do
+            Humanoid:LoadAnimation(k5[n].anim)
+        end
+    end
+end
+
+function scriptChildModified(a1) -- Line: 263 -- upvalues: u32 (val)
+    local v1 = u32[a1.Name]
+    if v1 ~= nil then
+        configureAnimationSet(a1.Name, v1)
+    end
+end
+
+script.ChildAdded:connect(scriptChildModified)
+script.ChildRemoved:connect(scriptChildModified)
+local Animator = if not Humanoid then nil else Humanoid:FindFirstChildOfClass("Animator")
+if Animator then
+    for i, v in ipairs((Animator:GetPlayingAnimationTracks())) do
+        v:Stop(0)
+        v:Destroy()
+    end
+end
+for k, i2 in pairs(u32) do
+    configureAnimationSet(k, i2)
+end
+local u141 = 0
+local u142 = false
+
+function stopAllAnimations() -- Line: 304
+    -- upvalues: u23 (ref), u77 (val), u142 (ref), u24 (ref), u26 (ref), u25 (ref), u29 (ref), u28 (ref)
+    local v1 = u23
+    if u77[v1] ~= nil and u77[v1] == false then
+        v1 = "idle"
+    end
+    if u142 then
+        v1 = "idle"
+        u142 = false
+    end
+    u23 = ""
+    u24 = nil
+    if u26 ~= nil then
+        u26:disconnect()
+    end
+    if u25 ~= nil then
+        u25:Stop()
+        u25:Destroy()
+        u25 = nil
+    end
+    if u29 ~= nil then
+        u29:disconnect()
+    end
+    if u28 ~= nil then
+        u28:Stop()
+        u28:Destroy()
+        u28 = nil
+    end
+    return v1
+end
+
+function getHeightScale() -- Line: 343 -- upvalues: Humanoid (val), ScaleDampeningPercent (ref), getRigScale (val)
+    if not Humanoid then
+        return getRigScale()
+    end
+    local v1 = Humanoid.HipHeight / 2
+    if ScaleDampeningPercent == nil then
+        ScaleDampeningPercent = script:FindFirstChild("ScaleDampeningPercent")
+    end
+    if ScaleDampeningPercent ~= nil then
+        v1 = 1 + (Humanoid.HipHeight - 2) * ScaleDampeningPercent.Value / 2
+    end
+    return v1
+end
+
+local function rootMotionCompensation(a1) -- Line: 363
+    return a1 * 1.25 / getHeightScale()
+end
+
+local function setRunSpeed(a1) -- Line: 371 -- upvalues: u25 (ref), u28 (ref)
+    local v1 = a1 * 1.25 / getHeightScale()
+    local v2 = 0.0001
+    local v3 = 0.0001
+    local v4 = 1
+    if v1 <= 0.5 then
+        v2 = 1
+        v4 = v1 / 0.5
+    elseif not (v1 < 1) then
+        v4 = v1 / 1
+        v3 = 1
+    else
+        local v5 = (v1 - 0.5) / 0.5
+        v2 = 1 - v5
+        v3 = v5
+    end
+    u25:AdjustWeight(v2)
+    u28:AdjustWeight(v3)
+    u25:AdjustSpeed(v4)
+    u28:AdjustSpeed(v4)
+end
+
+function setAnimationSpeed(a1) -- Line: 397 -- upvalues: u23 (ref), setRunSpeed (val), u27 (ref), u25 (ref)
+    if u23 == "walk" then
+        setRunSpeed(a1)
+        return
+    end
+    if a1 ~= u27 then
+        u25:AdjustSpeed(a1)
+    end
+end
+
+function keyFrameReachedFunc(a1) -- Line: 408
+    -- upvalues: u23 (ref), u11 (val), u28 (ref), u25 (ref), u77 (val), u142 (ref), u27 (ref), Humanoid (val)
+    if a1 == "End" then
+        if u23 ~= "walk" then
+            local v1 = u23
+            if u77[v1] ~= nil and u77[v1] == false then
+                v1 = "idle"
+            end
+            if u142 then
+                if u25.Looped then
+                    return
+                end
+                v1 = "idle"
+                u142 = false
+            end
+            local v2 = u27
+            playAnimation(v1, 0.15, Humanoid)
+            setAnimationSpeed(v2)
+        elseif u11 ~= true then
+            u28.TimePosition = 0
+            u25.TimePosition = 0
+            return
+        else
+            if u28.Looped ~= true then
+                u28.TimePosition = 0
+            end
+            if u25.Looped ~= true then
+                u25.TimePosition = 0
+                return
+            end
+        end
+    end
+end
+
+function rollAnimation(a1) -- Line: 446 -- upvalues: u31 (val)
+    local v1 = math.random(1, u31[a1].totalWeight)
+    local v2 = 1
+    while u31[a1][v2].weight < v1 do
+        v1 = v1 - u31[a1][v2].weight
+        v2 = v2 + 1
+    end
+    return v2
+end
+
+local function switchToAnim(a1, a2, a3, a4) -- Line: 457
+    -- upvalues: u24 (ref), u25 (ref), u28 (ref), u11 (val), u27 (ref), u23 (ref), u26 (ref), u31 (val), u29 (ref)
+    if a1 ~= u24 then
+        if u25 ~= nil then
+            u25:Stop(a3)
+            u25:Destroy()
+        end
+        if u28 ~= nil then
+            u28:Stop(a3)
+            u28:Destroy()
+            if u11 == true then
+                u28 = nil
+            end
+        end
+        u27 = 1
+        u25 = a4:LoadAnimation(a1)
+        u25.Priority = Enum.AnimationPriority.Core
+        u25:Play(a3)
+        u23 = a2
+        u24 = a1
+        if u26 ~= nil then
+            u26:disconnect()
+        end
+        u26 = u25.KeyframeReached:connect(keyFrameReachedFunc)
+        if a2 == "walk" then
+            u28 = a4:LoadAnimation(u31.run[(rollAnimation("run"))].anim)
+            u28.Priority = Enum.AnimationPriority.Core
+            u28:Play(a3)
+            if u29 ~= nil then
+                u29:disconnect()
+            end
+            u29 = u28.KeyframeReached:connect(keyFrameReachedFunc)
+        end
+    end
+end
+
+function playAnimation(a1, a2, a3) -- Line: 508 -- upvalues: u31 (val), switchToAnim (val), u142 (ref)
+    local v1 = rollAnimation(a1)
+    switchToAnim(u31[a1][v1].anim, a1, a2, a3)
+    u142 = false
+end
+
+function playEmote(a1, a2, a3) -- Line: 516 -- upvalues: switchToAnim (val), u142 (ref)
+    switchToAnim(a1, a1.Name, a2, a3)
+    u142 = true
+end
+
+local u166 = ""
+local u167 = nil
+local u168 = nil
+local u169 = nil
+
+function toolKeyFrameReachedFunc(a1) -- Line: 529 -- upvalues: u166 (ref), Humanoid (val)
+    if a1 == "End" then
+        playToolAnimation(u166, 0, Humanoid)
+    end
+end
+
+function playToolAnimation(a1, a2, a3, a4) -- Line: 536
+    -- upvalues: u31 (val), u168 (ref), u167 (ref), u166 (ref), u169 (ref)
+    local v1 = rollAnimation(a1)
+    local anim = u31[a1][v1].anim
+    if u168 ~= anim then
+        if u167 ~= nil then
+            u167:Stop()
+            u167:Destroy()
+            a2 = 0
+        end
+        u167 = a3:LoadAnimation(anim)
+        if a4 then
+            u167.Priority = a4
+        end
+        u167:Play(a2)
+        u166 = a1
+        u168 = anim
+        u169 = u167.KeyframeReached:connect(toolKeyFrameReachedFunc)
+    end
+end
+
+function stopToolAnimations() -- Line: 563 -- upvalues: u166 (ref), u169 (ref), u168 (ref), u167 (ref)
+    local v1 = u166
+    if u169 ~= nil then
+        u169:disconnect()
+    end
+    u166 = ""
+    u168 = nil
+    if u167 ~= nil then
+        u167:Stop()
+        u167:Destroy()
+        u167 = nil
+    end
+    return v1
+end
+
+function onRunning(a1) -- Line: 585 -- upvalues: u16 (val), u142 (ref), Humanoid (val), u6 (ref), u77 (val), u23 (ref)
+    local v1 = if not u16 then 1 else getHeightScale()
+    if (u142 and Humanoid.MoveDirection == Vector3.new(0, 0, 0) and Humanoid.WalkSpeed / v1 or 0.75) * v1 < a1 then
+        playAnimation("walk", 0.2, Humanoid)
+        setAnimationSpeed(a1 / 16)
+        u6 = "Running"
+        return
+    end
+    if u77[u23] == nil and not u142 then
+        playAnimation("idle", 0.2, Humanoid)
+        u6 = "Standing"
+    end
+end
+
+function onDied() -- Line: 603 -- upvalues: u6 (ref)
+    u6 = "Dead"
+end
+
+function onJumping() -- Line: 607 -- upvalues: Humanoid (val), u141 (ref), u6 (ref)
+    playAnimation("jump", 0.1, Humanoid)
+    u141 = 0.31
+    u6 = "Jumping"
+end
+
+function onClimbing(a1) -- Line: 613 -- upvalues: u16 (val), Humanoid (val), u6 (ref)
+    if u16 then
+        a1 = a1 / getHeightScale()
+    end
+    playAnimation("climb", 0.1, Humanoid)
+    setAnimationSpeed(a1 / 5)
+    u6 = "Climbing"
+end
+
+function onGettingUp() -- Line: 623 -- upvalues: u6 (ref)
+    u6 = "GettingUp"
+end
+
+function onFreeFall() -- Line: 627 -- upvalues: u141 (ref), Humanoid (val), u6 (ref)
+    if u141 <= 0 then
+        playAnimation("fall", 0.2, Humanoid)
+    end
+    u6 = "FreeFall"
+end
+
+function onFallingDown() -- Line: 634 -- upvalues: u6 (ref)
+    u6 = "FallingDown"
+end
+
+function onSeated() -- Line: 638 -- upvalues: u6 (ref)
+    u6 = "Seated"
+end
+
+function onPlatformStanding() -- Line: 642 -- upvalues: u6 (ref)
+    u6 = "PlatformStanding"
+end
+
+function onSwimming(a1) -- Line: 649 -- upvalues: u16 (val), Humanoid (val), u6 (ref)
+    if u16 then
+        a1 = a1 / getHeightScale()
+    end
+    if not (a1 > 1) then
+        playAnimation("swimidle", 0.4, Humanoid)
+        u6 = "Standing"
+        return
+    end
+    playAnimation("swim", 0.4, Humanoid)
+    setAnimationSpeed(a1 / 10)
+    u6 = "Swimming"
+end
+
+function animateTool() end
+
+local u186 = 0
+
+function stepAnimate(a1) -- Line: 692 -- upvalues: u186 (ref), u141 (ref), u6 (ref), Humanoid (val)
+    local v1 = a1 - u186
+    u186 = a1
+    if u141 > 0 then
+        u141 = u141 - v1
+    end
+    if u6 == "FreeFall" and u141 <= 0 then
+        playAnimation("fall", 0.2, Humanoid)
+        return
+    end
+    if u6 == "Seated" then
+        playAnimation("sit", 0.5, Humanoid)
+        return
+    end
+    if u6 == "Running" then
+        playAnimation("walk", 0.2, Humanoid)
+        return
+    end
+    if u6 == "Dead" or u6 == "GettingUp" or u6 == "FallingDown" or u6 == "Seated" or u6 == "PlatformStanding" then
+        stopAllAnimations()
+    end
+end
+
+Humanoid.Died:connect(onDied)
+Humanoid.Running:connect(onRunning)
+Humanoid.Jumping:connect(onJumping)
+Humanoid.Climbing:connect(onClimbing)
+Humanoid.GettingUp:connect(onGettingUp)
+Humanoid.FreeFalling:connect(onFreeFall)
+Humanoid.FallingDown:connect(onFallingDown)
+Humanoid.Seated:connect(onSeated)
+Humanoid.PlatformStanding:connect(onPlatformStanding)
+Humanoid.Swimming:connect(onSwimming)
+;(game:GetService("Players")).LocalPlayer.Chatted:connect(function(a1) -- Line: 758 -- upvalues: u6 (ref), u77 (val), Humanoid (val)
+    local v1 = ""
+    if string.sub(a1, 1, 3) == "/e " then
+        v1 = string.sub(a1, 4)
+    elseif string.sub(a1, 1, 7) == "/emote " then
+        v1 = string.sub(a1, 8)
+    end
+    if u6 == "Standing" and u77[v1] ~= nil then
+        playAnimation(v1, 0.1, Humanoid)
+    end
+end)
+local PlayEmote = script:WaitForChild("PlayEmote")
+
+function PlayEmote.OnInvoke(a1) -- Line: 772 -- upvalues: u6 (ref), u77 (val), Humanoid (val), u25 (ref)
+    if u6 ~= "Standing" then
+        return
+    end
+    if u77[a1] ~= nil then
+        playAnimation(a1, 0.1, Humanoid)
+        return true, u25
+    end
+    if typeof(a1) == "Instance" and a1:IsA("Animation") then
+        playEmote(a1, 0.1, Humanoid)
+        return true, u25
+    end
+    return false
+end
+
+if Parent.Parent ~= nil then
+    playAnimation("idle", 0.1, Humanoid)
+end
+while Parent.Parent ~= nil do
+    _, v1 = wait(0.1)
+    stepAnimate(v1)
+end

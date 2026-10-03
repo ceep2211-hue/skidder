@@ -1,0 +1,19 @@
+-- Path : ReplicatedStorage.Modules.Game.Quests.QuestsData.Milestones.BadSignal
+-- Script path: ReplicatedStorage.Modules.Game.Quests.QuestsData.Milestones.BadSignal
+-- Decompile time: 0.16 ms
+
+return {
+    {
+        display_name = "Bad Signal",
+        max_counter = 10,
+        layout_order = 3,
+        requirements = "Shoot All {max_counter} Satellite Dishes",
+        rewards = {
+            {
+                image = "rbxassetid://106880354532086",
+                name = "${amount}",
+                item_info = {name = "Money", item_type = "money", amount = 500},
+            },
+        },
+    },
+}

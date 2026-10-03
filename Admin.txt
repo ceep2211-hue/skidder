@@ -1,0 +1,65 @@
+-- Path : ReplicatedStorage.Modules.Game.Admin
+-- Script path: ReplicatedStorage.Modules.Game.Admin
+-- Decompile time: 1.56 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+require(game.ReplicatedStorage.Modules.Core.UI)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local NotificationsUI = require(ReplicatedStorage.Modules.Game.UI.NotificationsUI)
+local CurrentCamera = workspace.CurrentCamera
+local LocalPlayer = game:GetService("Players").LocalPlayer
+local v1 = {}
+local u41 = nil
+local u42 = false
+
+local function update_spectator() -- Line: 15
+    -- upvalues: u42 (ref), u41 (ref), NotificationsUI (val), LocalPlayer (val), CurrentCamera (val)
+    if not u42 then
+        return
+    end
+    local Value = u41.Value
+    if not Value then
+        NotificationsUI.show_notification("", "player has left the game")
+        return
+    end
+    local Character = Value.Character
+    local v1 = "Spectating " .. Value.Name .. " (" .. Value.DisplayName .. ")"
+    local AdminGui = LocalPlayer.PlayerGui:WaitForChild("AdminGui")
+    AdminGui:FindFirstChild("SpectateTextLabel", true).Text = v1
+    if not Character then
+        NotificationsUI.show_notification("", "player has no character")
+        return
+    end
+    Character:WaitForChild("HumanoidRootPart")
+    CurrentCamera.CameraSubject = (Character:WaitForChild("Humanoid"))
+end
+
+function v1.initiate() -- Line: 43
+    -- upvalues: Net (val), u41 (ref), LocalPlayer (val), update_spectator (val), u42 (ref), CurrentCamera (val)
+    -- upvalues: Char (val)
+    Net.hook("spectate", function(a1) -- Line: 44
+        -- upvalues: u41 (upval), LocalPlayer (upval), update_spectator (upval), u42 (upval)
+        if not u41 then
+            u41 = ((LocalPlayer.PlayerGui:WaitForChild("AdminGui")):WaitForChild("SpectateFrame")):WaitForChild("CurrentlySpectating")
+            local v1 = update_spectator
+            u41.Changed:Connect(v1)
+        end
+        local Character = a1.Character
+        local SpectateFrame_2 = (LocalPlayer.PlayerGui:WaitForChild("AdminGui")):FindFirstChild("SpectateFrame", true)
+        SpectateFrame_2.Visible = true
+        u41.Value = a1
+        update_spectator()
+        u42 = true
+    end)
+    Net.hook("stop_spectate", function() -- Line: 61 -- upvalues: LocalPlayer (upval), u42 (upval), CurrentCamera (upval), Char (upval)
+        local SpectateFrame = (LocalPlayer.PlayerGui:WaitForChild("AdminGui")):FindFirstChild("SpectateFrame", true)
+        SpectateFrame.Visible = false
+        u42 = false
+        CurrentCamera.CameraSubject = Char.get_hum()
+    end)
+end
+
+function v1.loaded() end
+
+return v1

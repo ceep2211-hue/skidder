@@ -1,0 +1,36 @@
+-- Path : ReplicatedStorage.Modules.Game.MultiAnimations.MultiPlayerAnimation.Sequences.baseball_bat
+-- Script path: ReplicatedStorage.Modules.Game.MultiAnimations.MultiPlayerAnimation.Sequences.baseball_bat
+-- Decompile time: 0.37 ms
+
+require(script.Parent.Parent.Types)
+return {
+    unequip_items_while_playing = true,
+    camera = {player = "player_a", attach_to = "HumanoidRootPart", object = script.CamPart},
+    props = {
+        {
+            player = "player_a",
+            attach_from = "RightHand",
+            attach_to = "Handle",
+            model = script.Props.AnimationModel,
+        },
+    },
+    fake_body_parts = {
+        Head = {
+            player = "player_b",
+            attach_from = "UpperTorso",
+            attach_to = "FakeHead",
+            model = script.FakeBodyParts.FakeHead,
+        },
+    },
+    audio_track = {sound_id = 138680482175213, volume = 5},
+    sequences = {
+        player_a = {
+            start_teleport = {offset = CFrame.new(0, 0, 0)},
+            animation = {animation_id = 102273356605688, yield_animation = true},
+        },
+        player_b = {
+            start_teleport = {offset = CFrame.new(0, 0, 0)},
+            animation = {animation_id = 85888191294766, yield_animation = true},
+        },
+    },
+}

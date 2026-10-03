@@ -1,0 +1,123 @@
+-- Path : ReplicatedStorage.Modules.Game.AirDrop
+-- Script path: ReplicatedStorage.Modules.Game.AirDrop
+-- Decompile time: 4.24 ms
+
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local Spring = require(game.ReplicatedStorage.Modules.Core.Spring)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local Audio = require(game.ReplicatedStorage.Modules.Core.Audio)
+local NotificationsUI = require(game.ReplicatedStorage.Modules.Game.UI.NotificationsUI)
+local u50 = {}
+u50.class = StatefulObject.new_class(function() -- Line: 16 -- upvalues: State (val)
+    return {
+        point = State.new(nil),
+        landing_stamp = State.new(0),
+        drop_type = State.new(""),
+        destroy_stamp = State.new(0),
+        opened = State.new(false),
+    }
+end, "AirDrop")
+
+function u50.initiate() -- Line: 26 -- upvalues: Net (val), NotificationsUI (val), Audio (val)
+    Net.hook("airdrop_spawn", function(a1) -- Line: 27 -- upvalues: NotificationsUI (upval), Audio (upval)
+        NotificationsUI.show_notification("rbxassetid://86643878775413", a1, 7)
+        Audio.play(71761566373403, 0.5)
+    end)
+end
+
+function u50.loaded() -- Line: 33 -- upvalues: u50 (val), Util (val), Spring (val), State (val)
+    u50.class.hook(function(a1) -- Line: 34 -- upvalues: Util (upval), Spring (upval), State (upval)
+        local instance = a1.instance
+        local u6 = Util.wait_for_descendant(instance, "BillboardGui")
+        local Parachute = instance:WaitForChild("Parachute")
+        local u15 = Util.wait_for_descendant(instance, "BoxTop")
+        local u20 = Util.wait_for_descendant(instance, "OpenSound")
+        local u25 = Util.wait_for_descendant(instance, "RareItemSound")
+        local CFrameValue = Instance.new("CFrameValue")
+        local u34 = Spring.new(1.1, 0.9, 0)
+        local u43 = (instance:GetPivot()):ToObjectSpace((Parachute:GetPivot()))
+        local u49 = Spring.new(1.4, 0.3, 0)
+        local u58 = (instance:GetPivot()):ToObjectSpace((u15:GetPivot()))
+        local u59 = false
+        local u63 = Util.override(function() -- Line: 49 -- upvalues: a1 (val), u34 (val), CFrameValue (val), Util (upval), u59 (ref)
+            local v1 = a1.states.point.get()
+            if v1 == nil then
+                return
+            end
+            local v2 = math.clamp(a1.states.landing_stamp.get() - os.time(), 0, 90)
+            u34.r = 0
+            CFrameValue.Value = (v1:GetPivot()) + Vector3.new(0, 5, 0) * v2
+            Util.tween(CFrameValue, TweenInfo.new(v2, Enum.EasingStyle.Linear), {Value = v1:GetPivot()}).Completed:Wait()
+            u34.r = 1
+            u59 = true
+        end)
+        u49.hook(function(a1) -- Line: 63 -- upvalues: u15 (val), instance (val), u58 (val)
+            u15:PivotTo((instance:GetPivot()) * u58 * (CFrame.Angles(math.rad(120 * a1), 0, 0)))
+        end)
+        local u74 = math.rad((Util.rand(-30, 30)))
+        local u82 = math.rad((Util.rand(-30, 30)))
+        local u89 = math.rad((Util.rand(-30, 30)))
+        u34.hook(function(a1) -- Line: 69 -- upvalues: Parachute (val), instance (val), u43 (val), u74 (val), u82 (val), u89 (val)
+            for i, j in Parachute:GetDescendants() do
+                if j:IsA("BasePart") then
+                    j.Transparency = a1
+                end
+            end
+            Parachute:PivotTo((instance:GetPivot()) * u43 * CFrame.new(0, -5 * a1, 0) * (CFrame.fromOrientation(u74 * a1, u82 * a1, u89 * a1)))
+        end)
+        local u96 = State.new(0)
+        u96.hook(function(a1) -- Line: 81 -- upvalues: u59 (ref), u6 (val)
+            if not u59 then
+                u6.TimeLeft.Text = ""
+                return
+            end
+            local v1 = math.max(0, a1)
+            local v2 = math.floor(v1 / 60)
+            local v3 = string.format("%02i", (tostring(v1 % 60)))
+            u6.TimeLeft.Text = ("%*:%*"):format(v2, v3)
+        end)
+        CFrameValue.Changed:Connect(function(a1) -- Line: 92 -- upvalues: instance (val)
+            instance:PivotTo(a1)
+        end)
+        return function() -- Line: 96 -- upvalues: instance (val), u96 (val), a1 (val), u63 (val), u20 (val), u25 (val), u49 (val)
+            task.spawn(function() -- Line: 97 -- upvalues: instance (upval), u96 (upval)
+                while instance do
+                    if not instance:IsDescendantOf(game.Workspace) then
+                        break
+                    end
+                    u96.update(function(a1) -- Line: 99
+                        return a1 - 1
+                    end)
+                    task.wait(1)
+                end
+            end)
+            a1.states.point.hook(function() -- Line: 106 -- upvalues: u63 (upval)
+                u63()
+            end)
+            a1.states.landing_stamp.hook(function() -- Line: 109 -- upvalues: u63 (upval)
+                u63()
+            end)
+            a1.states.destroy_stamp.hook(function(a1) -- Line: 112 -- upvalues: u96 (upval)
+                u96.set((math.max(0, a1 - (os.time()))))
+            end)
+            a1.states.opened.hook(function(a1) -- Line: 115 -- upvalues: u20 (upval), u25 (upval), instance (upval), u49 (upval)
+                if not a1 then
+                    u49.r = 0
+                    return
+                end
+                u20:Play()
+                u25:Play()
+                for i, j in instance:GetDescendants() do
+                    if j:IsA("ParticleEmitter") then
+                        j:Emit(10)
+                    end
+                end
+                u49.r = 1
+            end)
+        end
+    end)
+end
+
+return u50

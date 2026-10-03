@@ -1,0 +1,135 @@
+-- Path : ReplicatedStorage.Modules.Core.CFrameSpring
+-- Script path: ReplicatedStorage.Modules.Core.CFrameSpring
+-- Decompile time: 3.58 ms
+
+local Spring = require(game.ReplicatedStorage.Modules.Core.Spring)
+require(game.ReplicatedStorage.Modules.Core.Tbl)
+local v1 = {}
+require(game.ReplicatedStorage.Modules.Core.Util)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local sin = math.sin
+local cos = math.cos
+local Quaternion = require(script.Quaternion)
+State.new(0).hook(function(a1) end)
+
+function v1.new(a1, a2, a3) -- Line: 15
+    -- upvalues: Quaternion (val), Spring (val), State (val)
+    local u4 = a3
+    local v1 = Quaternion.fromCFrame(a3)
+    local u14 = Spring.new_v3(a1, a2, a3.Position)
+    local u24 = Spring.new_v3(a1, a2, (Vector3.new(v1.x, v1.y, v1.z)))
+    local u30 = Spring.new(a1, a2, v1.w)
+
+    local function setCFrame(a1) -- Line: 26
+        -- upvalues: Quaternion (upval), u14 (val), u24 (val), u30 (val)
+        local v1 = Quaternion.fromCFrame(a1)
+        u14.s = a1.Position
+        u24.s = Vector3.new(v1.x, v1.y, v1.z)
+        u30.s = v1.w
+    end
+
+    local function setCFrameVelocity(a1, a2) -- Line: 34
+        -- upvalues: u14 (val), u24 (val), u30 (val)
+        u14.v = a1
+        u24.v = Vector3.new(a2.x, a2.y, a2.z)
+        u30.v = a2.w
+    end
+
+    local function setDamping(a1) -- Line: 40 -- upvalues: u14 (val), u24 (val), u30 (val)
+        u14.d = a1
+        u24.d = a1
+        u30.d = a1
+    end
+
+    local function setFrequency(a1) -- Line: 46 -- upvalues: u14 (val), u24 (val), u30 (val)
+        u14.f = a1
+        u24.f = a1
+        u30.f = a1
+    end
+
+    local function getCFrame() -- Line: 52 -- upvalues: u14 (val), Quaternion (upval), u30 (val), u24 (val)
+        local s = u14.s
+        return Quaternion.new(u30.s, u24.s.X, u24.s.Y, u24.s.Z):toCFrame() + s
+    end
+
+    local function getCFrameVelocity() -- Line: 60 -- upvalues: u14 (val), Quaternion (upval), u30 (val), u24 (val)
+        return u14.v, (Quaternion.new(u30.v, u24.v.X, u24.v.Y, u24.v.Z))
+    end
+
+    local function setTargetCFrame(a1) -- Line: 66
+        -- upvalues: u4 (ref), Quaternion (upval), u14 (val), u30 (val), u24 (val)
+        u4 = a1
+        local v1 = Quaternion.fromCFrame(u4)
+        u14.r = u4.Position
+        local v2 = Quaternion.new(u30.s, u24.s.X, u24.s.Y, u24.s.Z)
+        if v2.w * v1.w + v2.x * v1.x + v2.y * v1.y + v2.z * v1.z < 0 then
+            v1 = Quaternion.new(-v1.w, -v1.x, -v1.y, -v1.z)
+        end
+        u24.r = Vector3.new(v1.x, v1.y, v1.z)
+        u30.r = v1.w
+    end
+
+    return (setmetatable({}, {
+        __index = function(a1_2, a2) -- Line: 121
+            -- upvalues: State (upval), u14 (val), Quaternion (upval), u30 (val), u24 (val), u4 (ref), a1 (val)
+            tick()
+            if a2 == "s" then
+                if State.poll then
+                    State.poll(a1_2)
+                end
+                local s = u14.s
+                return Quaternion.new(u30.s, u24.s.X, u24.s.Y, u24.s.Z):toCFrame() + s
+            end
+            if a2 == "r" then
+                return u4
+            end
+            if a2 == "f" then
+                return a1 / 6.283185307179586
+            end
+            if a2 == "hook" then
+                error("Hook was never implemented nicely so please ask nicely and i will do it")
+                return
+            end
+            if a2 == "is_active" then
+                return false
+            end
+            error(a2 .. " is not a valid member of spring!", 0)
+        end,
+        __newindex = function(a1, a2, a3) -- Line: 141
+            -- upvalues: Quaternion (upval), u14 (val), u24 (val), u30 (val), setTargetCFrame (val)
+            tick()
+            if a2 == "s" then
+                local v1 = Quaternion.fromCFrame(a3)
+                u14.s = a3.Position
+                u24.s = Vector3.new(v1.x, v1.y, v1.z)
+                u30.s = v1.w
+                return
+            end
+            if a2 == "v" then
+                u14.v = a3
+                u24.v = Vector3.new((nil).x, (nil).y, (nil).z)
+                u30.v = (nil).w
+                return
+            end
+            if a2 == "r" then
+                setTargetCFrame(a3)
+                return
+            end
+            if a2 == "d" then
+                u14.d = a3
+                u24.d = a3
+                u30.d = a3
+                return
+            end
+            if a2 ~= "f" then
+                error(a2 .. " is not a valid member of spring!", 0)
+                return
+            end
+            u14.f = a3
+            u24.f = a3
+            u30.f = a3
+        end,
+    }))
+end
+
+return v1

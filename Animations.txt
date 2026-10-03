@@ -1,0 +1,48 @@
+-- Path : ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator.Animations
+-- Script path: ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator.Animations
+-- Decompile time: 1.09 ms
+
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local Timer = require(game.ReplicatedStorage.Modules.Core.Timer)
+local u14 = {}
+local u15 = {125818145556456, 120485295994304, 75428988336006}
+
+function u14.stop() -- Line: 10 -- upvalues: u14 (val), u15 (val), Char (val)
+    local v1
+    u14.idle.stop()
+    for i, j in u15 do
+        v1 = Char.get_loaded_anim(j)
+        if v1 then
+            v1:Stop()
+        end
+    end
+    Char.get_loaded_anim(107361797593334):Stop()
+end
+
+function u14.shadow_box() -- Line: 21 -- upvalues: Char (val)
+    local v1 = Char.anim(script.Parent.IdleAnimations.Shuffle, false, Enum.AnimationPriority.Action)
+    if v1.Length == 0 then
+        local v2 = tick() + 3
+        repeat
+            task.wait()
+        until 0 < v1.Length or v2 < tick()
+    end
+    v1:Play()
+    return v1
+end
+
+function u14.start() -- Line: 33 -- upvalues: Char (val), u14 (val)
+    for k, v in pairs(Char.get_hum():GetPlayingAnimationTracks()) do
+        v:Stop()
+    end
+    Char.get():WaitForChild("Animate").idle.Animation1.AnimationId = ("rbxassetid://%*"):format(107361797593334)
+    Char.anim(107361797593334):Play()
+    u14.idle.start()
+end
+
+u14.idle = Timer.new(8, function() -- Line: 45 -- upvalues: u15 (val), Char (val)
+    if #u15 > 0 then
+        Char.anim(u15[math.random(1, #u15)]):Play()
+    end
+end, true)
+return u14

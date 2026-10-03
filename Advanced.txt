@@ -1,0 +1,32 @@
+-- Path : Workspace.Map.Tiles.HighEndHouseTile.House.HighEndhouse.PersonalWeaponCrate.MansionUpgrade.Crates.Personal Weapon Crate.CrateOptions.Advanced
+-- Script path: Workspace.Map.Tiles.HighEndHouseTile.House.HighEndhouse.PersonalWeaponCrate.MansionUpgrade.Crates.Personal Weapon Crate.CrateOptions.Advanced
+-- Decompile time: 0.47 ms
+
+return {
+    crate_name = script.Name,
+    crate_color_type = "Advanced",
+    layout_order = 2,
+    price = 10,
+    items = {
+        {name = "Metal Pipe", item_type = "melee"},
+        {name = "Rolling Pin", item_type = "melee"},
+        {name = "Wooden Board", item_type = "melee"},
+        {name = "Glass", item_type = "throwable", amount = 5},
+        {name = "Bottle", item_type = "throwable", amount = 5},
+        {name = "Jar", item_type = "throwable", amount = 5},
+        {name = "Mug", item_type = "throwable", amount = 5},
+        {name = "Brick", item_type = "throwable", amount = 5},
+        {name = "Bowling Pin", item_type = "throwable", amount = 5},
+        {name = "Dumbbell Plate", item_type = "throwable", amount = 5},
+        {name = "Fire Cracker", item_type = "throwable", amount = 5},
+        {name = "Baseball Bat", item_type = "melee"},
+        {name = "Tire Iron", item_type = "melee"},
+        {name = "Shank", item_type = "melee"},
+        {name = "Chair Leg", item_type = "melee"},
+        {name = "Nailed Wooden Board", item_type = "melee"},
+        {name = "Rusty Shovel", item_type = "melee"},
+        {name = "Hammer", item_type = "melee"},
+        {name = "C9", item_type = "gun"},
+        {name = "G3", item_type = "gun"},
+    },
+}

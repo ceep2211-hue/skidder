@@ -1,0 +1,54 @@
+-- Path : ReplicatedStorage.Modules.Game.CharacterCreator.BarberSeat
+-- Script path: ReplicatedStorage.Modules.Game.CharacterCreator.BarberSeat
+-- Decompile time: 1.49 ms
+
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local u12 = {}
+local State = require(ReplicatedStorage.Modules.Core.State)
+local StatefulObject = require(ReplicatedStorage.Modules.Core.StatefulObject)
+require(ReplicatedStorage.Modules.Core.Util)
+local LocalPlayer = game:GetService("Players").LocalPlayer
+local CharacterCreator = require(ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator)
+local all_item_types = (require(ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator.CharacterCreatorTypes)).all_item_types
+u12.class = StatefulObject.new_class(function() -- Line: 15 -- upvalues: State (val)
+    return {seated = State.new(false)}
+end, script.Name)
+
+function u12.initiate() end
+
+function u12.loaded() -- Line: 27 -- upvalues: u12 (val), all_item_types (val), Char (val), CharacterCreator (val)
+    u12.class.hook(function(a1) -- Line: 29 -- upvalues: all_item_types (upval), Char (upval), CharacterCreator (upval)
+        local instance = a1.instance
+        local u2 = {}
+        table.insert(u2, all_item_types.hair)
+        ;(instance:GetPropertyChangedSignal("Occupant")):Connect(function() -- Line: 35 -- upvalues: instance (val), Char (upval), a1 (val)
+            local Occupant = instance.Occupant
+            local v1 = Char.current_hum.get()
+            if v1 and Occupant == v1 then
+                a1.states.seated.set(true)
+                return
+            end
+            a1.states.seated.set(false)
+        end)
+        return function() -- Line: 47 -- upvalues: a1 (val), Char (upval), CharacterCreator (upval), u2 (val), instance (val)
+            a1.states.seated.hook(function(a1) -- Line: 48 -- upvalues: Char (upval), CharacterCreator (upval), u2 (upval)
+                if a1 then
+                    Char.get_hum():UnequipTools()
+                    CharacterCreator.display_paid_items.set(true)
+                    CharacterCreator.is_a_world_creator.set(true)
+                    CharacterCreator.start(u2)
+                end
+            end)
+            local Occupant = instance.Occupant
+            local v1 = Char.current_hum.get()
+            if v1 and Occupant == v1 then
+                a1.states.seated.set(true)
+                return
+            end
+            a1.states.seated.set(false)
+        end
+    end)
+end
+
+return u12

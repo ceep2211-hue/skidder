@@ -1,0 +1,27 @@
+-- Path : Workspace.Map.Tiles.HighEndHouseTile.House.HighEndhouse.PersonalWeaponCrate.MansionUpgrade.Crates.Personal Weapon Crate.CrateOptions.Basic
+-- Script path: Workspace.Map.Tiles.HighEndHouseTile.House.HighEndhouse.PersonalWeaponCrate.MansionUpgrade.Crates.Personal Weapon Crate.CrateOptions.Basic
+-- Decompile time: 0.49 ms
+
+return {
+    crate_name = script.Name,
+    crate_color_type = "Basic",
+    layout_order = 1,
+    price = 10,
+    items = {
+        {name = "Pool Cue", item_type = "melee"},
+        {name = "Metal Pipe", item_type = "melee"},
+        {name = "Rolling Pin", item_type = "melee"},
+        {name = "Wooden Board", item_type = "melee"},
+        {name = "Glass", item_type = "throwable", amount = 5},
+        {name = "Bottle", item_type = "throwable", amount = 5},
+        {name = "Jar", item_type = "throwable", amount = 5},
+        {name = "Mug", item_type = "throwable", amount = 5},
+        {name = "Bowling Pin", item_type = "throwable", amount = 10},
+        {name = "Spray Can", item_type = "throwable", amount = 5},
+        {name = "Bike Lock", item_type = "melee"},
+        {name = "Soda Can", item_type = "throwable", amount = 5},
+        {name = "Rock", item_type = "throwable", amount = 5},
+        {name = "Fire Cracker", item_type = "throwable", amount = 5},
+        {name = "Shank", item_type = "melee"},
+    },
+}

@@ -1,0 +1,237 @@
+-- Path : ReplicatedStorage.Modules.Game.UI.AwardUI
+-- Script path: ReplicatedStorage.Modules.Game.UI.AwardUI
+-- Decompile time: 6.91 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Signal = require(ReplicatedStorage.Modules.Core.Signal)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+require(game.ReplicatedStorage.Modules.Core.List)
+local Audio = require(game.ReplicatedStorage.Modules.Core.Audio)
+require(game.ReplicatedStorage.Modules.Game.Keybinds)
+local SubMenuBackground = require(game.ReplicatedStorage.Modules.Game.UI.SubMenuBackground)
+local RunService = game:GetService("RunService")
+local u65 = {}
+local u68 = State.new(false)
+local u71 = State.new(nil)
+local u74 = State.new(false)
+local u75 = {}
+local u76 = {}
+local u77 = {}
+local u78 = 0
+local u79 = false
+u65.can_click = State.new(false)
+u65.animating_awards = u68
+u65.on_finished_animating_awards = Signal.new()
+
+function u65.award_items(a1) -- Line: 29 -- upvalues: u75 (val), u68 (val)
+    table.insert(u75, a1)
+    if not u68.get() then
+        u68.set(true)
+    end
+end
+
+function u65.loaded() -- Line: 39
+    -- upvalues: UI (val), Util (val), u78 (ref), u71 (val), u68 (val), u79 (ref), Audio (val), u77 (ref)
+    -- upvalues: SubMenuBackground (val), u76 (ref), u74 (val), RunService (val), u65 (val), u75 (val)
+    local Award = UI.get("Award")
+    local BasicRing = UI.get("BasicRing")
+    local GlowRing = UI.get("GlowRing")
+    local Holder = Award.Holder
+    local Frame = Holder.Frame
+    local Item = Frame.Item
+    local Image = Item.Image
+    local Amount = Item.Amount
+    local Name = Item:FindFirstChild("Name")
+    local BackgroundGlow = Frame.BackgroundGlow
+    local AwardedItems = Frame.AwardedItems
+    local AwardsOkButton = Frame.AwardsOkButton
+    local Size = BasicRing.Size
+    local u34 = UDim2.new(Size.X.Scale * 1.5, 0, Size.Y.Scale * 1.5, 0)
+    local Size_2 = GlowRing.Size
+    local u39 = Util.override(function(a1) -- Line: 84
+        -- upvalues: Item (val), Image (val), Name (val), Amount (val), Util (upval), u78 (upval), BasicRing (val)
+        -- upvalues: u34 (val), GlowRing (val), Size (val), u71 (upval)
+        Item.Visible = true
+        Item.Size = UDim2.new(2, 0, 2, 0)
+        Image.Image = a1.image
+        Name.Text = a1.name
+        local v1 = a1.amount and ("x%*"):format(a1.amount) or tostring(a1.description)
+        Amount.Text = v1
+        v1 = true
+        if a1.amount == nil then
+            v1 = a1.description ~= nil
+        end
+        Amount.Visible = v1
+        Image.ImageTransparency = 0
+        Name.TextTransparency = 0
+        Name.UIStroke.Transparency = 0
+        Amount.TextTransparency = 0
+        Amount.UIStroke.Transparency = 0
+        Util.tween(Item, TweenInfo.new(0.8, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out), {Size = UDim2.new(0.75, 0, 0.75, 0)})
+        task.wait(0.25)
+        local PitchShiftSoundEffect = script.ItemHit.PitchShiftSoundEffect
+        PitchShiftSoundEffect.Octave = math.min(1.5, (math.pow(2, (u78 - 1) / 12)))
+        script.ItemHit:Play()
+        Util.tween(BasicRing, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = u34})
+        Util.tween(GlowRing, TweenInfo.new(0.4, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {ImageTransparency = 0})
+        task.wait(0.4)
+        task.wait(1)
+        Util.tween(BasicRing, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Size = Size})
+        Util.tween(GlowRing, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {ImageTransparency = 1})
+        task.wait(0.1)
+        Util.tween(Item, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Size = UDim2.new(2, 0, 2, 0)})
+        Util.tween(Image, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {ImageTransparency = 1})
+        Util.tween(Name, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {TextTransparency = 1})
+        Util.tween(Name.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Transparency = 1})
+        Util.tween(Amount, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {TextTransparency = 1})
+        Util.tween(Amount.UIStroke, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Transparency = 1})
+        task.wait(0.7)
+        u71.set(nil)
+    end)
+
+    local function display_final_items() -- Line: 149
+        -- upvalues: u68 (upval), u79 (upval), Audio (upval), Util (upval), BasicRing (val), BackgroundGlow (val)
+        -- upvalues: AwardedItems (val), u77 (upval), AwardsOkButton (val), SubMenuBackground (upval)
+        local ImageLabel
+        if not u68.get() then
+            return
+        end
+        u79 = true
+        script.BackgroundMusic:Stop()
+        script.Cheer.Volume = 0.8
+        task.delay(4, function() -- Line: 156 -- upvalues: Audio (upval)
+            Audio.ease(script.Cheer, 0, 3)
+        end)
+        script.Cheer:Play()
+        Util.tween(BasicRing, TweenInfo.new(0.3), {ImageTransparency = 1})
+        Util.tween(BackgroundGlow, TweenInfo.new(0.3), {ImageTransparency = 1})
+        task.wait(0.3)
+        for i, j in AwardedItems:GetChildren() do
+            if j:IsA("ImageLabel") then
+                j:Destroy()
+            end
+        end
+        for k, n in u77 do
+            ImageLabel = Instance.new("ImageLabel")
+            ImageLabel.Size = UDim2.new(0.5, 0, 0.5, 0)
+            ImageLabel.BackgroundTransparency = 1
+            ImageLabel.Image = n.image
+            ImageLabel.Parent = AwardedItems
+        end
+        AwardedItems.Visible = true
+        AwardsOkButton.Visible = true
+        SubMenuBackground.override_closing.set(false)
+    end
+
+    u71.hook(function(a1, a2) -- Line: 186
+        -- upvalues: u39 (val), Item (val), u76 (upval), u78 (upval), u77 (upval), u71 (upval)
+        -- upvalues: display_final_items (val)
+        if a1 then
+            task.wait()
+            u39(a1)
+            return
+        end
+        Item.Visible = false
+        if not (#u76 > 0) then
+            display_final_items()
+            return
+        end
+        u78 = u78 + 1
+        local v1 = table.remove(u76)
+        table.insert(u77, v1)
+        u71.set(v1)
+    end)
+    local u45 = nil
+    u74.hook(function(a1) -- Line: 209 -- upvalues: u45 (ref), RunService (upval), BackgroundGlow (val)
+        if a1 then
+            u45 = RunService.Heartbeat:Connect(function(a1) -- Line: 211 -- upvalues: BackgroundGlow (upval)
+                local v1 = BackgroundGlow
+                v1.Rotation = v1.Rotation - 45 * a1
+            end)
+            return
+        end
+        if u45 then
+            u45:Disconnect()
+            u45 = nil
+        end
+    end)
+
+    local function animate_open() -- Line: 220
+        -- upvalues: BasicRing (val), Size (val), GlowRing (val), Size_2 (val), BackgroundGlow (val), u74 (upval)
+        -- upvalues: Util (upval), u78 (upval), u76 (upval), u77 (upval), u71 (upval)
+        task.wait(0.5)
+        BasicRing.Visible = true
+        BasicRing.ImageTransparency = 1
+        BasicRing.Size = Size
+        GlowRing.Visible = true
+        GlowRing.ImageTransparency = 1
+        GlowRing.Size = Size_2
+        BackgroundGlow.Visible = true
+        BackgroundGlow.ImageTransparency = 1
+        u74.set(true)
+        Util.tween(BasicRing, TweenInfo.new(0.3), {ImageTransparency = 0})
+        Util.tween(GlowRing, TweenInfo.new(0.3), {ImageTransparency = 0})
+        Util.tween(BackgroundGlow, TweenInfo.new(0.3), {ImageTransparency = 0})
+        task.wait(0.3)
+        u78 = 1
+        local v1 = table.remove(u76)
+        table.insert(u77, v1)
+        u71.set(v1)
+    end
+
+    local function animate_awards() -- Line: 249
+        -- upvalues: u65 (upval), SubMenuBackground (upval), UI (upval), Holder (val), animate_open (val)
+        script.BackgroundMusic:Play()
+        u65.can_click.set(true)
+        SubMenuBackground.open(u65.can_click, UI.get("Award"))
+        SubMenuBackground.override_closing.set(true)
+        Holder.Visible = true
+        Holder.BackgroundTransparency = 1
+        animate_open()
+    end
+
+    u65.can_click.hook(function(a1, a2) -- Line: 263
+        -- upvalues: u79 (upval), AwardedItems (val), AwardsOkButton (val), Util (upval), Holder (val), u68 (upval)
+        -- upvalues: u75 (upval), u65 (upval), u71 (upval), u76 (upval)
+        if a1 == false and a2 then
+            if u79 then
+                AwardedItems.Visible = false
+                AwardsOkButton.Visible = false
+                Util.tween(Holder, TweenInfo.new(0.5), {BackgroundTransparency = 1})
+                task.wait(0.5)
+                Holder.Visible = false
+                u68.set(false)
+                if #u75 > 0 then
+                    u68.set(true)
+                end
+                u65.on_finished_animating_awards:Fire()
+                return
+            end
+            if u71.get() and #u76 > 0 then
+                u71.set(nil)
+            end
+            u65.can_click.set(true)
+        end
+    end)
+    u68.hook(function(a1, a2) -- Line: 299
+        -- upvalues: u79 (upval), u76 (upval), u75 (upval), u77 (upval), AwardedItems (val), AwardsOkButton (val)
+        -- upvalues: animate_awards (val), SubMenuBackground (upval)
+        if a1 and not a2 then
+            u79 = false
+            u76 = table.remove(u75)
+            u77 = {}
+            AwardedItems.Visible = false
+            AwardsOkButton.Visible = false
+            animate_awards()
+            return
+        end
+        if a2 then
+            SubMenuBackground.close()
+        end
+    end)
+    SubMenuBackground.enabled.hook(function(a1) end)
+end
+
+return u65

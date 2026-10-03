@@ -1,0 +1,43 @@
+-- Path : ReplicatedStorage.Modules.Core.Audio
+-- Script path: ReplicatedStorage.Modules.Core.Audio
+-- Decompile time: 0.87 ms
+
+require(game.ReplicatedStorage.Modules.Core.Util)
+local Tween = require(game.ReplicatedStorage.Modules.Core.Tween)
+local u14 = {}
+
+function u14.ease(a1, a2, a3) -- Line: 5 -- upvalues: Tween (val) -- types: a1: userdata, a2: number, a3: number
+    if a2 > 0 and not a1.Playing then
+        a1:Play()
+    end
+    Tween.play(a1, TweenInfo.new(a3 or 1), {Volume = a2}).Completed:Wait()
+    if a1.Volume == 0 then
+        a1:Stop()
+    end
+end
+
+function u14.play(a1, a2, a3, a4, a5) -- Line: 15 -- types: a2: number?, a3: number?, a4: userdata?, a5: number?
+    local v1 = if not string.find(tostring(a1), "rbxassetid://") then ("rbxassetid://%*"):format(a1) else a1
+    local Sound = Instance.new("Sound")
+    Sound.SoundId = v1
+    Sound.Volume = a2 or 0.5
+    Sound.PlaybackSpeed = a3 or 1
+    Sound.Parent = a4 or game:GetService("SoundService")
+    Sound.TimePosition = a5 or 0
+    Sound.RollOffMaxDistance = 500
+    Sound:Play()
+    task.spawn(function() -- Line: 33 -- upvalues: Sound (val)
+        Sound.Ended:Wait()
+        Sound:Destroy()
+    end)
+end
+
+function u14.error() -- Line: 39 -- upvalues: u14 (val)
+    u14.play(82711903388234, 1)
+end
+
+function u14.initiate() end
+
+function u14.loaded() end
+
+return u14

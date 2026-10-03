@@ -1,0 +1,45 @@
+-- Path : ReplicatedStorage.Modules.Core.CFrameSpringTest
+-- Script path: ReplicatedStorage.Modules.Core.CFrameSpringTest
+-- Decompile time: 0.77 ms
+
+local Spring = require(game.ReplicatedStorage.Modules.Core.Spring)
+return {
+    new = function(a1, a2, a3) -- Line: 5 -- upvalues: Spring (val)
+        local u3 = {}
+        local u9 = Spring.new(a1, a2, 1)
+        local u10 = a3
+        local u11 = u10
+        u3.spring_object = u9
+
+        function u3.set_goal(a1) -- Line: 14 -- upvalues: u10 (ref), u3 (val), u11 (ref), u9 (val)
+            u10 = u3.get()
+            u11 = a1
+            u9.s = 0
+        end
+
+        function u3.set(a1) -- Line: 20 -- upvalues: u10 (ref), u9 (val)
+            u10 = a1
+            u9.s = 0
+            u9.r = 1
+        end
+
+        function u3.set_position_and_goal(a1) -- Line: 26 -- upvalues: u11 (ref), u3 (val)
+            u11 = a1
+            u3.set(a1)
+        end
+
+        function u3.get() -- Line: 31 -- upvalues: u10 (ref), u11 (ref), u9 (val)
+            return u10:Lerp(u11, u9.s)
+        end
+
+        function u3.hook(a1) -- Line: 35 -- upvalues: u9 (val), u10 (ref), u11 (ref)
+            return u9.hook(function(a1) -- Line: 36 -- upvalues: u10 (upval), u11 (upval)
+                return (u10:Lerp(u11, a1)), a1
+            end)
+        end
+
+        return u3
+    end,
+    initiate = function() end,
+    loaded = function() end,
+}

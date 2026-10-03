@@ -1,0 +1,100 @@
+-- Path : ReplicatedStorage.Modules.Game.AmbientNoise
+-- Script path: ReplicatedStorage.Modules.Game.AmbientNoise
+-- Decompile time: 2.44 ms
+
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local FlagManager = require(game.ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local Audio = require(game.ReplicatedStorage.Modules.Core.Audio)
+local CharacterCreator = require(game.ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator)
+local v1 = {}
+local u38 = {}
+u38[1] = (Vector3.new(0, 0, 0))
+u38[2] = (Vector3.new(1, 0, 1))
+u38[3] = (Vector3.new(1, 0, -1))
+u38[4] = (Vector3.new(-1, 0, 1))
+u38[5] = (Vector3.new(-1, 0, -1))
+
+function v1.loaded() -- Line: 20
+    -- upvalues: FlagManager (val), State (val), CharacterCreator (val), Audio (val), Char (val), u38 (val)
+    if not FlagManager.FLAG_CITY_AMBIENT_NOISE_ENABLED then
+        return
+    end
+    local AmbientSound = script.AmbientSound
+    AmbientSound.Parent = game.SoundService
+    local Volume = AmbientSound.Volume
+    local indoors = State.new("indoors")
+    State.new(function() -- Line: 29
+        -- upvalues: CharacterCreator (upval), Audio (upval), AmbientSound (val), indoors (val), Volume (val)
+        if CharacterCreator.is_in_creator.get() then
+            task.spawn(Audio.ease, AmbientSound, 0, 0)
+            return
+        end
+        local v1 = 0
+        local v2 = indoors.get()
+        if v2 == "indoors" then
+            v1 = 0
+        elseif v2 == "sheltered" then
+            v1 = Volume / 2
+        elseif v2 == "outdoors" then
+            v1 = Volume
+        end
+        task.spawn(Audio.ease, AmbientSound, v1, 1)
+    end)
+    local u15 = nil
+    Char.hook(function(a1) -- Line: 54 -- upvalues: u15 (ref), Char (upval), u38 (upval), indoors (val)
+        if u15 then
+            task.cancel(u15)
+            u15 = nil
+        end
+        u15 = task.spawn(function() -- Line: 60 -- upvalues: a1 (val), Char (upval), u38 (upval), indoors (upval)
+            local v1, v2, v3, v4
+            local v5 = RaycastParams.new()
+            local v6 = {a1}
+            v5.FilterDescendantsInstances = v6
+            while true do
+                v1 = false
+                v2 = 0
+                if not Char.get_hum().SeatPart then
+                    for i, j in u38 do
+                        v4 = workspace:Raycast(Char.get_hrp().Position + j, Vector3.new(0, 100, 0), v5)
+                        if not v4 then
+                            break
+                        end
+                        v2 = v2 + 1
+                        if v4.Instance:HasTag("OutdoorCeiling") then
+                            v1 = true
+                        end
+                    end
+                    v6 = v2 == #u38
+                elseif not (Char.get_hum()).SeatPart:IsDescendantOf(workspace.Vehicles) then
+                    for k, n in u38 do
+                        v4 = workspace:Raycast(Char.get_hrp().Position + n, Vector3.new(0, 100, 0), v5)
+                        if not v4 then
+                            break
+                        end
+                        v2 = v2 + 1
+                        if v4.Instance:HasTag("OutdoorCeiling") then
+                            v1 = true
+                        end
+                    end
+                    v6 = v2 == #u38
+                else
+                    v6 = true
+                    v1 = true
+                    if Char.get_hum().SeatPart:HasTag("OutdoorSeat") then
+                        v6 = false
+                    end
+                end
+                v3 = "outdoors"
+                if v6 then
+                    v3 = if not v1 then "indoors" else "sheltered"
+                end
+                indoors.set(v3)
+                task.wait(1)
+            end
+        end)
+    end)
+end
+
+return v1

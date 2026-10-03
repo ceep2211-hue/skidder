@@ -1,0 +1,46 @@
+-- Path : ReplicatedStorage.Modules.Game.AlternateInputHandler
+-- Script path: ReplicatedStorage.Modules.Game.AlternateInputHandler
+-- Decompile time: 1.11 ms
+
+game:GetService("ReplicatedStorage")
+local Keybinds = require(game.ReplicatedStorage.Modules.Game.Keybinds)
+require(game.ReplicatedStorage.Modules.Core.Input)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local SplashScreen = require(game.ReplicatedStorage.Modules.Game.SplashScreen)
+game:GetService("ReplicatedStorage")
+local u45 = {}
+u45.enable_alternate_controls = State.new(function() -- Line: 12 -- upvalues: Char (val)
+    if not workspace:FindFirstChild("Vehicles") then
+        return
+    end
+    local v1 = Char.sitting.get()
+    if v1 and v1:IsDescendantOf(workspace.Vehicles) then
+        return true
+    end
+    return false
+end)
+
+function u45.initiate() end
+
+function u45.loaded() -- Line: 28 -- upvalues: State (val), Keybinds (val), SplashScreen (val), u45 (val)
+    State.new(function() -- Line: 30 -- upvalues: Keybinds (upval), SplashScreen (upval)
+        local v1 = Keybinds.alternate_controls_enabled.get()
+        local v2 = Keybinds.current_input_mode.get()
+        local v3 = SplashScreen.in_loading_screen.get()
+        if v2 ~= "gamepad" then
+            Keybinds.override_button_a.set(false)
+            return
+        end
+        if not v3 and not v1 then
+            Keybinds.override_button_a.set(false)
+            return
+        end
+        Keybinds.override_button_a.set(true)
+    end)
+    u45.enable_alternate_controls.hook(function(a1) -- Line: 45 -- upvalues: Keybinds (upval)
+        Keybinds.alternate_controls_enabled.set(a1)
+    end)
+end
+
+return u45

@@ -1,0 +1,20 @@
+-- Path : Workspace.Map.Tiles.GasStationTile.Quick11.Interior.ShelfStockingJob.ElectronicsBox.AccessCheck
+-- Script path: Workspace.Map.Tiles.GasStationTile.Quick11.Interior.ShelfStockingJob.ElectronicsBox.AccessCheck
+-- Decompile time: 0.38 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+game:GetService("RunService")
+local SkillsList = require(game.ReplicatedStorage.Modules.Game.Skills.SkillsList)
+require(game.ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local v1 = {}
+require(ReplicatedStorage.Modules.Game.Jobs.JobData)
+
+function v1.can_access(a1) -- Line: 11 -- upvalues: SkillsList (val)
+    if SkillsList.has_skill(a1, "shelf_stocker", "ShelfStockerUnlockElectronicsCrate")
+        and SkillsList.has_skill(a1, "atm_hacker", "HackerUnlockElectronicsCrate") then
+        return true
+    end
+    return false, "You need to be level 70 in Shelf Stocking and and level 60 in ATM Hacking"
+end
+
+return v1

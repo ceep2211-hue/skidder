@@ -1,0 +1,218 @@
+-- Path : ReplicatedStorage.Modules.Game.ATM.ATM
+-- Script path: ReplicatedStorage.Modules.Game.ATM.ATM
+-- Decompile time: 5.67 ms
+
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+game:GetService("ReplicatedStorage")
+local ATMUI = require(game.ReplicatedStorage.Modules.Game.ATM.ATMUI)
+local ItemUtils = require(game.ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local NotificationsUI = require(game.ReplicatedStorage.Modules.Game.UI.NotificationsUI)
+local Players = game:GetService("Players")
+local SliderMinigame = require(game.ReplicatedStorage.Modules.Game.Minigames.SliderMinigame)
+local SelectOptionUI = require(game.ReplicatedStorage.Modules.Game.UI.SelectOptionUI)
+local Data = require(game.ReplicatedStorage.Modules.Core.Data)
+local SkillsList = require(game.ReplicatedStorage.Modules.Game.Skills.SkillsList)
+local NotificationsUI_2 = require(game.ReplicatedStorage.Modules.Game.UI.NotificationsUI)
+local LocalPlayer = Players.LocalPlayer
+local u116 = {}
+u116.pulsating_atm = State.new(nil)
+u116.class = StatefulObject.new_class(function() -- Line: 22 -- upvalues: State (val)
+    return {
+        fake_hacker_state_1 = State.new(nil),
+        fake_disabled_state_1 = State.new(true),
+        fake_hack_tool_1 = State.new(""),
+        start_hack = State.new(0),
+        disabled = State.new(false),
+        hacker = State.new(nil),
+        active_hack_tool = State.new(""),
+        fake_hacker_state_2 = State.new(workspace),
+        fake_disabled_state_2 = State.new(false),
+        fake_hack_tool_2 = State.new("HackToolBasic"),
+    }
+end, script.Name)
+u116.DEFAULT_ATM_CHANCES = 3
+local u129 = State.new(nil)
+
+local function get_atm_hacking_upgrades(a1, a2) -- Line: 54
+    -- upvalues: SkillsList (val), Data (val)
+    local v1 = a2
+    for i, j in SkillsList.list.atm_hacker do
+        if j.reward_info and j.reward_info[a1] and SkillsList.has_skill(Data, "atm_hacker", j.name) then
+            v1 = v1 + j.reward_info[a1]
+        end
+    end
+    return v1
+end
+
+function u116.initiate() -- Line: 70
+    -- upvalues: Net (val), NotificationsUI (val), u116 (val), Char (val), SliderMinigame (val), NotificationsUI_2 (val)
+    Net.hook("got_money_in_bank", function(a1) -- Line: 71 -- upvalues: NotificationsUI (upval), u116 (upval), Char (upval)
+        NotificationsUI.show_notification("", (("%*$ was added to your bank account"):format(a1)))
+        local u56 = nil
+        local v1 = nil
+        local v2 = nil
+        for i, j in u116.class.objects, v1, v2 do
+            if u56 == nil
+                or (j.instance:GetPivot().Position - Char.get_hrp().Position).Magnitude < (u56.instance:GetPivot().Position - Char.get_hrp().Position).Magnitude then
+                u56 = j
+            end
+        end
+        if u56 then
+            u116.pulsating_atm.set(u56.instance)
+            task.delay(20, function() -- Line: 81 -- upvalues: u116 (upval), u56 (ref)
+                if u116.pulsating_atm.get() == u56 then
+                    u116.pulsating_atm.set(nil)
+                end
+            end)
+        end
+    end)
+    Net.hook("cancel_hacking_atm", function() -- Line: 89 -- upvalues: SliderMinigame (upval), NotificationsUI_2 (upval)
+        SliderMinigame.enabled.set(false)
+        NotificationsUI_2.show_notification("", "You stepped away - hacking failed!")
+    end)
+end
+
+function u116.loaded() -- Line: 103
+    -- upvalues: u116 (val), Char (val), Util (val), State (val), u129 (val), ATMUI (val), LocalPlayer (val)
+    -- upvalues: SliderMinigame (val), get_atm_hacking_upgrades (val), NotificationsUI_2 (val), Net (val)
+    -- upvalues: ItemUtils (val), Data (val), UI (val), SelectOptionUI (val)
+    local u4 = script.ArrowDirection:Clone()
+    local Attachment = Instance.new("Attachment")
+    local Attachment_2 = Instance.new("Attachment")
+    u4.Attachment0 = Attachment
+    u4.Attachment1 = Attachment_2
+    local Highlight = Instance.new("Highlight")
+    Highlight.FillTransparency = 0.5
+    Highlight.FillColor = Color3.fromRGB(255, 255, 255)
+    Highlight.Enabled = true
+    u116.pulsating_atm.hook(function(a1) -- Line: 115 -- upvalues: Highlight (val), Attachment (val), Attachment_2 (val), Char (upval), u4 (val)
+        if not a1 then
+            u4.Parent = nil
+            Highlight.Parent = nil
+            return
+        end
+        Highlight.Parent = a1
+        Attachment.Parent = a1:FindFirstChildWhichIsA("ProximityPrompt", true).Parent
+        Attachment_2.Parent = Char.get_hrp()
+        u4.Parent = game.Workspace
+    end)
+    u116.class.hook(function(a1) -- Line: 127
+        -- upvalues: Util (upval), State (upval), Char (upval), u116 (upval), u129 (upval), ATMUI (upval)
+        -- upvalues: LocalPlayer (upval), SliderMinigame (upval), get_atm_hacking_upgrades (upval)
+        -- upvalues: NotificationsUI_2 (upval), Net (upval)
+        local instance = a1.instance
+        local u6 = Util.wait_for_descendant(instance, "ProximityPrompt")
+        local Screen = a1.get("Screen")
+        State.new(function() -- Line: 132 -- upvalues: Char (upval), a1 (val), u6 (val)
+            local v1 = Char.current_vehicle.get()
+            local v2 = a1.states.disabled.get()
+            local v3 = false
+            if v1 == nil then
+                v3 = not v2
+            end
+            u6.Enabled = v3
+        end)
+        u6.Triggered:Connect(function() -- Line: 139 -- upvalues: Char (upval), u116 (upval), u129 (upval), a1 (val), ATMUI (upval)
+            if Char.current_vehicle.get() then
+                return
+            end
+            u116.pulsating_atm.set(nil)
+            u129.set(a1.instance)
+            ATMUI.enabled.set(true)
+        end)
+        return function() -- Line: 147
+            -- upvalues: u6 (val), a1 (val), Screen (val), LocalPlayer (upval), SliderMinigame (upval)
+            -- upvalues: get_atm_hacking_upgrades (upval), u116 (upval), NotificationsUI_2 (upval), Net (upval)
+            u6.ActionText = "Open ATM"
+            a1.states.disabled.hook(function(a1) -- Line: 150 -- upvalues: u6 (upval), Screen (upval)
+                u6.Enabled = not a1
+                Screen.Enabled = a1
+            end)
+            a1.states.hacker.hook(function(a1_2, a2) -- Line: 155
+                -- upvalues: LocalPlayer (upval), SliderMinigame (upval), get_atm_hacking_upgrades (upval), u116 (upval)
+                -- upvalues: NotificationsUI_2 (upval), Net (upval), a1 (upval), Screen (upval)
+                if a2 == LocalPlayer then
+                    SliderMinigame.enabled.set(false)
+                end
+                if a1_2 == LocalPlayer then
+                    local u12 = SliderMinigame.server_mode_enabled()
+                    if not u12 then
+                        local v1 = get_atm_hacking_upgrades("extra_chance", u116.DEFAULT_ATM_CHANCES)
+                        local v2 = get_atm_hacking_upgrades("bar_percentage_increase", 0)
+                        SliderMinigame.tries.set(v1)
+                        SliderMinigame.bar_percentage_increase.set(v2)
+                        SliderMinigame.start()
+                    end
+                    SliderMinigame.win:Connect(function(a1_2) -- Line: 176 -- upvalues: NotificationsUI_2 (upval), u12 (val), Net (upval), a1 (upval)
+                        if not a1_2 then
+                            NotificationsUI_2.show_notification("", "Hacking failed!")
+                        end
+                        if not u12 then
+                            if a1_2 then
+                                Net.send("atm_win_3", a1.instance)
+                                return
+                            end
+                            Net.send("atm_fail_early", a1.instance)
+                        end
+                    end)
+                end
+                if a1_2 ~= nil then
+                    Screen.Text.Text = "HACKING..."
+                    Screen.Text.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+                    Screen.Text.TextColor3 = Color3.fromRGB(0, 255, 0)
+                    return
+                end
+                Screen.Text.Text = "ERROR"
+                Screen.Text.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+                Screen.Text.TextColor3 = Color3.fromRGB(255, 255, 255)
+            end)
+        end
+    end)
+
+    local function get_options() -- Line: 204 -- upvalues: ATMUI (upval), ItemUtils (upval), Data (upval)
+        local v1 = {}
+        for i, j in ATMUI.valid_hack_tools do
+            table.insert(v1, {
+                text = j:GetAttribute("DisplayName"),
+                item_name = j.Name,
+                image_id = j:GetAttribute("ImageId"),
+                color = j:GetAttribute("OptionColor"),
+            })
+        end
+        local v2 = {}
+        for k, n in v1 do
+            if 0 < (ItemUtils.get_item_count(Data, "misc", n.item_name)) then
+                table.insert(v2, n)
+            end
+        end
+        return v2
+    end
+
+    UI.on_click("ATMHackButton", function() -- Line: 226 -- upvalues: ATMUI (upval), get_options (val), Net (upval), u129 (upval), SelectOptionUI (upval)
+        ATMUI.enabled.set(false)
+        local v1 = get_options()
+        local u7 = nil
+
+        local function send(a1) -- Line: 232 -- upvalues: Net (upval), u129 (upval)
+            Net.send("request_begin_hacking_3", u129.get(), a1)
+        end
+
+        if #v1 ~= 1 then
+            SelectOptionUI.select_option(v1, function(a1) -- Line: 239 -- upvalues: u7 (ref), Net (upval), u129 (upval)
+                u7 = a1.item_name
+                local item_name = a1.item_name
+                Net.send("request_begin_hacking_3", u129.get(), item_name)
+            end)
+        else
+            local item_name = v1[1].item_name
+            Net.send("request_begin_hacking_3", u129.get(), item_name)
+        end
+    end)
+end
+
+return u116

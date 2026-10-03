@@ -1,0 +1,132 @@
+-- Path : ReplicatedStorage.Modules.Game.VehicleSystem.Vehicle.VehicleTypes.bike
+-- Script path: ReplicatedStorage.Modules.Game.VehicleSystem.Vehicle.VehicleTypes.bike
+-- Decompile time: 3.78 ms
+
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local RunService = game:GetService("RunService")
+local LocalPlayer = game.Players.LocalPlayer
+require(game.ReplicatedStorage.Modules.Core.Net)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local Spring = require(game.ReplicatedStorage.Modules.Core.Spring)
+require(game.ReplicatedStorage.Modules.Core.Char)
+return {
+    init_vehicle = function(a1) -- Line: 11 -- upvalues: Spring (val), Util (val), State (val), RunService (val)
+        local instance = a1.instance
+        local u2 = nil
+        local u8 = Spring.new(1, 0.9, 0)
+        local Chassis = instance.Chassis
+        instance:FindFirstChildWhichIsA("VehicleSeat")
+        local Sound = Instance.new("Sound")
+        Sound.Name = "FireLoopSound"
+        Sound.SoundId = "rbxassetid://75638102319594"
+        Sound.PlaybackSpeed = Util.rand(1.4, 1.7)
+        Sound.RollOffMaxDistance = 170
+        Sound.RollOffMinDistance = 10
+        Sound.Volume = 0.4
+        Sound.Looped = true
+        Sound.Parent = Chassis
+        local u32 = script.PointLight:Clone()
+        u32.Parent = Chassis
+        u32.Enabled = false
+        local u38 = script.Fire:Clone()
+        u38.Parent = Chassis
+        u38.Enabled = false
+        local Attachment = Instance.new("Attachment")
+        Attachment.Parent = Chassis
+        Attachment.WorldCFrame = Chassis.CFrame + Chassis.CFrame.LookVector * ((math.max(Chassis.Size.X, Chassis.Size.Y, Chassis.Size.Z)) * 0.35)
+        local u61 = script.DamageSmokeParticles:Clone()
+        u61.Parent = Attachment
+        u61.Enabled = false
+        local u63 = nil
+        local u64 = nil
+        local Wheelie = a1.instance.Balance.Wheelie
+        State.new(function() -- Line: 49
+            -- upvalues: a1 (val), instance (val), u2 (ref), u63 (ref), u64 (ref), RunService (upval), u8 (val)
+            local v1 = a1.states.driver.get()
+            local v2 = a1.streamed.get()
+            if v1 and v2 and instance:GetAttribute("PedalingEnabled") and not u2 then
+                local Crankset = a1.get("Crankset")
+                local u19 = 0
+                local Parent = v1.Parent
+                u63 = CFrame.new(Parent.LowerTorso.Root.C0.Position)
+                u64 = CFrame.new(Parent.UpperTorso.Waist.C0.Position)
+                u2 = RunService.Heartbeat:Connect(function(a1) -- Line: 58
+                    -- upvalues: instance (upval), u19 (ref), Crankset (val), u8 (upval), Parent (val), u63 (upval)
+                    -- upvalues: u64 (upval)
+                    local Rear = instance.Wheels.Rear
+                    local v1 = -Rear.CFrame:VectorToObjectSpace(Rear.AssemblyAngularVelocity).X
+                    u19 = u19 + v1 * a1
+                    Crankset.Chainring.Motor.C0 = CFrame.Angles(u19 / 4, 0, 0)
+                    Crankset.LeftPedal.Motor.C0 = CFrame.Angles(-u19 / 4, 0, 0)
+                    Crankset.RightPedal.Motor.C0 = CFrame.Angles(-u19 / 4, 0, 0)
+                    u8.r = math.clamp(v1 / 20, 0, 1)
+                    Parent.LowerTorso.Root.C0 = u63 * CFrame.new(0, (math.sin(u19 / 2) * 0.2 + 0.4) * 1 * u8.s, -0.6 * u8.s) * CFrame.Angles(-0.08726646259971647 + -0.3490658503988659 * u8.s, 0, 0)
+                    Parent.UpperTorso.Waist.C0 = u64 * CFrame.Angles(-0.17453292519943295, 0, 0)
+                end)
+                return
+            end
+            if u2 then
+                u2:Disconnect()
+                u2 = nil
+            end
+        end)
+
+        local function reset_welds(a1) -- Line: 82 -- upvalues: u63 (ref), u64 (ref)
+            if u63 then
+                a1.LowerTorso.Root.C0 = u63
+            end
+            if u64 then
+                a1.UpperTorso.Waist.C0 = u64
+            end
+        end
+
+        a1.instance.Destroying:Connect(function() -- Line: 91 -- upvalues: a1 (val), u63 (ref), u64 (ref)
+            local v1 = a1.states.driver.get()
+            if v1 then
+                local Parent = v1.Parent
+                if u63 then
+                    Parent.LowerTorso.Root.C0 = u63
+                end
+                if u64 then
+                    Parent.UpperTorso.Waist.C0 = u64
+                end
+            end
+        end)
+        return function() -- Line: 98
+            -- upvalues: a1 (val), Sound (val), u38 (val), u32 (val), Chassis (val), u61 (val), Wheelie (val), u63 (ref)
+            -- upvalues: u64 (ref)
+            a1.states.health.hook(function(a1, a2) -- Line: 99 -- upvalues: Sound (upval), u38 (upval), u32 (upval), Chassis (upval), u61 (upval)
+                if not (a1 <= 0) or not (a2 > 0) then
+                    Sound:Stop()
+                else
+                    Sound:Play()
+                end
+                u38.Enabled = a1 <= 0
+                u32.Enabled = a1 <= 0
+                if a1 <= 0 and a2 > 0 then
+                    local v1 = script.Explosion:Clone()
+                    v1.Parent = Chassis
+                    v1:Play()
+                    game.Debris:AddItem(v1, 3)
+                end
+                u61.Enabled = a1 <= 0
+                u61.Color = ColorSequence.new(Color3.new(0.5, 0.5, 0.5), Color3.new(0, 0, 0))
+                u61.Size = NumberSequence.new(2, 3)
+            end)
+            a1.states.driver.hook(function(a1, a2) -- Line: 118 -- upvalues: Wheelie (upval), u63 (upval), u64 (upval)
+                if not a1 then
+                    Wheelie.Enabled = false
+                end
+                if a2 then
+                    local Parent = a2.Parent
+                    if u63 then
+                        Parent.LowerTorso.Root.C0 = u63
+                    end
+                    if u64 then
+                        Parent.UpperTorso.Waist.C0 = u64
+                    end
+                end
+            end)
+        end
+    end,
+}

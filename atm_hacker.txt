@@ -1,0 +1,110 @@
+-- Path : ReplicatedStorage.Modules.Game.Skills.SkillsList.atm_hacker
+-- Script path: ReplicatedStorage.Modules.Game.Skills.SkillsList.atm_hacker
+-- Decompile time: 1.24 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local FlagManager = require(ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local v1 = {
+    {
+        level = 1,
+        name = "HackTool_Basic",
+        display_name = "Basic Hack Tool",
+        reward_info = {tool_name = "BasicHackTool"},
+        display_reward = {
+            {image = "rbxassetid://81576102145621", text = "Basic Hack Tool!"},
+            {text = "Unlocks the Basic Hack Tool which can be purchased from the alleyway dealer"},
+        },
+    },
+    {
+        level = 5,
+        name = "HackIncreaseGreenArea{level}",
+        reward_info = {bar_percentage_increase = 5},
+        display_reward = {{text = "Increased minigame bar by {bar_percentage_increase}%"}},
+    },
+    {
+        level = 10,
+        name = "HackExtraChance{level}",
+        reward_info = {extra_chance = 1},
+        display_reward = {{text = "{extra_chance} extra minigame chance"}},
+    },
+    {
+        level = 12,
+        name = "HackTool_Pro",
+        display_name = "Pro Hack Tool",
+        reward_info = {tool_name = "HackToolPro", pay_multiplier_increase = 5},
+        display_reward = {
+            {image = "rbxassetid://109748523668606", text = "Pro Hack Tool!"},
+            {text = "Unlocks the Pro Hack Tool which can be purchased from the alleyway dealer"},
+            {text = "Increases pay by x{pay_multiplier_increase}"},
+        },
+    },
+    {
+        level = 15,
+        name = "HackIncreaseGreenArea{level}",
+        reward_info = {bar_percentage_increase = 5},
+        display_reward = {{text = "Increased minigame bar by {bar_percentage_increase}%"}},
+    },
+    {
+        level = 20,
+        name = "HackExtraChance{level}",
+        reward_info = {extra_chance = 1},
+        display_reward = {{text = "{extra_chance} extra minigame chance"}},
+    },
+    {
+        level = 30,
+        name = "HackIncreaseGreenArea{level}",
+        reward_info = {bar_percentage_increase = 5},
+        display_reward = {{text = "Increased minigame bar by {bar_percentage_increase}%"}},
+    },
+    {
+        level = 35,
+        name = "HackExtraChance{level}",
+        reward_info = {extra_chance = 1},
+        display_reward = {{text = "{extra_chance} extra minigame chance"}},
+    },
+    {
+        level = 40,
+        name = "HackIncreaseGreenArea{level}",
+        reward_info = {bar_percentage_increase = 5},
+        display_reward = {{text = "Increased minigame bar by {bar_percentage_increase}%"}},
+    },
+    {
+        level = 50,
+        name = "HackTool_Ultimate",
+        display_name = "Ultimate Hack Tool",
+        reward_info = {tool_name = "HackToolUltimate", pay_multiplier_increase = 10},
+        display_reward = {
+            {image = "rbxassetid://89233085746124", text = "Ultimate Hack Tool!"},
+            {text = "Unlocks the Ultimate Hack Tool which can be purchased from the alleyway dealer"},
+            {text = "Increases pay by x{pay_multiplier_increase}"},
+        },
+    },
+}
+if FlagManager.FLAG_QUICK_11_ELECTRONICS_CRATE then
+    table.insert(v1, {
+        level = 60,
+        name = "HackerUnlockElectronicsCrate",
+        display_name = "Stock electronics crates",
+        display_reward = {
+            {
+                image = "rbxassetid://134812486114734",
+                text = "Unlocks stocking electronics crates at Quick-11",
+            },
+            {text = "You must also be level 70 in shelf stocking"},
+        },
+    })
+end
+if FlagManager.FLAG_QUANTUM_HACK_TOOL then
+    table.insert(v1, {
+        level = 90,
+        name = "HackTool_Quantum",
+        display_name = "Quantum Hack Tool",
+        reward_info = {tool_name = "HackToolQuantum", pay_multiplier_increase = 20},
+        display_reward = {
+            {image = "rbxassetid://92101186550540", text = "Quantum Hack Tool!"},
+            {text = "Unlocks the Quantum Hack Tool which can be purchased from the Spin Club dealer"},
+            {text = "Increases pay by x{pay_multiplier_increase}"},
+        },
+    })
+end
+return v1
