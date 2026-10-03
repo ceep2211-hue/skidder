@@ -1,0 +1,5 @@
+-- Path : ReplicatedStorage.Items.car.Mazede.Upgrades.Horn.Train Horn.Configuration
+-- Script path: ReplicatedStorage.Items.car.Mazede.Upgrades.Horn.Train Horn.Configuration
+-- Decompile time: 0.06 ms
+
+return {SoundId = "rbxassetid://6870691428", SoundName = "HornSound"}

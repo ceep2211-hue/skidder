@@ -1,0 +1,5 @@
+-- Path : ReplicatedStorage.Items.car.F150.Upgrades.Braking.Braking3.Configuration
+-- Script path: ReplicatedStorage.Items.car.F150.Upgrades.Braking.Braking3.Configuration
+-- Decompile time: 0.07 ms
+
+return {AttributeName = "braking", AttributeMultiplier = 5, FolderName = "Motors", DisplayName = "Level 3"}

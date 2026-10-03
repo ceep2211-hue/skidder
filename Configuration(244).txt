@@ -1,0 +1,5 @@
+-- Path : ReplicatedStorage.Items.car.Cullivane.Upgrades.Suspension.Low.Configuration
+-- Script path: ReplicatedStorage.Items.car.Cullivane.Upgrades.Suspension.Low.Configuration
+-- Decompile time: 0.07 ms
+
+return {AttributeName = "suspensionMultiplier", AttributeValue = 0.85, FolderName = "Suspension"}

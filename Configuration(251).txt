@@ -1,0 +1,5 @@
+-- Path : ReplicatedStorage.Items.car.Cullivane.Upgrades.Horn.Dual Air Horns.Configuration
+-- Script path: ReplicatedStorage.Items.car.Cullivane.Upgrades.Horn.Dual Air Horns.Configuration
+-- Decompile time: 0.06 ms
+
+return {SoundId = "rbxassetid://9114402340", SoundName = "HornSound"}
