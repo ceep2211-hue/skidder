@@ -1,0 +1,96 @@
+-- Path : ReplicatedStorage.Modules.Core.Cam
+-- Script path: ReplicatedStorage.Modules.Core.Cam
+-- Decompile time: 2.18 ms
+
+local Spring = require(game.ReplicatedStorage.Modules.Core.Spring)
+require(game.ReplicatedStorage.Modules.Core.Util)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local Tween = require(game.ReplicatedStorage.Modules.Core.Tween)
+local u42 = {}
+local CurrentCamera = workspace.CurrentCamera
+local LocalPlayer = game.Players.LocalPlayer
+local u48 = nil
+u42.fov_spring = Spring.new(0.4, 0.8, 70)
+local u54 = nil
+
+function u42.tween(a1, a2) -- Line: 18 -- upvalues: CurrentCamera (val), u48 (ref), UI (val), u54 (ref), Tween (val)
+    if CurrentCamera.CameraType == Enum.CameraType.Custom then
+        if game.Players.LocalPlayer.Character then
+            u48:Disable()
+            UI.mobile_controls(false)
+        end
+        u54 = CurrentCamera.CFrame
+    end
+    CurrentCamera.CameraType = Enum.CameraType.Scriptable
+    return Tween.play(CurrentCamera, TweenInfo.new(a2 or 0.5, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {CFrame = a1})
+end
+
+function u42.tween_to_character(a1) -- Line: 31
+    -- upvalues: u54 (ref), Tween (val), CurrentCamera (val), u48 (ref), UI (val)
+    if not u54 then
+        return
+    end
+    local v1 = Tween.play(CurrentCamera, TweenInfo.new(a1 or 0.5, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {CFrame = u54})
+    v1.Completed:Connect(function() -- Line: 34 -- upvalues: u54 (upval), u48 (upval), UI (upval), CurrentCamera (upval)
+        u54 = nil
+        u48:Enable()
+        UI.mobile_controls(true)
+        CurrentCamera.CameraType = Enum.CameraType.Custom
+    end)
+    return v1
+end
+
+function u42.zoom(a1) -- Line: 43 -- upvalues: LocalPlayer (val)
+    local CameraMinZoomDistance = LocalPlayer.CameraMinZoomDistance
+    local CameraMaxZoomDistance = LocalPlayer.CameraMaxZoomDistance
+    LocalPlayer.CameraMinZoomDistance = a1
+    LocalPlayer.CameraMaxZoomDistance = a1
+    game:GetService("RunService").RenderStepped:Wait()
+    LocalPlayer.CameraMinZoomDistance = CameraMinZoomDistance
+    LocalPlayer.CameraMaxZoomDistance = CameraMaxZoomDistance
+end
+
+function u42.get_zoom() -- Line: 52
+    return (workspace.CurrentCamera.CFrame.Position - workspace.CurrentCamera.Focus.Position).Magnitude
+end
+
+function u42.new_shake(a1, a2) -- Line: 56 -- upvalues: Spring (val)
+    local v1 = {frequency = a1, damping = a2}
+    local u9 = Spring.new_v3(a1, a2, (Vector3.new()))
+    u9.hook(function(a1) -- Line: 62
+        local CurrentCamera = workspace.CurrentCamera
+        CurrentCamera.CFrame = CurrentCamera.CFrame * CFrame.fromOrientation(a1.x, a1.y, a1.z)
+    end, Enum.RenderPriority.Camera.Value + 1)
+
+    function v1.play(a1) -- Line: 66 -- upvalues: u9 (val)
+        u9.a = a1
+    end
+
+    return v1
+end
+
+function u42.initiate() -- Line: 73 -- upvalues: Net (val), Char (val), u48 (ref), UI (val), u42 (val)
+    Net.hook("cam_follow_player", function() -- Line: 74 -- upvalues: Char (upval), u48 (upval), UI (upval)
+        workspace.CurrentCamera.CameraSubject = Char.get().Head
+        if game.Players.LocalPlayer.Character then
+            u48:Disable()
+            UI.mobile_controls(false)
+        end
+    end)
+    Net.hook("stop_cam_follow_player", function() -- Line: 82 -- upvalues: u48 (upval), UI (upval), Char (upval)
+        u48:Enable()
+        UI.mobile_controls(true)
+        workspace.CurrentCamera.CameraSubject = Char.get_hum()
+    end)
+    u42.fov_spring.hook(function(a1) -- Line: 88
+        workspace.CurrentCamera.FieldOfView = a1
+    end)
+end
+
+function u42.loaded() -- Line: 93 -- upvalues: u48 (ref)
+    u48 = require(game:GetService("Players").LocalPlayer.PlayerScripts:WaitForChild("PlayerModule")):GetControls()
+end
+
+return u42

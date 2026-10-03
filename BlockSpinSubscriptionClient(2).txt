@@ -1,0 +1,82 @@
+-- Path : ReplicatedStorage.Modules.Game.Store.BlockSpinSubscriptionClient
+-- Script path: ReplicatedStorage.Modules.Game.Store.BlockSpinSubscriptionClient
+-- Decompile time: 1.49 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local Util = require(ReplicatedStorage.Modules.Core.Util)
+local BlockSpinSubscriptionData = require(ReplicatedStorage.Modules.Game.Store.BlockSpinSubscriptionData)
+local State = require(ReplicatedStorage.Modules.Core.State)
+local NotificationsUI = require(ReplicatedStorage.Modules.Game.UI.NotificationsUI)
+local PlaceInfo = require(ReplicatedStorage.Modules.Game.GameInfo.PlaceInfo)
+local LocalPlayer = Players.LocalPlayer
+local u39 = {
+    BLOCK_SPIN_PLUS_SUBSCRIPTION_ID = BlockSpinSubscriptionData.BLOCK_SPIN_PLUS_SUBSCRIPTION_ID,
+    LEGACY_BLOCK_SPIN_PLUS_SUBSCRIPTION_ID = BlockSpinSubscriptionData.LEGACY_BLOCK_SPIN_PLUS_SUBSCRIPTION_ID,
+    ROBUX_BLOCK_SPIN_PLUS_SUBSCRIPTION_ID = BlockSpinSubscriptionData.ROBUX_BLOCK_SPIN_PLUS_SUBSCRIPTION_ID,
+    LEGACY_ROBUX_BLOCK_SPIN_PLUS_SUBSCRIPTION_ID = BlockSpinSubscriptionData.LEGACY_ROBUX_BLOCK_SPIN_PLUS_SUBSCRIPTION_ID,
+}
+local u44 = {}
+u39.policy_subscriptions_can_be_purchased = State.new(false)
+
+local function update_player_subscription_info(a1) -- Line: 26 -- upvalues: u44 (ref)
+    u44 = a1
+end
+
+u39.NO_SUBSCRIPTION_SKU_VALUE = "None"
+
+function u39.get_preferred_subscription() -- Line: 33
+    -- upvalues: u39 (val), u44 (ref), PlaceInfo (val), NotificationsUI (val)
+    local v1 = u39.policy_subscriptions_can_be_purchased.get()
+    local v2 = game.GuiService:IsTenFootInterface()
+    local v3 = {
+        can_purchase = false,
+        subscription_id = "",
+        error_message = "",
+        purchase_sku = u39.NO_SUBSCRIPTION_VALUE,
+    }
+    if u44.only_prompt_robux_subscriptions then
+        v3.can_purchase = true
+        v3.subscription_id = u39.ROBUX_BLOCK_SPIN_PLUS_SUBSCRIPTION_ID
+        v3.debug_status = "Forced robux subscription"
+        v3.purchase_sku = "BlockSpinPlusRobux"
+    elseif v1 then
+        v3.can_purchase = true
+        v3.subscription_id = u39.BLOCK_SPIN_PLUS_SUBSCRIPTION_ID
+        v3.debug_status = "Default fiat subscription"
+        v3.purchase_sku = "BlockSpinPlus"
+    elseif not u44.allow_robux_subscriptions_as_alternative_payment then
+        local v4 = "You can not purchase BlockSpin+ in this region"
+        if v2 then
+            v4 = "You can not purchase BlockSpin+ on a console device. Try on a different device (It will transfer!)"
+        end
+        v3.error_message = v4
+        v3.debug_status = "No suitable subscription"
+        v3.purchase_sku = u39.NO_SUBSCRIPTION_SKU_VALUE
+    else
+        v3.can_purchase = true
+        v3.subscription_id = u39.ROBUX_BLOCK_SPIN_PLUS_SUBSCRIPTION_ID
+        v3.debug_status = "Alternative robux subscription"
+        v3.purchase_sku = "BlockSpinPlusRobux"
+    end
+    if PlaceInfo.is_dev_place() then
+        NotificationsUI.show_notification(nil, "Debug: Prompting/Preferred subscription: " .. v3.purchase_sku)
+    end
+    return v3
+end
+
+function u39.initiate() end
+
+function u39.loaded() -- Line: 88 -- upvalues: Util (val), LocalPlayer (val), u44 (ref)
+    Util.watch_attribute(LocalPlayer, "SubscriptionInfo", function(a1) -- Line: 89 -- upvalues: u44 (upval)
+        if not a1 then
+            return
+        end
+        local v1 = game.HttpService:JSONDecode(a1)
+        if v1 then
+            u44 = v1
+        end
+    end)
+end
+
+return u39

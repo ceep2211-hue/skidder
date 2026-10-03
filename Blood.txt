@@ -1,0 +1,57 @@
+-- Path : ReplicatedStorage.Modules.Game.Effects.Blood
+-- Script path: ReplicatedStorage.Modules.Game.Effects.Blood
+-- Decompile time: 1.18 ms
+
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local u14 = {}
+
+function u14.apply_blood(a1, a2, a3) -- Line: 5 -- types: a1: vector, a2: vector, a3: number
+    local Attachment = Instance.new("Attachment")
+    Attachment.Parent = game.Workspace.Terrain
+    Attachment.Name = "Blood"
+    game.Debris:AddItem(Attachment, 2)
+    Attachment.WorldCFrame = (CFrame.new(a1)) * CFrame.lookAt(Vector3.new(0, 0, 0), a2)
+    local v1 = script.Dust:Clone()
+    v1.Parent = Attachment
+    local v2 = script.NormalFacingDust:Clone()
+    v2.Parent = Attachment
+    v1:Emit(1)
+    v2:Emit(2)
+end
+
+function u14.apply_spatter(a1, a2, a3) -- Line: 21 -- upvalues: Util (val) -- types: a1: vector, a2: vector, a3: number
+    local v1, v2
+    local Attachment = Instance.new("Attachment")
+    Attachment.Parent = game.Workspace.Terrain
+    Attachment.Name = "BloodSpatter"
+    game.Debris:AddItem(Attachment, 3)
+    Attachment.WorldCFrame = (CFrame.new(a1)) * CFrame.lookAt(Vector3.new(0, 0, 0), a2)
+    local v3 = script.SplashSideParticles:Clone()
+    v3.Parent = Attachment
+    local v4 = script.Spatter:Clone()
+    v4.Parent = Attachment
+    v4:Play()
+    for i = 1, (Util.rand(2, 4, true)) do
+        v1 = (math.random(2, 4)) * (a3 / 30)
+        v3.Size = NumberSequence.new({
+            NumberSequenceKeypoint.new(0, v1 * 0.5),
+            NumberSequenceKeypoint.new(0.05, v1 * 0.95),
+            (NumberSequenceKeypoint.new(1, v1)),
+        })
+        v3:Emit(1)
+        v2 = Util.rand(-0.5, 0.5)
+        v3.Squash = NumberSequence.new({
+            NumberSequenceKeypoint.new(0, v2 * 0.5),
+            NumberSequenceKeypoint.new(0.05, v2 * 0.95),
+            (NumberSequenceKeypoint.new(1, v2)),
+        })
+    end
+end
+
+function u14.initiate() -- Line: 54 -- upvalues: Net (val), u14 (val)
+    Net.hook("blood", u14.apply_blood)
+    Net.hook("blood_spatter", u14.apply_spatter)
+end
+
+return u14

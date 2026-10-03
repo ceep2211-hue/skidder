@@ -1,0 +1,477 @@
+-- Path : ReplicatedStorage.Modules.Game.Inventory.BulkDropUI
+-- Script path: ReplicatedStorage.Modules.Game.Inventory.BulkDropUI
+-- Decompile time: 11.01 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local v1 = {}
+local UI = require(ReplicatedStorage.Modules.Core.UI)
+local Net = require(ReplicatedStorage.Modules.Core.Net)
+local Data = require(ReplicatedStorage.Modules.Core.Data)
+local State = require(ReplicatedStorage.Modules.Core.State)
+local Util = require(ReplicatedStorage.Modules.Core.Util)
+local Audio = require(ReplicatedStorage.Modules.Core.Audio)
+local ItemsUI = require(ReplicatedStorage.Modules.Game.Inventory.ItemsUI)
+local ItemUtils = require(ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+local BuyPromptUI = require(ReplicatedStorage.Modules.Game.UI.BuyPromptUI)
+local InsuranceShared = require(ReplicatedStorage.Modules.Game.Insurance.InsuranceShared)
+local NotificationsUI = require(ReplicatedStorage.Modules.Game.UI.NotificationsUI)
+local u68 = State.new(false)
+local u69 = {}
+local u70 = nil
+local u71 = nil
+local u72 = false
+
+local function selected_guids() -- Line: 72 -- upvalues: u69 (val)
+    local v1 = {}
+    for i in u69 do
+        table.insert(v1, i)
+    end
+    return v1
+end
+
+local function count_selected() -- Line: 80 -- upvalues: u69 (val)
+    local v1 = 0
+    for i in u69 do
+        v1 = v1 + 1
+    end
+    return v1
+end
+
+local function info_for(a1) -- Line: 88 -- upvalues: ItemUtils (val), Data (val) -- types: a1: string
+    return ItemUtils.get_item_info(Data, a1)
+end
+
+local function prune_selection() -- Line: 97 -- upvalues: u69 (val), ItemUtils (val), Data (val)
+    local v1
+    local v2 = false
+    local v3 = nil
+    local v4 = nil
+    for i in u69, v3, v4 do
+        v1 = ItemUtils.get_item_info(Data, i)
+        if not v1 or v1.location ~= "hand" then
+            u69[i] = nil
+            v2 = true
+        end
+    end
+    return v2
+end
+
+local function protected_in_selection() -- Line: 115 -- upvalues: InsuranceShared (val), Data (val), u69 (val)
+    local v1 = 0
+    local v2 = nil
+    local success, result = pcall(function() -- Line: 117 -- upvalues: InsuranceShared (upval), Data (upval)
+        return InsuranceShared.get_protected_guids(InsuranceShared.get_records(Data))
+    end)
+    if success and type(result) == "table" then
+        for i in u69 do
+            if result[i] then
+                v1 = v1 + 1
+                v2 = v2 or i
+            end
+        end
+        return v1, v2
+    end
+    return 0, nil
+end
+
+local function tick_on(a1, a2) -- Line: 134 -- types: a1: userdata, a2: boolean
+    local BulkSelectedIcon = a1:FindFirstChild("BulkSelectedIcon")
+    if BulkSelectedIcon then
+        BulkSelectedIcon.Visible = a2
+        return
+    end
+    if not a2 then
+        return
+    end
+    local ImageLabel = Instance.new("ImageLabel")
+    ImageLabel.Name = "BulkSelectedIcon"
+    ImageLabel.Image = "rbxassetid://84093605595780"
+    ImageLabel.BackgroundTransparency = 1
+    ImageLabel.AnchorPoint = Vector2.new(1, 0)
+    ImageLabel.Position = UDim2.fromScale(0.97, 0.03)
+    ImageLabel.Size = UDim2.fromScale(0.34, 0.34)
+    ImageLabel.ZIndex = 10
+    ImageLabel.Visible = true
+    local UIAspectRatioConstraint = Instance.new("UIAspectRatioConstraint")
+    UIAspectRatioConstraint.AspectRatio = 1
+    UIAspectRatioConstraint.Parent = ImageLabel
+    ImageLabel.Parent = a1
+end
+
+local u79 = {}
+
+local function set_equipped_ticks_hidden(a1) -- Line: 167 -- upvalues: UI (val), u79 (val) -- types: a1: boolean
+    local ItemsScrollingFrame = UI.get("ItemsScrollingFrame")
+    if ItemsScrollingFrame and typeof(ItemsScrollingFrame) == "Instance" then
+        local ItemEquipped
+        local v1 = a1
+        for i, j in ItemsScrollingFrame:GetChildren() do
+            ItemEquipped = j:FindFirstChild("ItemEquipped")
+            if ItemEquipped and ItemEquipped:IsA("GuiObject") then
+                if v1 then
+                    if u79[ItemEquipped] == nil then
+                        u79[ItemEquipped] = ItemEquipped.Visible
+                    end
+                    ItemEquipped.Visible = false
+                elseif u79[ItemEquipped] ~= nil then
+                    ItemEquipped.Visible = u79[ItemEquipped]
+                end
+            end
+        end
+        if not v1 then
+            table.clear(u79)
+        end
+        return
+    end
+end
+
+local function refresh_ticks() -- Line: 192
+    -- upvalues: UI (val), tick_on (val), u69 (val), set_equipped_ticks_hidden (val)
+    local ItemsScrollingFrame = UI.get("ItemsScrollingFrame")
+    if ItemsScrollingFrame and typeof(ItemsScrollingFrame) == "Instance" then
+        local Attribute, v1
+        for i, j in ItemsScrollingFrame:GetChildren() do
+            if j:IsA("GuiButton") then
+                Attribute = j:GetAttribute("GUID")
+                v1 = false
+                if type(Attribute) == "string" then
+                    v1 = u69[Attribute] == true
+                end
+                tick_on(j, v1)
+            end
+        end
+        set_equipped_ticks_hidden(true)
+        return
+    end
+end
+
+local function clear_ticks() -- Line: 207 -- upvalues: UI (val)
+    local ItemsScrollingFrame = UI.get("ItemsScrollingFrame")
+    if ItemsScrollingFrame and typeof(ItemsScrollingFrame) == "Instance" then
+        local BulkSelectedIcon
+        for i, j in ItemsScrollingFrame:GetChildren() do
+            BulkSelectedIcon = j:FindFirstChild("BulkSelectedIcon")
+            if BulkSelectedIcon then
+                BulkSelectedIcon.Visible = false
+            end
+        end
+        return
+    end
+end
+
+local function set_button_text(a1) -- Line: 222 -- upvalues: u70 (ref) -- types: a1: string
+    if not u70 then
+        return
+    end
+    local TextLabel = u70:FindFirstChild("TextLabel")
+    if TextLabel and TextLabel:IsA("TextLabel") then
+        TextLabel.Text = a1
+    end
+end
+
+local function refresh_button() -- Line: 232 -- upvalues: u70 (ref), u68 (val), u69 (val)
+    if not u70 then
+        return
+    end
+    if not u68.get() then
+        if not u70 then
+            return
+        end
+        local TextLabel = u70:FindFirstChild("TextLabel")
+        if TextLabel and TextLabel:IsA("TextLabel") then
+            TextLabel.Text = "Bulk Drop Items"
+        end
+        return
+    end
+    local v1 = 0
+    for i in u69 do
+        v1 = v1 + 1
+    end
+    if v1 == 0 then
+        if not u70 then
+            return
+        end
+        local TextLabel_2 = u70:FindFirstChild("TextLabel")
+        if TextLabel_2 and TextLabel_2:IsA("TextLabel") then
+            TextLabel_2.Text = "Select items to drop"
+            return
+        end
+        return
+    end
+    local v2 = ("Drop: %* stack(s)"):format(v1)
+    if not u70 then
+        return
+    end
+    local TextLabel_3 = u70:FindFirstChild("TextLabel")
+    if TextLabel_3 and TextLabel_3:IsA("TextLabel") then
+        TextLabel_3.Text = v2
+    end
+end
+
+local function build_button() -- Line: 250 -- upvalues: UI (val)
+    local ItemsHolder = UI.get("ItemsHolder")
+    if ItemsHolder and typeof(ItemsHolder) == "Instance" then
+        local BulkDropButton = ItemsHolder:FindFirstChild("BulkDropButton")
+        if BulkDropButton and BulkDropButton:IsA("TextButton") then
+            return BulkDropButton
+        end
+        local SellAllFishButton = ItemsHolder:FindFirstChild("SellAllFishButton")
+        if SellAllFishButton and SellAllFishButton:IsA("TextButton") then
+            local v1 = SellAllFishButton:Clone()
+            v1.Name = "BulkDropButton"
+            v1.Visible = false
+            local TextLabel = v1:FindFirstChild("TextLabel")
+            if TextLabel and TextLabel:IsA("TextLabel") then
+                TextLabel.Size = UDim2.fromScale(1, 0.46)
+            end
+            v1:SetAttribute("being_listened_to", nil)
+            v1.Parent = ItemsHolder
+            return v1
+        end
+        warn("[BulkDrop] SellAllFishButton not found to clone")
+        return nil
+    end
+    return nil
+end
+
+local function exit_selection() -- Line: 288
+    -- upvalues: u68 (val), ItemsUI (val), u69 (val), clear_ticks (val), set_equipped_ticks_hidden (val), u71 (ref)
+    -- upvalues: Util (val), refresh_button (val)
+    if not u68.get() then
+        return
+    end
+    u68.set(false)
+    ItemsUI.bulk_drop_mode.set(false)
+    table.clear(u69)
+    clear_ticks()
+    set_equipped_ticks_hidden(false)
+    if u71 then
+        Util.tween(u71, TweenInfo.new(0), {Value = 0})
+    end
+    refresh_button()
+end
+
+v1.exit_selection = exit_selection
+
+local function enter_selection() -- Line: 304
+    -- upvalues: u68 (val), u69 (val), ItemsUI (val), refresh_ticks (val), refresh_button (val)
+    if u68.get() then
+        return
+    end
+    table.clear(u69)
+    u68.set(true)
+    ItemsUI.bulk_drop_mode.set(true)
+    refresh_ticks()
+    refresh_button()
+end
+
+local function toggle_item(a1) -- Line: 315
+    -- upvalues: u68 (val), u69 (val), NotificationsUI (val), ItemUtils (val), refresh_ticks (val), refresh_button (val)
+    if u68.get() and type(a1) == "table" then
+        local guid = a1.guid
+        if type(guid) ~= "string" then
+            return
+        end
+        if u69[guid] then
+            u69[guid] = nil
+            refresh_ticks()
+            refresh_button()
+            return
+        end
+        local v1 = 0
+        for i in u69 do
+            v1 = v1 + 1
+        end
+        if v1 >= 20 then
+            NotificationsUI.show_notification(nil, (("You can only drop %* stacks at once"):format(20)))
+            return
+        end
+        if a1.location ~= "hand" then
+            return
+        end
+        if not ItemUtils.can_be_dropped(a1.name) then
+            NotificationsUI.show_notification(nil, (("You can not drop %*"):format((tostring(a1.name)))))
+            return
+        end
+        u69[guid] = true
+        refresh_ticks()
+        refresh_button()
+        return
+    end
+end
+
+local function send_request(a1) -- Line: 349
+    -- upvalues: u72 (ref), Net (val), Audio (val), NotificationsUI (val), exit_selection (val)
+    u72 = true
+    local success, result, v1, v2 = pcall(function() -- Line: 351 -- upvalues: Net (upval), a1 (val)
+        return Net.get("bulk_drop", a1)
+    end)
+    u72 = false
+    if success and result == true then
+        if 0 < (v1 or 0) then
+            NotificationsUI.show_notification(nil, (("Dropped %* stack(s)"):format(v1)))
+        end
+        if 0 < (v2 or 0) then
+            NotificationsUI.show_notification(nil, (("%* item(s) could not be dropped"):format(v2)))
+        end
+        exit_selection()
+        return
+    end
+    Audio.error()
+    NotificationsUI.show_notification(
+        nil,
+        (if not success then nil else if type(v1) ~= "string" then nil else v1) or "Could not drop those items - try again"
+    )
+end
+
+local function confirm_drop() -- Line: 376
+    -- upvalues: u72 (ref), u68 (val), u69 (val), NotificationsUI (val), protected_in_selection (val), ItemUtils (val)
+    -- upvalues: Data (val), BuyPromptUI (val), send_request (val)
+    if not u72 and u68.get() then
+        local u4 = {}
+        for i in u69 do
+            table.insert(u4, i)
+        end
+        if #u4 == 0 then
+            NotificationsUI.show_notification(nil, "Select some items first")
+            return
+        end
+        local v1, v2 = protected_in_selection()
+        if not (v1 > 0) then
+            send_request(u4)
+            return
+        end
+        local v3 = v2 and ItemUtils.get_item_info(Data, v2)
+        local drop_request_with_slider = BuyPromptUI.drop_request_with_slider
+        local v4 = ("%* protected item(s)"):format(v1)
+        drop_request_with_slider(v3 and ItemUtils.get_item_icon(v3.name) or "", v4, 1, 1, "Remove protection?", "Hold to drop", function(a1) -- Line: 404 -- upvalues: send_request (upval), u4 (val)
+            if a1 then
+                task.delay(0.25, function() -- Line: 406 -- upvalues: send_request (upval), u4 (upval)
+                    send_request(u4)
+                end)
+            end
+        end, 3000)
+        return
+    end
+end
+
+local function should_show_button() -- Line: 421 -- upvalues: ItemsUI (val)
+    local v1 = false
+    if ItemsUI.is_open.get() == true then
+        v1 = false
+        if ItemsUI.inventory_type.get() == "hand" then
+            v1 = ItemsUI.click_type.get() == "equip"
+        end
+    end
+    return v1
+end
+
+local function refresh_visibility() -- Line: 427 -- upvalues: u70 (ref), ItemsUI (val), exit_selection (val)
+    if not u70 then
+        return
+    end
+    local v1 = false
+    if ItemsUI.is_open.get() == true then
+        v1 = false
+        if ItemsUI.inventory_type.get() == "hand" then
+            v1 = ItemsUI.click_type.get() == "equip"
+        end
+    end
+    u70.Visible = v1
+    if not v1 then
+        exit_selection()
+    end
+end
+
+function v1.initiate() -- Line: 438 -- upvalues: ItemsUI (val), toggle_item (val)
+    ItemsUI.on_bulk_drop_item_clicked:Connect(toggle_item)
+end
+
+function v1.loaded() -- Line: 442
+    -- upvalues: u70 (ref), build_button (val), u71 (ref), Util (val), confirm_drop (val), u68 (val)
+    -- upvalues: enter_selection (val), u69 (val), ItemsUI (val), refresh_visibility (val), Data (val)
+    -- upvalues: prune_selection (val), refresh_ticks (val), refresh_button (val), exit_selection (val)
+    u70 = build_button()
+    if not u70 then
+        return
+    end
+    local HoldStroke = u70:FindFirstChild("HoldStroke", true)
+    local UIGradient = HoldStroke
+    if UIGradient then
+        UIGradient = HoldStroke:FindFirstChildOfClass("UIGradient")
+    end
+    u71 = Instance.new("NumberValue")
+    u71.Value = 0
+    if HoldStroke and UIGradient then
+        UIGradient.Enabled = true
+        HoldStroke.Enabled = false
+        local v1 = u71
+        Util.watch_property(v1, "Value", function(a1) -- Line: 459
+            -- upvalues: UIGradient (val), HoldStroke (val), u71 (upval), confirm_drop (upval)
+            UIGradient.Transparency = NumberSequence.new({
+                NumberSequenceKeypoint.new(0, 1),
+                NumberSequenceKeypoint.new(math.max(0, 1 - a1 - 0.001), 1),
+                NumberSequenceKeypoint.new(1 - a1, 0),
+                (NumberSequenceKeypoint.new(1, 0)),
+            })
+            HoldStroke.Enabled = a1 > 0
+            if a1 >= 1 then
+                u71.Value = 0
+                task.spawn(confirm_drop)
+            end
+        end)
+    end
+    u70.MouseButton1Down:Connect(function() -- Line: 474
+        -- upvalues: u68 (upval), enter_selection (upval), u69 (upval), Util (upval), u71 (upval), u70 (upval)
+        if not u68.get() then
+            enter_selection()
+            return
+        end
+        local v1 = 0
+        for i in u69 do
+            v1 = v1 + 1
+        end
+        if v1 == 0 then
+            return
+        end
+        Util.tween(u71, TweenInfo.new(1.5, Enum.EasingStyle.Linear), {Value = 1})
+        local u25 = nil
+        local v2 = u70.InputEnded:Connect(function(a1) -- Line: 485 -- upvalues: u25 (ref), u71 (upval), Util (upval) -- types: a1: userdata
+            if a1.UserInputType == Enum.UserInputType.MouseMovement
+                or a1.UserInputType == Enum.UserInputType.MouseButton1
+                or a1.UserInputType == Enum.UserInputType.Touch then
+                u25:Disconnect()
+                if u71.Value < 1 then
+                    Util.tween(u71, TweenInfo.new(0), {Value = 0})
+                end
+            end
+        end)
+    end)
+    ItemsUI.is_open.hook(refresh_visibility)
+    ItemsUI.inventory_type.hook(refresh_visibility)
+    ItemsUI.click_type.hook(refresh_visibility)
+    Data.hook("items", function() -- Line: 504 -- upvalues: u68 (upval), prune_selection (upval), refresh_ticks (upval), refresh_button (upval)
+        if not u68.get() then
+            return
+        end
+        prune_selection()
+        refresh_ticks()
+        refresh_button()
+    end)
+    if u70 then
+        local v2 = false
+        if ItemsUI.is_open.get() == true then
+            v2 = false
+            if ItemsUI.inventory_type.get() == "hand" then
+                v2 = ItemsUI.click_type.get() == "equip"
+            end
+        end
+        u70.Visible = v2
+        if not v2 then
+            exit_selection()
+        end
+    end
+    refresh_button()
+end
+
+return v1

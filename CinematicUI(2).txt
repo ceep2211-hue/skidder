@@ -1,0 +1,61 @@
+-- Path : ReplicatedStorage.Modules.Game.UI.CinematicUI
+-- Script path: ReplicatedStorage.Modules.Game.UI.CinematicUI
+-- Decompile time: 1.73 ms
+
+local Tween = require(game.ReplicatedStorage.Modules.Core.Tween)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local u21 = {}
+u21.enabled = State.new(false)
+u21.paused = State.new(false)
+
+function u21.initiate() end
+
+function u21.loaded() -- Line: 14 -- upvalues: UI (val), Tween (val), State (val), u21 (val)
+    UI.get("CinematicGui")
+    local CinematicGuiHolder = UI.get("CinematicGuiHolder")
+    local Upper = CinematicGuiHolder.Upper
+    local Lower = CinematicGuiHolder.Lower
+    local Size = Upper.Size
+    local u14 = UDim2.fromScale(1, 0)
+    local u15 = {}
+    local v1 = Tween.create(Upper, TweenInfo.new(0.5), {Size = Size})
+    local create_2 = Tween.create
+    local v2 = TweenInfo.new(0.5)
+    u15[1] = v1
+    u15[2] = create_2(Lower, v2, {Size = Size})
+    local u32 = {}
+    local v3 = Tween.create(Upper, TweenInfo.new(0.5), {Size = u14})
+    local create_4 = Tween.create
+    local v4 = TweenInfo.new(0.5)
+    u32[1] = v3
+    u32[2] = create_4(Lower, v4, {Size = u14})
+    local u52 = State.new(false)
+    State.new(function() -- Line: 36 -- upvalues: u21 (upval), CinematicGuiHolder (val)
+        local v1 = u21.paused.get()
+        CinematicGuiHolder.Visible = (u21.enabled.get()) and not v1
+    end)
+    u21.enabled.hook(function(a1, a2) -- Line: 43 -- upvalues: Upper (val), u14 (val), Lower (val), u52 (val), u15 (val), u32 (val)
+        if a1 == a2 then
+            return
+        end
+        if a1 then
+            Upper.Size = u14
+            Lower.Size = u14
+            u52.set(true)
+            for k, n in u15 do
+                n:Play()
+            end
+            return
+        end
+        for i, j in u32 do
+            j:Play()
+            if i == #u32 then
+                j.Completed:Wait()
+            end
+        end
+        u52.set(false)
+    end)
+end
+
+return u21

@@ -1,0 +1,5 @@
+-- Path : Workspace.Vehicles.Stang.Upgrades.Suspension.High.Configuration
+-- Script path: Workspace.Vehicles.Stang.Upgrades.Suspension.High.Configuration
+-- Decompile time: 0.07 ms
+
+return {AttributeName = "suspensionMultiplier", AttributeValue = 1.2, FolderName = "Suspension"}

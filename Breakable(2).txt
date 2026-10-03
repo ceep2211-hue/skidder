@@ -1,0 +1,84 @@
+-- Path : ReplicatedStorage.Modules.Game.Effects.Breakable
+-- Script path: ReplicatedStorage.Modules.Game.Effects.Breakable
+-- Decompile time: 3.28 ms
+
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local v1 = {}
+local ContentProvider = game:GetService("ContentProvider")
+
+function v1.initiate() -- Line: 7 -- upvalues: Net (val), Util (val)
+    Net.hook("break_glass", function(a1) -- Line: 8 -- upvalues: Util (upval)
+        if a1 and a1:IsDescendantOf(game.Workspace) then
+            local Part, v1, v2, v3
+            local v4 = script.Break:Clone()
+            v4.TimePosition = 0.2
+            v4.PlaybackSpeed = Util.rand(0.95, 1.05)
+            v4.Parent = a1
+            game.Debris:AddItem(v4, 3)
+            v4:Play()
+            local Z = a1.Size.Z
+            local v5 = {
+                a1.CFrame + a1.CFrame.UpVector * a1.Size.Y * 0.25 - a1.CFrame.RightVector * a1.Size.X * 0.25,
+                a1.CFrame + a1.CFrame.UpVector * a1.Size.Y * 0.25 + a1.CFrame.RightVector * a1.Size.X * 0.25,
+                a1.CFrame - a1.CFrame.UpVector * a1.Size.Y * 0.25 - a1.CFrame.RightVector * a1.Size.X * 0.25,
+                a1.CFrame - a1.CFrame.UpVector * a1.Size.Y * 0.25 + a1.CFrame.RightVector * a1.Size.X * 0.25,
+            }
+            local v6 = a1
+            for i = 1, 8 do
+                Part = Instance.new("Part")
+                Part.Transparency = v6:GetAttribute("OriginalTransparency")
+                Part.Material = v6.Material
+                Part.Shape = Enum.PartType.CornerWedge
+                Part.CanCollide = false
+                Part.Color = v6.Color
+                Part.Reflectance = v6.Reflectance
+                Part.Size = Vector3.new(Z, v6.Size.Y * 0.5, v6.Size.X * 0.5)
+                Part.Parent = game.Workspace
+                v3 = v5[math.round(i / 2)] * CFrame.Angles(0, 1.5707963267948966, 0)
+                v1 = if i % 2 ~= 1 then CFrame.new() else CFrame.Angles(0, 3.141592653589793, 3.141592653589793)
+                Part.CFrame = v3 * v1
+                game.Debris:AddItem(Part, 5)
+                v2 = Part.Mass * 10
+                Part:ApplyAngularImpulse((Vector3.new(math.random() * v2, math.random() * v2, (math.random()) * v2)))
+            end
+        end
+    end)
+    Net.hook("break_car_glass", function(a1) -- Line: 46 -- upvalues: Util (upval)
+        if a1 and a1:IsDescendantOf(game.Workspace) then
+            local Part, v1
+            local v2 = script.Break:Clone()
+            v2.TimePosition = 0.2
+            v2.PlaybackSpeed = Util.rand(0.95, 1.05)
+            v2.Parent = a1
+            v2.Volume = v2.Volume * 1.5
+            game.Debris:AddItem(v2, 1)
+            Util.tween(v2, TweenInfo.new(1), {Volume = 0})
+            v2:Play()
+            local v3 = math.max(a1.Size.X, a1.Size.Y, a1.Size.Z)
+            for i = 1, 8 do
+                Part = Instance.new("Part")
+                Part.Transparency = a1:GetAttribute("OriginalTransparency")
+                Part.Material = a1.Material
+                Part.Shape = Enum.PartType.CornerWedge
+                Part.CanCollide = false
+                Part.Color = a1.Color
+                Part.Reflectance = a1.Reflectance
+                Part.Size = Vector3.new(0.1, v3 * 0.3, v3 * 0.3)
+                Part.Parent = game.Workspace
+                Part.CFrame = a1.CFrame * CFrame.new(Util.rand(-1, 1), Util.rand(-1, 1), Util.rand(-1, 1)) * CFrame.Angles(Util.rand(-1, 1), Util.rand(-1, 1), Util.rand(-1, 1))
+                game.Debris:AddItem(Part, 5)
+                v1 = Part.Mass * 10
+                Part:ApplyAngularImpulse((Vector3.new(math.random() * v1, math.random() * v1, (math.random()) * v1)))
+            end
+        end
+    end)
+end
+
+function v1.loaded() -- Line: 81 -- upvalues: ContentProvider (val)
+    task.spawn(function() -- Line: 82 -- upvalues: ContentProvider (upval)
+        ContentProvider:PreloadAsync((script:GetChildren()))
+    end)
+end
+
+return v1

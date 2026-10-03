@@ -1,0 +1,55 @@
+-- Path : ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator.CharacterCreatorSlot
+-- Script path: ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator.CharacterCreatorSlot
+-- Decompile time: 1.34 ms
+
+require(game.ReplicatedStorage.Modules.Core.Music)
+local Tween = require(game.ReplicatedStorage.Modules.Core.Tween)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local u28 = {}
+local LocalPlayer = (game:GetService("Players")).LocalPlayer
+local u35 = nil
+require(game.ReplicatedStorage.Modules.Core.Char)
+u28.play_music = State.new(false)
+
+function u28.get_my_creator_model() -- Line: 13 -- upvalues: u35 (ref)
+    repeat
+        task.wait()
+    until u35
+    return u35
+end
+
+function u28.initiate() -- Line: 18 -- upvalues: Net (val), u35 (ref), LocalPlayer (val)
+    Net.hook("create_creator_slot", function(a1) -- Line: 19 -- upvalues: u35 (upval), LocalPlayer (upval) -- types: a1: vector
+        u35 = script:WaitForChild("HeightAdjustmentArea"):Clone()
+        u35.Name = LocalPlayer.Name .. "_character_creator_area"
+        u35:PivotTo((CFrame.new(a1)))
+        u35.HeightTeleport.Transparency = 1
+        u35.Parent = workspace
+    end)
+end
+
+function u28.loaded() -- Line: 28 -- upvalues: Tween (val), u28 (val)
+    local Music = script.Parent.Sounds.Music
+    local Volume = Music.Volume
+    if workspace:GetAttribute("MuteSplashMusic") then
+        Volume = 0
+    end
+    local u19 = Tween.create(Music, TweenInfo.new(1.5), {Volume = 0})
+    local u28_2 = Tween.create(Music, TweenInfo.new(1), {Volume = Volume})
+    u28.play_music.hook(function(a1, a2) -- Line: 44 -- upvalues: Music (val), u28_2 (val), u19 (val)
+        if a1 then
+            Music.Volume = 0
+            Music:Play()
+            u28_2:Play()
+            return
+        end
+        if a2 then
+            u19:Play()
+            u19.Completed:Wait()
+            Music:Stop()
+        end
+    end)
+end
+
+return u28

@@ -1,0 +1,99 @@
+-- Path : ReplicatedStorage.Modules.Game.CharacterBillboardGui
+-- Script path: ReplicatedStorage.Modules.Game.CharacterBillboardGui
+-- Decompile time: 2.47 ms
+
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+require(game.ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator)
+local Timer = require(game.ReplicatedStorage.Modules.Core.Timer)
+local Spring = require(game.ReplicatedStorage.Modules.Core.Spring)
+require(game.ReplicatedStorage.Modules.Core.Util)
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+require(game.ReplicatedStorage.Modules.Core.State)
+local u50 = {}
+u50.class = StatefulObject.new_class(function() -- Line: 12
+    return {}
+end, script.Name)
+local u57 = false
+
+function u50.initiate() -- Line: 20 -- upvalues: Net (val), u57 (ref)
+    Net.hook("toggle_esp", function(a1) -- Line: 21 -- upvalues: u57 (upval)
+        u57 = a1
+    end)
+end
+
+function u50.loaded() -- Line: 26 -- upvalues: u50 (val), Spring (val), Timer (val), u57 (ref), Net (val)
+    u50.class.hook(function(a1) -- Line: 28 -- upvalues: Spring (upval), Timer (upval), u57 (upval), Net (upval)
+        local Parent = a1.instance.Parent
+        local u8 = Spring.new(3, 0.95, 1)
+        local u15 = game.Players.LocalPlayer.Character == Parent.Parent
+        local PlayerRealName = a1.get("PlayerRealName")
+        local u21 = 1
+        Parent.Destroying:Connect((Timer.new(0.5, function() -- Line: 40 -- upvalues: u57 (upval), Parent (val), u21 (ref), u8 (val), a1 (val), PlayerRealName (val)
+            if u57 then
+                a1.instance.MaxDistance = (1 / 0)
+                a1.instance.AlwaysOnTop = true
+                u8.r = 0
+                PlayerRealName.Visible = true
+                return
+            end
+            local v1 = math.clamp((workspace.CurrentCamera.CFrame.Position - Parent.Position).Magnitude, 40, 50)
+            if v1 ~= u21 then
+                if v1 == 50 then
+                    u8.r = 1
+                elseif v1 ~= 40 then
+                    u8.r = (v1 - 40) / 10
+                else
+                    u8.r = 0
+                end
+                u21 = v1
+            end
+            a1.instance.MaxDistance = 70
+            a1.instance.AlwaysOnTop = false
+            PlayerRealName.Visible = false
+        end)).stop)
+        local u37 = a1.get("PlayerName")
+        local u41 = a1.get("LevelImage")
+        local LevelText = a1.get("LevelText")
+        local u48 = a1.get("GangIcon")
+        local u52 = a1.get("InSafeZone")
+        local IsPassiveMode = a1.get("IsPassiveMode")
+
+        local function update_billboard(a1) -- Line: 71 -- upvalues: u15 (val), Net (upval)
+            if u15 then
+                Net.send("replicate_billboard_gui_1", a1)
+            end
+        end
+
+        ;(u37:GetPropertyChangedSignal("Text")):Connect(function() -- Line: 77 -- upvalues: u37 (val), u15 (val), Net (upval)
+            local Text = u37.Text
+            if u15 then
+                Net.send("replicate_billboard_gui_1", Text)
+            end
+        end)
+        return function() -- Line: 81
+            -- upvalues: u37 (val), u15 (val), Net (upval), u8 (val), LevelText (val), u41 (val), u48 (val), u52 (val)
+            -- upvalues: IsPassiveMode (val)
+            local Text = u37.Text
+            if u15 then
+                Net.send("replicate_billboard_gui_1", Text)
+            end
+            u8.hook(function(a1) -- Line: 84
+                -- upvalues: u15 (upval), u37 (upval), LevelText (upval), u41 (upval), u48 (upval), u52 (upval)
+                -- upvalues: IsPassiveMode (upval)
+                if u15 then
+                    a1 = 0.75 + a1 * 0.25
+                end
+                u37.TextTransparency = a1
+                u37.TextStrokeTransparency = a1 * 0.3 + 0.7
+                LevelText.TextTransparency = a1
+                LevelText.TextStrokeTransparency = a1 * 0.3 + 0.7
+                u41.ImageTransparency = a1
+                u48.ImageTransparency = a1
+                u52.ImageTransparency = a1
+                IsPassiveMode.ImageTransparency = a1
+            end)
+        end
+    end)
+end
+
+return u50

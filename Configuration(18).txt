@@ -1,0 +1,5 @@
+-- Path : Workspace.Vehicles.SRT.Upgrades.Braking.Braking2.Configuration
+-- Script path: Workspace.Vehicles.SRT.Upgrades.Braking.Braking2.Configuration
+-- Decompile time: 0.07 ms
+
+return {AttributeName = "braking", AttributeMultiplier = 3, FolderName = "Motors", DisplayName = "Level 2"}

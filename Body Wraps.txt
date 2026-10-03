@@ -1,0 +1,24 @@
+-- Path : Workspace.Map.Tiles.ShoppingTile.Garage1.Interior.Crates.Garage Crate.CrateOptions.Body Wraps
+-- Script path: Workspace.Map.Tiles.ShoppingTile.Garage1.Interior.Crates.Garage Crate.CrateOptions.Body Wraps
+-- Decompile time: 0.31 ms
+
+return {
+    crate_name = script.Name,
+    crate_color_type = "Rare",
+    layout_order = 2,
+    bias = 1.275,
+    category = "vehicle_body_color",
+    items = {
+        {name = "Snow Camo", item_type = "cosmetic"},
+        {name = "Volcanic", item_type = "cosmetic"},
+        {name = "Night", item_type = "cosmetic"},
+        {name = "Nature", item_type = "cosmetic"},
+        {name = "Cherry Blossom", item_type = "cosmetic"},
+        {name = "Graffiti", item_type = "cosmetic"},
+        {name = "Doodles", item_type = "cosmetic"},
+        {name = "Purple Liquid", item_type = "cosmetic"},
+        {name = "Red Wave", item_type = "cosmetic"},
+        {name = "Blue Strike", item_type = "cosmetic"},
+        {name = "Metallic Swirl", item_type = "cosmetic"},
+    },
+}

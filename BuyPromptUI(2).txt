@@ -1,0 +1,302 @@
+-- Path : ReplicatedStorage.Modules.Game.UI.BuyPromptUI
+-- Script path: ReplicatedStorage.Modules.Game.UI.BuyPromptUI
+-- Decompile time: 8.00 ms
+
+require(game.ReplicatedStorage.Modules.Core.Data)
+game:GetService("ReplicatedStorage")
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local NotificationsUI = require(game.ReplicatedStorage.Modules.Game.UI.NotificationsUI)
+local UIFX = require(game.ReplicatedStorage.Modules.Core.UIFX)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local SubMenuBackground = require(game.ReplicatedStorage.Modules.Game.UI.SubMenuBackground)
+local FlagManager = require(game.ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local UISlider = require(game.ReplicatedStorage.Modules.Game.UI.UISlider)
+local ItemUtils = require(game.ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+local u80 = {}
+u80.enabled = State.new(false)
+u80.is_prompting = State.new(false)
+local u87 = nil
+local u88 = nil
+local u89 = nil
+
+local function reset() -- Line: 22 -- upvalues: UI (val)
+    local BuyItemCost = UI.get("BuyItemCost")
+    BuyItemCost.Visible = false
+    local BuyPromptButtons = UI.get("BuyPromptButtons")
+    BuyPromptButtons.Visible = false
+    local SellPromptButtons = UI.get("SellPromptButtons")
+    SellPromptButtons.Visible = false
+end
+
+local function cancel_other_requests() -- Line: 28 -- upvalues: u87 (ref), u88 (ref)
+    if u87 then
+        u87(false)
+        u87 = nil
+        u88 = nil
+    end
+end
+
+function u80.drop_request_with_slider(a1, a2, a3, a4, a5, a6, a7, a8) -- Line: 36
+    -- upvalues: u87 (ref), u88 (ref), UI (val), ItemUtils (val), u89 (ref), u80 (val)
+    local u8 = 1
+    local u9 = nil
+    if u87 then
+        u87(false)
+        u87 = nil
+        u88 = nil
+    end
+    local BuyItemCost = UI.get("BuyItemCost")
+    BuyItemCost.Visible = false
+    local BuyPromptButtons = UI.get("BuyPromptButtons")
+    BuyPromptButtons.Visible = false
+    local SellPromptButtons = UI.get("SellPromptButtons")
+    SellPromptButtons.Visible = false
+
+    function u87(a1) -- Line: 45 -- upvalues: u9 (ref), a7 (val), u8 (ref)
+        if u9 then
+            u9.unhook()
+            u9 = nil
+        end
+        task.spawn(a7, a1, u8)
+    end
+
+    u88 = a8
+    local u45 = ItemUtils.get_item_instance(a2):GetAttribute("DisplayName") or a2
+    u89.set(1)
+    local SellPromptButtons_2 = UI.get("SellPromptButtons")
+    SellPromptButtons_2.Visible = true
+    local BuyItemImage = UI.get("BuyItemImage")
+    BuyItemImage.Image = a1.image_id
+    local BuyItemImage_2 = UI.get("BuyItemImage")
+    BuyItemImage_2.ImageColor3 = a1.color
+    UI.get("ItemBuyHolder").TextLabel.Text = a5 or "Drop Item"
+    UI.get("SellPromptSellButton").TextLabel.Text = a6 or "Drop"
+    u80.enabled.set(true)
+    local SellPromptSlider = UI.get("SellPromptSlider")
+    SellPromptSlider.Visible = a4 > 1
+    if not (a4 > 1) then
+        local BuyItemName = UI.get("BuyItemName")
+        BuyItemName.Text = ("Drop: %* %*"):format(u8, u45)
+    else
+        local v1 = u89.hook(function(a1) -- Line: 71 -- upvalues: u8 (ref), a3 (val), a4 (val), UI (upval), a6 (val), u45 (val)
+            u8 = math.round((math.map(a1, 0, 1, a3, a4)))
+            if u8 == 1 then
+                local BuyItemName = UI.get("BuyItemName")
+                BuyItemName.Text = ("%*: %* %*"):format(a6 or "Drop", u8, u45)
+                return
+            end
+            local BuyItemName_2 = UI.get("BuyItemName")
+            BuyItemName_2.Text = ("%*: %* %*s"):format(a6 or "Drop", u8, u45)
+        end)
+    end
+end
+
+u80.sell_button_unfinished_clicks = 0
+
+function u80.sell_request_with_slider(a1, a2, a3, a4, a5, a6) -- Line: 89
+    -- upvalues: u87 (ref), u88 (ref), UI (val), u80 (val), ItemUtils (val), u89 (ref)
+    local u6 = nil
+    local u7 = a4
+    if u87 then
+        u87(false)
+        u87 = nil
+        u88 = nil
+    end
+    local BuyItemCost = UI.get("BuyItemCost")
+    BuyItemCost.Visible = false
+    local BuyPromptButtons = UI.get("BuyPromptButtons")
+    BuyPromptButtons.Visible = false
+    local SellPromptButtons = UI.get("SellPromptButtons")
+    SellPromptButtons.Visible = false
+    u80.sell_button_unfinished_clicks = 0
+
+    function u87(a1) -- Line: 100 -- upvalues: u6 (ref), a6 (val), u7 (ref)
+        if u6 then
+            u6.unhook()
+            u6 = nil
+        end
+        task.spawn(a6, a1, u7)
+    end
+
+    local u44 = ItemUtils.get_item_instance(a2):GetAttribute("DisplayName") or a2
+    u89.set(1)
+    local SellPromptButtons_2 = UI.get("SellPromptButtons")
+    SellPromptButtons_2.Visible = true
+    local BuyItemImage = UI.get("BuyItemImage")
+    BuyItemImage.Image = a1.image_id
+    local BuyItemImage_2 = UI.get("BuyItemImage")
+    BuyItemImage_2.ImageColor3 = a1.color
+    UI.get("ItemBuyHolder").TextLabel.Text = "Sell Item"
+    u80.enabled.set(true)
+    local SellPromptSlider = UI.get("SellPromptSlider")
+    SellPromptSlider.Visible = a5 > 1
+    if not (a5 > 1) then
+        local BuyItemName = UI.get("BuyItemName")
+        BuyItemName.Text = ("Sell: %* %*"):format(u7, u44)
+        UI.get("SellPromptSellButton").TextLabel.Text = "Sell: $" .. a3 * u7
+    else
+        local v1 = u89.hook(function(a1) -- Line: 123 -- upvalues: u7 (ref), a4 (val), a5 (val), UI (upval), a3 (val), u44 (val)
+            u7 = math.round((math.map(a1, 0, 1, a4, a5)))
+            UI.get("SellPromptSellButton").TextLabel.Text = "Sell: $" .. a3 * u7
+            if u7 == 1 then
+                local BuyItemName = UI.get("BuyItemName")
+                BuyItemName.Text = ("Sell: %* %*"):format(u7, u44)
+                return
+            end
+            local BuyItemName_2 = UI.get("BuyItemName")
+            BuyItemName_2.Text = ("Sell: %* %*s"):format(u7, u44)
+        end)
+    end
+end
+
+function u80.purchase_request(a1, a2, a3, a4, a5, a6) -- Line: 141
+    -- upvalues: u87 (ref), u88 (ref), UI (val), ItemUtils (val), u80 (val)
+    if u87 then
+        u87(false)
+        u87 = nil
+        u88 = nil
+    end
+    local BuyItemCost = UI.get("BuyItemCost")
+    BuyItemCost.Visible = false
+    local BuyPromptButtons = UI.get("BuyPromptButtons")
+    BuyPromptButtons.Visible = false
+    local SellPromptButtons = UI.get("SellPromptButtons")
+    SellPromptButtons.Visible = false
+
+    function u87(a1) -- Line: 147 -- upvalues: a6 (val)
+        task.spawn(a6, a1)
+    end
+
+    local v1 = a2
+    local v2 = ItemUtils.get_item_instance(a2)
+    if v2 then
+        v1 = v2:GetAttribute("DisplayName")
+    end
+    local BuyPromptButtons_2 = UI.get("BuyPromptButtons")
+    BuyPromptButtons_2.Visible = true
+    local BuyItemCost_2 = UI.get("BuyItemCost")
+    BuyItemCost_2.Visible = true
+    local BuyItemImage = UI.get("BuyItemImage")
+    BuyItemImage.Image = a1.image_id or ""
+    local BuyItemImage_2 = UI.get("BuyItemImage")
+    local color = a1.color or Color3.fromRGB(255, 255, 255)
+    BuyItemImage_2.ImageColor3 = color
+    local BuyItemCost_3 = UI.get("BuyItemCost")
+    BuyItemCost_3.Text = ("%*"):format((tostring(a3)))
+    local BuyItemName = UI.get("BuyItemName")
+    BuyItemName.Text = v1 or ""
+    UI.get("ItemBuyHolder").TextLabel.Text = a4 or "Buy Item"
+    UI.get("BuyPromptBuyButton").TextLabel.Text = a5 or "Buy"
+    u80.enabled.set(true)
+end
+
+function u80.initiate() end
+
+function u80.loaded() -- Line: 175
+    -- upvalues: UI (val), u80 (val), SubMenuBackground (val), UIFX (val), u87 (ref), u88 (ref), FlagManager (val)
+    -- upvalues: Util (val), NotificationsUI (val), u89 (ref), UISlider (val)
+    UI.get("BuyPrompt")
+    local SellPromptSellButton = UI.get("SellPromptSellButton")
+    local BuyPromptBuyButton = UI.get("BuyPromptBuyButton")
+    local BuyPromptBackButton = UI.get("BuyPromptBackButton")
+    local BuyPromptCloseButton = UI.get("BuyPromptCloseButton")
+    local ItemBuyHolder = UI.get("ItemBuyHolder")
+    ItemBuyHolder.Visible = false
+    u80.enabled.hook(function(a1) -- Line: 184
+        -- upvalues: SubMenuBackground (upval), u80 (upval), UI (upval), UIFX (upval), ItemBuyHolder (val), u87 (upval)
+        -- upvalues: u88 (upval)
+        if not SubMenuBackground.can_open() then
+            return
+        end
+        if a1 then
+            SubMenuBackground.open(u80.enabled, UI.get("BuyPrompt"))
+            UIFX.scale_open(ItemBuyHolder)
+            return
+        end
+        SubMenuBackground.close()
+        UIFX.scale_close(ItemBuyHolder)
+        task.defer(function() -- Line: 194 -- upvalues: u87 (upval), u88 (upval)
+            if u87 then
+                u87(false)
+                u87 = nil
+                u88 = nil
+            end
+        end)
+    end)
+    UI.on_click(BuyPromptBackButton, function() -- Line: 201 -- upvalues: u80 (upval)
+        u80.enabled.set(false)
+    end)
+    UI.on_click(BuyPromptCloseButton, function() -- Line: 205 -- upvalues: u80 (upval)
+        u80.enabled.set(false)
+    end)
+    UI.on_click(BuyPromptBuyButton, function() -- Line: 209 -- upvalues: u87 (upval), u80 (upval)
+        u87(true)
+        u87 = nil
+        u80.enabled.set(false)
+    end)
+    if not FlagManager.FLAG_HOLD_SELL_BUTTON then
+        UI.on_click(SellPromptSellButton, function() -- Line: 264 -- upvalues: u87 (upval), u80 (upval)
+            u87(true)
+            u87 = nil
+            u80.enabled.set(false)
+        end)
+    else
+        local HoldStroke = SellPromptSellButton:FindFirstChild("HoldStroke", true)
+        local UIGradient = HoldStroke.UIGradient
+        UIGradient.Enabled = true
+        HoldStroke.Enabled = true
+        local NumberValue = Instance.new("NumberValue")
+        NumberValue.Value = 0
+        Util.watch_property(NumberValue, "Value", function(a1) -- Line: 224 -- upvalues: UIGradient (val), u87 (upval), u80 (upval), HoldStroke (val) -- types: a1: number
+            UIGradient.Transparency = NumberSequence.new({
+                NumberSequenceKeypoint.new(0, 1),
+                NumberSequenceKeypoint.new(math.max(0, 1 - a1 - 0.001), 1),
+                NumberSequenceKeypoint.new(1 - a1, 0),
+                (NumberSequenceKeypoint.new(1, 0)),
+            })
+            if a1 >= 1 then
+                u87(true)
+                u87 = nil
+                u80.enabled.set(false)
+            end
+            HoldStroke.Enabled = a1 > 0
+        end)
+        SellPromptSellButton.MouseButton1Down:Connect(function() -- Line: 239
+            -- upvalues: SellPromptSellButton (val), u88 (upval), Util (upval), NumberValue (val), u80 (upval)
+            -- upvalues: NotificationsUI (upval), u87 (upval)
+            local v1 = tonumber((string.match(SellPromptSellButton.TextLabel.Text, "%d+")))
+            if v1 == nil then
+                v1 = u88
+            end
+            if v1 == nil then
+                u87(true)
+                u87 = nil
+                u80.enabled.set(false)
+                return
+            end
+            local v2 = if not (v1 >= 3000) then 0.5 else 2
+            Util.tween(NumberValue, TweenInfo.new(v2), {Value = 1})
+            local u22 = nil
+            local v3 = SellPromptSellButton.InputEnded:Connect(function(a1) -- Line: 245
+                -- upvalues: NumberValue (upval), u80 (upval), NotificationsUI (upval), u22 (ref), Util (upval)
+                if a1.UserInputType == Enum.UserInputType.MouseMovement
+                    or a1.UserInputType == Enum.UserInputType.MouseButton1
+                    or a1.UserInputType == Enum.UserInputType.Touch then
+                    if NumberValue.Value < 1 then
+                        local v1 = u80
+                        v1.sell_button_unfinished_clicks = v1.sell_button_unfinished_clicks + 1
+                        if 3 <= u80.sell_button_unfinished_clicks then
+                            NotificationsUI.show_notification(nil, "Hold to confirm!", nil, true)
+                        end
+                    end
+                    u22:Disconnect()
+                    Util.tween(NumberValue, TweenInfo.new(0), {Value = 0})
+                end
+            end)
+        end)
+    end
+    u89 = UISlider.setup_slider(UI.get("SellPromptSlider"), 0)
+end
+
+return u80

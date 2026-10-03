@@ -1,0 +1,10 @@
+-- Path : ReplicatedStorage.Modules.Game.Store.BlockSpinSubscriptionData
+-- Script path: ReplicatedStorage.Modules.Game.Store.BlockSpinSubscriptionData
+-- Decompile time: 0.08 ms
+
+return {
+    BLOCK_SPIN_PLUS_SUBSCRIPTION_ID = "EXP-3721711932053127523",
+    LEGACY_BLOCK_SPIN_PLUS_SUBSCRIPTION_ID = "EXP-8978432955422343501",
+    ROBUX_BLOCK_SPIN_PLUS_SUBSCRIPTION_ID = "EXP-8375710888711291395",
+    LEGACY_ROBUX_BLOCK_SPIN_PLUS_SUBSCRIPTION_ID = "EXP-5237651963859698184",
+}

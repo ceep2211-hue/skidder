@@ -1,0 +1,12 @@
+-- Path : Workspace.Map.Tiles.ShoppingTile.HighEndStore.Interior.Model.Model.ClothingStorePromptModel.CharacterCreatorPages
+-- Script path: Workspace.Map.Tiles.ShoppingTile.HighEndStore.Interior.Model.Model.ClothingStorePromptModel.CharacterCreatorPages
+-- Decompile time: 0.28 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CharacterCreatorTypes = require(ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator.CharacterCreatorTypes)
+return {
+    CharacterCreatorTypes.all_item_types.hat_accessories,
+    CharacterCreatorTypes.all_item_types.shoe_accessories,
+    CharacterCreatorTypes.all_item_types.top_accessories,
+    CharacterCreatorTypes.all_item_types.bottom_accessories,
+}

@@ -1,0 +1,81 @@
+-- Path : ReplicatedStorage.Modules.Game.Booster.Boosters
+-- Script path: ReplicatedStorage.Modules.Game.Booster.Boosters
+-- Decompile time: 1.90 ms
+
+local Data = require(game.ReplicatedStorage.Modules.Core.Data)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local Timer = require(game.ReplicatedStorage.Modules.Core.Timer)
+local BoostersInfo = require(game.ReplicatedStorage.Modules.Game.Booster.BoostersInfo)
+local FlagManager = require(game.ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local u44 = {}
+local LocalPlayer = game.Players.LocalPlayer
+
+function u44.get_seconds_left(a1) -- Line: 11 -- upvalues: Data (val), BoostersInfo (val) -- types: a1: string
+    if not Data.boosters[a1] then
+        return 0
+    end
+    local duration = BoostersInfo[a1].duration
+    local start_stamp = Data.boosters[a1].start_stamp
+    if duration == (1 / 0) then
+        return (1 / 0)
+    end
+    return (math.max(0, start_stamp + duration - (os.time())))
+end
+
+local u49 = {}
+
+function update_boosters(a1) -- Line: 29
+    -- upvalues: UI (val), u49 (ref), u44 (val), BoostersInfo (val), Timer (val), Util (val)
+    local background_color
+    local PassiveTemplate = UI.get("PassiveTemplate")
+    for i, j in u49 do
+        j:Destroy()
+    end
+    u49 = {}
+    local v1 = nil
+    local v2 = nil
+    for k, n in a1, v1, v2 do
+        if (u44.get_seconds_left(k)) <= 0 then
+            return
+        end
+        local u35 = PassiveTemplate:Clone()
+        u35.Visible = true
+        u35.Name = "Booster"
+        u35.ImageLabel.Image = BoostersInfo[k].image_id or "rbxassetid://0"
+        u35.Parent = UI.get("Passives")
+        background_color = BoostersInfo[k].background_color or Color3.new(1, 1, 1)
+        u35.BackgroundColor3 = background_color
+        table.insert(u49, u35)
+        local u66 = Timer.new(1, function() -- Line: 47 -- upvalues: u44 (upval), k (val), Util (upval), u35 (val)
+            local v1 = u44.get_seconds_left(k)
+            local v2 = Util.formatted_time(v1)
+            if v2 ~= "inf" then
+                u35.Countdown.Text = v2
+            else
+                u35.Countdown.Text = ""
+            end
+            if v1 <= 0 then
+                task.defer(function() -- Line: 57 -- upvalues: u35 (upval)
+                    u35:Destroy()
+                end)
+            end
+        end)
+        u35.Destroying:Connect(function() -- Line: 63 -- upvalues: u66 (val)
+            u66.stop()
+        end)
+    end
+end
+
+function u44.initiate() end
+
+function u44.loaded() -- Line: 73 -- upvalues: FlagManager (val), UI (val), Data (val)
+    if not FlagManager.FLAG_BOOSTERS_ACTIVE then
+        return
+    end
+    local PassiveTemplate = UI.get("PassiveTemplate")
+    PassiveTemplate.Visible = false
+    Data.hook("boosters", update_boosters)
+end
+
+return u44

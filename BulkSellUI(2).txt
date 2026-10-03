@@ -1,0 +1,437 @@
+-- Path : ReplicatedStorage.Modules.Game.Inventory.BulkSellUI
+-- Script path: ReplicatedStorage.Modules.Game.Inventory.BulkSellUI
+-- Decompile time: 9.74 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local v1 = {}
+local UI = require(ReplicatedStorage.Modules.Core.UI)
+local Net = require(ReplicatedStorage.Modules.Core.Net)
+local Data = require(ReplicatedStorage.Modules.Core.Data)
+local State = require(ReplicatedStorage.Modules.Core.State)
+local Util = require(ReplicatedStorage.Modules.Core.Util)
+local Audio = require(ReplicatedStorage.Modules.Core.Audio)
+local ItemsUI = require(ReplicatedStorage.Modules.Game.Inventory.ItemsUI)
+local ItemUtils = require(ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+local PawnShop = require(ReplicatedStorage.Modules.Game.Inventory.PawnShop)
+local NotificationsUI = require(ReplicatedStorage.Modules.Game.UI.NotificationsUI)
+local u62 = State.new(false)
+local u63 = {}
+local u64 = nil
+local u65 = nil
+local u66 = false
+
+local function selected_guids() -- Line: 57 -- upvalues: u63 (val)
+    local v1 = {}
+    for i in u63 do
+        table.insert(v1, i)
+    end
+    return v1
+end
+
+local function count_selected() -- Line: 65 -- upvalues: u63 (val)
+    local v1 = 0
+    for i in u63 do
+        v1 = v1 + 1
+    end
+    return v1
+end
+
+local function info_for(a1) -- Line: 73 -- upvalues: ItemUtils (val), Data (val) -- types: a1: string
+    return (ItemUtils.get_item_info(Data, a1))
+end
+
+local function prune_selection() -- Line: 83 -- upvalues: u63 (val), ItemUtils (val), Data (val)
+    local v1
+    local v2 = false
+    local v3 = nil
+    local v4 = nil
+    for i in u63, v3, v4 do
+        v1 = ItemUtils.get_item_info(Data, i)
+        if not v1 or v1.location ~= "hand" then
+            u63[i] = nil
+            v2 = true
+        end
+    end
+    return v2
+end
+
+local function estimated_total() -- Line: 95 -- upvalues: u63 (val), ItemUtils (val), Data (val), PawnShop (val)
+    local v1
+    local v2 = 0
+    for i in u63 do
+        v1 = ItemUtils.get_item_info(Data, i)
+        if v1 then
+            v2 = v2 + (PawnShop.get_sell_price_for_item(v1) or 0) * (v1.amount or 1)
+        end
+    end
+    return v2
+end
+
+local function tick_on(a1, a2) -- Line: 109 -- types: a1: userdata, a2: boolean
+    local BulkSelectedIcon = a1:FindFirstChild("BulkSelectedIcon")
+    if BulkSelectedIcon then
+        BulkSelectedIcon.Visible = a2
+        return
+    end
+    if not a2 then
+        return
+    end
+    local ImageLabel = Instance.new("ImageLabel")
+    ImageLabel.Name = "BulkSelectedIcon"
+    ImageLabel.Image = "rbxassetid://84093605595780"
+    ImageLabel.BackgroundTransparency = 1
+    ImageLabel.AnchorPoint = Vector2.new(1, 0)
+    ImageLabel.Position = UDim2.fromScale(0.97, 0.03)
+    ImageLabel.Size = UDim2.fromScale(0.34, 0.34)
+    ImageLabel.ZIndex = 10
+    ImageLabel.Visible = true
+    local UIAspectRatioConstraint = Instance.new("UIAspectRatioConstraint")
+    UIAspectRatioConstraint.AspectRatio = 1
+    UIAspectRatioConstraint.Parent = ImageLabel
+    ImageLabel.Parent = a1
+end
+
+local u73 = {}
+
+local function set_equipped_ticks_hidden(a1) -- Line: 149 -- upvalues: UI (val), u73 (val) -- types: a1: boolean
+    local ItemsScrollingFrame = UI.get("ItemsScrollingFrame")
+    if ItemsScrollingFrame and typeof(ItemsScrollingFrame) == "Instance" then
+        local ItemEquipped
+        local v1 = a1
+        for i, j in ItemsScrollingFrame:GetChildren() do
+            ItemEquipped = j:FindFirstChild("ItemEquipped")
+            if ItemEquipped and ItemEquipped:IsA("GuiObject") then
+                if v1 then
+                    if u73[ItemEquipped] == nil then
+                        u73[ItemEquipped] = ItemEquipped.Visible
+                    end
+                    ItemEquipped.Visible = false
+                elseif u73[ItemEquipped] ~= nil then
+                    ItemEquipped.Visible = u73[ItemEquipped]
+                end
+            end
+        end
+        if not v1 then
+            table.clear(u73)
+        end
+        return
+    end
+end
+
+local function refresh_ticks() -- Line: 175
+    -- upvalues: UI (val), tick_on (val), u63 (val), set_equipped_ticks_hidden (val)
+    local ItemsScrollingFrame = UI.get("ItemsScrollingFrame")
+    if ItemsScrollingFrame and typeof(ItemsScrollingFrame) == "Instance" then
+        local Attribute, v1
+        for i, j in ItemsScrollingFrame:GetChildren() do
+            if j:IsA("GuiButton") then
+                Attribute = j:GetAttribute("GUID")
+                v1 = false
+                if type(Attribute) == "string" then
+                    v1 = u63[Attribute] == true
+                end
+                tick_on(j, v1)
+            end
+        end
+        set_equipped_ticks_hidden(true)
+        return
+    end
+end
+
+local function clear_ticks() -- Line: 190 -- upvalues: UI (val)
+    local ItemsScrollingFrame = UI.get("ItemsScrollingFrame")
+    if ItemsScrollingFrame and typeof(ItemsScrollingFrame) == "Instance" then
+        local BulkSelectedIcon
+        for i, j in ItemsScrollingFrame:GetChildren() do
+            BulkSelectedIcon = j:FindFirstChild("BulkSelectedIcon")
+            if BulkSelectedIcon then
+                BulkSelectedIcon.Visible = false
+            end
+        end
+        return
+    end
+end
+
+local function set_button_text(a1) -- Line: 205 -- upvalues: u64 (ref) -- types: a1: string
+    if not u64 then
+        return
+    end
+    local TextLabel = u64:FindFirstChild("TextLabel")
+    if TextLabel and TextLabel:IsA("TextLabel") then
+        TextLabel.Text = a1
+    end
+end
+
+local function refresh_button() -- Line: 215 -- upvalues: u64 (ref), u62 (val), u63 (val), estimated_total (val)
+    if not u64 then
+        return
+    end
+    if not u62.get() then
+        if not u64 then
+            return
+        end
+        local TextLabel = u64:FindFirstChild("TextLabel")
+        if TextLabel and TextLabel:IsA("TextLabel") then
+            TextLabel.Text = "Bulk Sell Items"
+        end
+        return
+    end
+    local v1 = 0
+    for i in u63 do
+        v1 = v1 + 1
+    end
+    if v1 == 0 then
+        if not u64 then
+            return
+        end
+        local TextLabel_2 = u64:FindFirstChild("TextLabel")
+        if TextLabel_2 and TextLabel_2:IsA("TextLabel") then
+            TextLabel_2.Text = "Select items to sell"
+            return
+        end
+        return
+    end
+    local v2 = ("Sell: $%*"):format((estimated_total()))
+    if not u64 then
+        return
+    end
+    local TextLabel_3 = u64:FindFirstChild("TextLabel")
+    if TextLabel_3 and TextLabel_3:IsA("TextLabel") then
+        TextLabel_3.Text = v2
+    end
+end
+
+local function build_button() -- Line: 233 -- upvalues: UI (val)
+    local ItemsHolder = UI.get("ItemsHolder")
+    if ItemsHolder and typeof(ItemsHolder) == "Instance" then
+        local BulkSellButton = ItemsHolder:FindFirstChild("BulkSellButton")
+        if BulkSellButton and BulkSellButton:IsA("TextButton") then
+            return BulkSellButton
+        end
+        local SellAllFishButton = ItemsHolder:FindFirstChild("SellAllFishButton")
+        if SellAllFishButton and SellAllFishButton:IsA("TextButton") then
+            local v1 = SellAllFishButton:Clone()
+            v1.Name = "BulkSellButton"
+            v1.Visible = false
+            local TextLabel = v1:FindFirstChild("TextLabel")
+            if TextLabel and TextLabel:IsA("TextLabel") then
+                TextLabel.Size = UDim2.fromScale(1, 0.46)
+            end
+            v1:SetAttribute("being_listened_to", nil)
+            v1.Parent = ItemsHolder
+            return v1
+        end
+        warn("[BulkSell] SellAllFishButton not found to clone")
+        return nil
+    end
+    return nil
+end
+
+local function exit_selection() -- Line: 271
+    -- upvalues: u62 (val), ItemsUI (val), u63 (val), clear_ticks (val), set_equipped_ticks_hidden (val), u65 (ref)
+    -- upvalues: Util (val), refresh_button (val)
+    if not u62.get() then
+        return
+    end
+    u62.set(false)
+    ItemsUI.bulk_sell_mode.set(false)
+    table.clear(u63)
+    clear_ticks()
+    set_equipped_ticks_hidden(false)
+    if u65 then
+        Util.tween(u65, TweenInfo.new(0), {Value = 0})
+    end
+    refresh_button()
+end
+
+v1.exit_selection = exit_selection
+
+local function enter_selection() -- Line: 287
+    -- upvalues: u62 (val), u63 (val), ItemsUI (val), refresh_ticks (val), refresh_button (val)
+    if u62.get() then
+        return
+    end
+    table.clear(u63)
+    u62.set(true)
+    ItemsUI.bulk_sell_mode.set(true)
+    refresh_ticks()
+    refresh_button()
+end
+
+local function toggle_item(a1) -- Line: 298
+    -- upvalues: u62 (val), u63 (val), NotificationsUI (val), PawnShop (val), refresh_ticks (val), refresh_button (val)
+    if u62.get() and type(a1) == "table" then
+        local guid = a1.guid
+        if type(guid) ~= "string" then
+            return
+        end
+        if u63[guid] then
+            u63[guid] = nil
+            refresh_ticks()
+            refresh_button()
+            return
+        end
+        local v1 = 0
+        for i in u63 do
+            v1 = v1 + 1
+        end
+        if v1 >= 20 then
+            NotificationsUI.show_notification(nil, (("You can only sell %* stacks at once"):format(20)))
+            return
+        end
+        if (PawnShop.get_sell_price_for_item(a1) or 0) <= 0 then
+            NotificationsUI.show_notification(nil, (("You can not sell %* here"):format((tostring(a1.name)))))
+            return
+        end
+        u63[guid] = true
+        refresh_ticks()
+        refresh_button()
+        return
+    end
+end
+
+local function confirm_sell() -- Line: 328
+    -- upvalues: u66 (ref), u62 (val), u63 (val), NotificationsUI (val), Net (val), Audio (val), exit_selection (val)
+    if not u66 and u62.get() then
+        local u4 = {}
+        for i in u63 do
+            table.insert(u4, i)
+        end
+        if #u4 == 0 then
+            NotificationsUI.show_notification(nil, "Select some items first")
+            return
+        end
+        u66 = true
+        local success, result, v1, v2, v3 = pcall(function() -- Line: 340 -- upvalues: Net (upval), u4 (val)
+            return Net.get("bulk_sell", u4)
+        end)
+        u66 = false
+        if success and result == true then
+            if 0 < (v1 or 0) then
+                NotificationsUI.show_notification(nil, (("Sold %* stack(s) for $%*"):format(v1, v3 or 0)))
+            end
+            if 0 < (v2 or 0) then
+                NotificationsUI.show_notification(nil, (("%* item(s) could not be sold"):format(v2)))
+            end
+            exit_selection()
+            return
+        end
+        Audio.error()
+        NotificationsUI.show_notification(
+            nil,
+            (if not success then nil else if type(v1) ~= "string" then nil else v1) or "Could not sell those items - try again"
+        )
+        return
+    end
+end
+
+local function should_show_button() -- Line: 370 -- upvalues: ItemsUI (val)
+    local v1 = false
+    if ItemsUI.is_open.get() == true then
+        v1 = ItemsUI.inventory_type.get() == "sell"
+    end
+    return v1
+end
+
+local function refresh_visibility() -- Line: 374 -- upvalues: u64 (ref), ItemsUI (val), exit_selection (val)
+    if not u64 then
+        return
+    end
+    local v1 = false
+    if ItemsUI.is_open.get() == true then
+        v1 = ItemsUI.inventory_type.get() == "sell"
+    end
+    u64.Visible = v1
+    if not v1 then
+        exit_selection()
+    end
+end
+
+function v1.initiate() -- Line: 385 -- upvalues: ItemsUI (val), toggle_item (val)
+    ItemsUI.on_bulk_item_clicked:Connect(toggle_item)
+end
+
+function v1.loaded() -- Line: 389
+    -- upvalues: u64 (ref), build_button (val), u65 (ref), Util (val), confirm_sell (val), u62 (val)
+    -- upvalues: enter_selection (val), u63 (val), ItemsUI (val), refresh_visibility (val), Data (val)
+    -- upvalues: prune_selection (val), refresh_ticks (val), refresh_button (val), exit_selection (val)
+    u64 = build_button()
+    if not u64 then
+        return
+    end
+    local HoldStroke = u64:FindFirstChild("HoldStroke", true)
+    local UIGradient = HoldStroke
+    if UIGradient then
+        UIGradient = HoldStroke:FindFirstChildOfClass("UIGradient")
+    end
+    u65 = Instance.new("NumberValue")
+    u65.Value = 0
+    if HoldStroke and UIGradient then
+        UIGradient.Enabled = true
+        HoldStroke.Enabled = false
+        local v1 = u65
+        Util.watch_property(v1, "Value", function(a1) -- Line: 406
+            -- upvalues: UIGradient (val), HoldStroke (val), u65 (upval), confirm_sell (upval)
+            UIGradient.Transparency = NumberSequence.new({
+                NumberSequenceKeypoint.new(0, 1),
+                NumberSequenceKeypoint.new(math.max(0, 1 - a1 - 0.001), 1),
+                NumberSequenceKeypoint.new(1 - a1, 0),
+                (NumberSequenceKeypoint.new(1, 0)),
+            })
+            HoldStroke.Enabled = a1 > 0
+            if a1 >= 1 then
+                u65.Value = 0
+                task.spawn(confirm_sell)
+            end
+        end)
+    end
+    u64.MouseButton1Down:Connect(function() -- Line: 421
+        -- upvalues: u62 (upval), enter_selection (upval), u63 (upval), Util (upval), u65 (upval), u64 (upval)
+        if not u62.get() then
+            enter_selection()
+            return
+        end
+        local v1 = 0
+        for i in u63 do
+            v1 = v1 + 1
+        end
+        if v1 == 0 then
+            return
+        end
+        Util.tween(u65, TweenInfo.new(1.5, Enum.EasingStyle.Linear), {Value = 1})
+        local u25 = nil
+        local v2 = u64.InputEnded:Connect(function(a1) -- Line: 432 -- upvalues: u25 (ref), u65 (upval), Util (upval) -- types: a1: userdata
+            if a1.UserInputType == Enum.UserInputType.MouseMovement
+                or a1.UserInputType == Enum.UserInputType.MouseButton1
+                or a1.UserInputType == Enum.UserInputType.Touch then
+                u25:Disconnect()
+                if u65.Value < 1 then
+                    Util.tween(u65, TweenInfo.new(0), {Value = 0})
+                end
+            end
+        end)
+    end)
+    ItemsUI.is_open.hook(refresh_visibility)
+    ItemsUI.inventory_type.hook(refresh_visibility)
+    Data.hook("items", function() -- Line: 450 -- upvalues: u62 (upval), prune_selection (upval), refresh_ticks (upval), refresh_button (upval)
+        if not u62.get() then
+            return
+        end
+        prune_selection()
+        refresh_ticks()
+        refresh_button()
+    end)
+    if u64 then
+        local v2 = false
+        if ItemsUI.is_open.get() == true then
+            v2 = ItemsUI.inventory_type.get() == "sell"
+        end
+        u64.Visible = v2
+        if not v2 then
+            exit_selection()
+        end
+    end
+    refresh_button()
+end
+
+return v1

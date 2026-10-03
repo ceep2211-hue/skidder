@@ -1,0 +1,5 @@
+-- Path : Workspace.Vehicles.SRT.Upgrades.Horn.Train Horn.Configuration
+-- Script path: Workspace.Vehicles.SRT.Upgrades.Horn.Train Horn.Configuration
+-- Decompile time: 0.06 ms
+
+return {SoundId = "rbxassetid://6870691428", SoundName = "HornSound"}

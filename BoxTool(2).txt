@@ -1,0 +1,53 @@
+-- Path : ReplicatedStorage.Modules.Game.Tools.BoxTool
+-- Script path: ReplicatedStorage.Modules.Game.Tools.BoxTool
+-- Decompile time: 1.19 ms
+
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+require(game.ReplicatedStorage.Modules.Game.Ragdoll)
+require(game.ReplicatedStorage.Modules.Core.Char)
+local ShelfStocking = require(game.ReplicatedStorage.Modules.Game.Jobs.ShelfStocking)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local u36 = {}
+u36.class = StatefulObject.new_class(function() -- Line: 9 -- upvalues: State (val)
+    return {
+        extra = State.new(0),
+        box_1 = State.new(""),
+        box_2 = State.new(""),
+        box_3 = State.new(""),
+        box_4 = State.new(""),
+        box_5 = State.new(""),
+        box_6 = State.new(""),
+    }
+end, "BoxTool")
+
+function u36.initiate() end
+
+function u36.loaded() -- Line: 28 -- upvalues: u36 (val), ShelfStocking (val)
+    u36.class.hook(function(a1) -- Line: 30 -- upvalues: ShelfStocking (upval)
+        local instance = a1.instance
+        if instance.ClassName ~= "Tool" then
+            return
+        end
+        instance.Unequipped:Connect(function() -- Line: 34 -- upvalues: instance (val), ShelfStocking (upval)
+            if instance.Parent ~= game.Players.LocalPlayer.Backpack then
+                return
+            end
+            ShelfStocking.cancel_stocking()
+        end)
+        return function() -- Line: 40 -- upvalues: a1 (val), instance (val)
+            a1.states.extra.hook(function(a1) -- Line: 41 -- upvalues: instance (upval)
+                local v1
+                for i = 1, 5 do
+                    for j, k in instance:FindFirstChild("Extra" .. i):GetChildren() do
+                        if k:IsA("BasePart") then
+                            v1 = if not (i <= a1) then 1 else 0
+                            k.Transparency = v1
+                        end
+                    end
+                end
+            end)
+        end
+    end)
+end
+
+return u36

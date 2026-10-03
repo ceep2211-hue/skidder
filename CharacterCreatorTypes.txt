@@ -1,0 +1,23 @@
+-- Path : ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator.CharacterCreatorTypes
+-- Script path: ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator.CharacterCreatorTypes
+-- Decompile time: 0.17 ms
+
+return {
+    page_display_types = {
+        items = "items",
+        gender_selection = "gender_selection",
+        height_selection = "height_selection",
+        skin_color_selection = "skin_color_selection",
+    },
+    all_item_types = {
+        hair = "Hair",
+        face = "Face",
+        skin_color = "Skin Color",
+        height = "Body Size",
+        gender = "Body",
+        hat_accessories = "Hat",
+        shoe_accessories = "Shoes",
+        top_accessories = "Top",
+        bottom_accessories = "Bottoms",
+    },
+}

@@ -1,0 +1,28 @@
+-- Path : ReplicatedStorage.Modules.Game.Booster.BoostersInfo
+-- Script path: ReplicatedStorage.Modules.Game.Booster.BoostersInfo
+-- Decompile time: 0.29 ms
+
+local v1 = {
+    image_id = "rbxassetid://114286790575033",
+    duration = 900,
+    remove_on_death = false,
+    background_color = Color3.fromRGB(76, 207, 255),
+    notification = {enabled = "Passive mode booster started", disabled = "Passive mode booster ended"},
+}
+return {
+    quick_revive = {
+        image_id = "rbxassetid://73406606385927",
+        duration = 900,
+        background_color = Color3.fromRGB(227, 33, 33),
+        notification = {enabled = "Quick revive booster started", disabled = "Quick revive booster ended"},
+    },
+    body_armor = {
+        image_id = "rbxassetid://115102350258817",
+        duration = (1 / 0),
+        remove_on_death = true,
+        accessory = "BodyArmour",
+        background_color = Color3.fromRGB(69, 153, 198),
+        notification = {enabled = "Body armor booster started", disabled = "Body armor booster ended"},
+    },
+    passive_mode = v1,
+}

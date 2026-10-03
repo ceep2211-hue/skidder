@@ -1,0 +1,966 @@
+-- Path : ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator
+-- Script path: ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator
+-- Decompile time: 27.10 ms
+
+local Keybinds = require(game.ReplicatedStorage.Modules.Game.Keybinds)
+local u7 = {}
+game:GetService("ReplicatedFirst")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+game:GetService("StarterGui")
+local Spring = require(game.ReplicatedStorage.Modules.Core.Spring)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local CurrentCamera = game.Workspace.CurrentCamera
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local ShoulderCamera = require(game.ReplicatedStorage.Modules.Game.ShoulderCamera)
+local Util_2 = require(game.ReplicatedStorage.Modules.Core.Util)
+local LocalPlayer = Players.LocalPlayer
+u7.FLAG_USE_MENU_CHARACTER_CREATOR = true
+Util_2.watch_attribute(LocalPlayer, "SplashScreenAvatarIsSeparateButton", function(a1) -- Line: 23 -- upvalues: u7 (val)
+    u7.FLAG_USE_MENU_CHARACTER_CREATOR = not a1
+end)
+local UISlider = require(game.ReplicatedStorage.Modules.Game.UI.UISlider)
+local Data = require(game.ReplicatedStorage.Modules.Core.Data)
+local Timer = require(game.ReplicatedStorage.Modules.Core.Timer)
+local Audio = require(game.ReplicatedStorage.Modules.Core.Audio)
+local BuyPromptUI = require(game.ReplicatedStorage.Modules.Game.UI.BuyPromptUI)
+local ResetCallback = require(game.ReplicatedStorage.Modules.Game.ResetCallback)
+local SplashScreen = require(game.ReplicatedStorage.Modules.Game.SplashScreen)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local TransitionUI = require(ReplicatedStorage.Modules.Game.UI.TransitionUI)
+local Heights = require(script.Items.Heights)
+local CharacterCreatorTypes = require(script.CharacterCreatorTypes)
+local CharacterCreatorSlot = require(script.CharacterCreatorSlot)
+local FillPages = require(script.FillPages)
+local Animations = require(script.Animations)
+local all_item_types = CharacterCreatorTypes.all_item_types
+local page_display_types = CharacterCreatorTypes.page_display_types
+local u174 = {}
+local u175 = nil
+local AvatarItemTemplate = script.AvatarItemTemplate
+local u178 = {}
+local u179 = nil
+local u180 = nil
+u7.finish_transition = State.new(false)
+u7.base_offset = Vector3.new(3, 0.699999988079071, 8.5)
+u7.offset_spring = Spring.new_v3(0.8, 0.8, u7.base_offset)
+u7.current_focus_part = State.new(nil)
+u7.editing_height = State.new(false)
+u7.is_in_creator = State.new(false)
+u7.is_final_page = State.new(false)
+u7.page_number = State.new(-1)
+u7.is_in_menu_page = State.new(false)
+u7.leaving_creator = State.new(false)
+u7.display_paid_items = State.new(false)
+u7.is_a_world_creator = State.new(false)
+u7.item_max_selection = State.new(0)
+u7.item_current_selection = State.new(0)
+u7.place_in_creator_model = State.new(function() -- Line: 85 -- upvalues: u7 (val)
+    local v1 = u7.is_in_creator.get()
+    u7.editing_height.get()
+    if u7.is_a_world_creator.get() then
+        return false
+    end
+    return v1
+end)
+u7.display_quantity_state = State.new(function() -- Line: 100 -- upvalues: u7 (val)
+    local v1 = u7.editing_height.get()
+    u7.item_current_selection.get()
+    local v2 = u7.item_max_selection.get()
+    local v3 = u7.is_in_creator.get()
+    if v1 or v2 == 1 or not v3 then
+        return false
+    end
+    return true
+end)
+local MIN_HEIGHT = Heights.MIN_HEIGHT
+local MAX_HEIGHT = Heights.MAX_HEIGHT
+local MIN_WIDTH = Heights.MIN_WIDTH
+local MAX_WIDTH = Heights.MAX_WIDTH
+local heights = Heights.heights
+local widths = Heights.widths
+local u235 = nil
+local u236 = nil
+local u237 = nil
+local u238 = nil
+
+local function update_camera() -- Line: 127 -- upvalues: u7 (val), u175 (ref), CurrentCamera (val), Char (val)
+    local v1 = u7.current_focus_part.get()
+    if u175 and v1 then
+        if u7.is_a_world_creator.get() then
+            update_main_spring(u175)
+        end
+        local v2 = os.clock()
+        CurrentCamera.CFrame = (CFrame.new(u7.offset_spring.s)) * Char.get_hrp().CFrame.Rotation * CFrame.Angles(
+            0.20943951023931953 + math.sin(v2 * 0.553) * 0.01,
+            3.141592653589793 + math.cos(v2 * 0.321) * 0.01 - 0.12217304763960307,
+            0
+        )
+    end
+end
+
+local function darken(a1, a2) -- Line: 139 -- types: a1: userdata, a2: number
+    local v1 = a2 or 0.2
+    return Color3.new(math.clamp(a1.R + v1, 0, 1), math.clamp(a1.G + v1, 0, 1), (math.clamp(a1.B + v1, 0, 1)))
+end
+
+local function is_final_page() -- Line: 148 -- upvalues: u175 (ref), u174 (ref)
+    if u175 == u174[#u174] then
+        return true
+    end
+    return false
+end
+
+local function is_first_page() -- Line: 155 -- upvalues: u175 (ref), u174 (ref)
+    if u175 == u174[1] then
+        return true
+    end
+    return false
+end
+
+local function get_total_equipped() -- Line: 162 -- upvalues: u178 (ref)
+    local v1 = 0
+    for i, j in u178 do
+        if j:GetAttribute("IsEquipped") then
+            v1 = v1 + 1
+        end
+    end
+    return v1
+end
+
+local function get_cframe_in_creator_area() -- Line: 172 -- upvalues: CharacterCreatorSlot (val), Char (val)
+    local HeightTeleport = (CharacterCreatorSlot.get_my_creator_model()).HeightTeleport
+    local v1 = Char.get()
+    Char.get_hum()
+    local PrimaryPart = v1.PrimaryPart
+    local RightFoot = v1:WaitForChild("RightFoot")
+    if not RightFoot then
+        print("Not teleporting CC: no right foot")
+        return
+    end
+    local v2 = PrimaryPart.Position.Y - RightFoot.Position.Y
+    return HeightTeleport.CFrame * CFrame.Angles(0, 0.12217304763960307, 0) + Vector3.new(0, v2, 0)
+end
+
+local function update_position_in_creator_area() -- Line: 195
+    -- upvalues: u7 (val), CharacterCreatorSlot (val), Char (val), get_cframe_in_creator_area (val), Net (val)
+    if u7.leaving_creator.get() or not u7.is_in_creator.get() then
+        return
+    end
+    CharacterCreatorSlot.get_my_creator_model()
+    local PrimaryPart = Char.get().PrimaryPart
+    local v1 = get_cframe_in_creator_area()
+    local v2 = false
+    if 0.1 < (PrimaryPart.CFrame.Position - v1.Position).Magnitude then
+        v2 = true
+    end
+    PrimaryPart.CFrame = v1
+    if v2 then
+        Net.send("replicate_cc_cframe", v1)
+    end
+end
+
+local function get_humanoid_description() -- Line: 223 -- upvalues: Char (val)
+    return Char.get():WaitForChild("Humanoid"):GetAppliedDescription()
+end
+
+local function get_equipped_status(a1) -- Line: 229 -- upvalues: Char (val)
+    local v1
+    local v2 = Char.get():WaitForChild("Humanoid"):GetAppliedDescription()
+    Char.get()
+    for i, j in script.Items:GetChildren() do
+        v1 = require(j)
+        if v1.page_name == a1.item_type then
+            return v1.get_equipped_status(a1, v2)
+        end
+    end
+    return false
+end
+
+local function run_equipped_sound_effect(a1, a2) -- Line: 243 -- upvalues: u7 (val) -- types: a1: boolean
+    local v1
+    for i, j in script.Items:GetChildren() do
+        v1 = require(j)
+        if v1.page_name == a2.item_type and v1.run_equipped_sound_effect then
+            v1.run_equipped_sound_effect(a1, a2, u7.is_a_world_creator.get())
+        end
+    end
+end
+
+local u249 = {}
+local u250 = false
+
+local function send_request() -- Line: 258 -- upvalues: u250 (ref), u249 (val)
+    local v1, v2, v3, v4
+    if u250 then
+        return
+    end
+    u250 = true
+    while true do
+        if not (#u249 > 0) then
+            break
+        end
+        v1 = table.remove(u249, 1)
+        v2 = v1[1]
+        v3 = v1[2]
+        for i, j in script.Items:GetChildren() do
+            v4 = require(j)
+            if v4.page_name == v3.item_type then
+                v4.send_equipped_to_server(v2, v3)
+            end
+        end
+    end
+    u250 = false
+end
+
+local function send_equipped_to_server(a1, a2) -- Line: 279
+    -- upvalues: u249 (val), send_request (val)
+    table.insert(u249, {a1, a2})
+    task.spawn(send_request)
+end
+
+local function is_item_owned(a1) -- Line: 284 -- upvalues: Data (val)
+    local purchased_items = Data.avatar.purchased_items
+    if not purchased_items then
+        return false
+    end
+    local v1 = false
+    if a1.price ~= nil then
+        v1 = purchased_items[a1.item_name]
+    end
+    return v1
+end
+
+local function request_purchase(a1) end
+
+local function init_item_template(a1, a2, a3) -- Line: 297
+    -- upvalues: get_equipped_status (val), u7 (val), Util (val), Data (val), Net (val), Audio (val), BuyPromptUI (val)
+    -- upvalues: u178 (ref), run_equipped_sound_effect (val), UI (val), u249 (val), send_request (val)
+    local u4 = a2.equipped_max or 1000
+    local ItemEquipped = a1.ItemEquipped
+    ItemEquipped.Visible = get_equipped_status(a3)
+    a1:SetAttribute("IsEquipped", ItemEquipped.Visible)
+    a1:SetAttribute("ItemInfo", (game.HttpService:JSONEncode(a3)))
+    a1.LayoutOrder = a3.layout_order or 1
+    if ItemEquipped.Visible then
+        u7.item_current_selection.update(function(a1) -- Line: 308
+            return a1 + 1
+        end)
+    end
+    a1.Frame.ItemImage.Visible = false
+    a1.Frame.TextLabel.Visible = false
+    if a3.image_id then
+        a1.Frame.ItemImage.Visible = true
+        a1.Frame.ItemImage.Image = a3.image_id
+    end
+    if a3.label_text then
+        a1.Frame.TextLabel.Visible = true
+        a1.Frame.TextLabel.Text = a3.label_text
+    end
+    if a3.skin_color then
+        local v1 = Util.table_to_color(a3.skin_color, true)
+        local v2 = -0.1
+        local v3 = Color3.new(math.clamp(v1.R + v2, 0, 1), math.clamp(v1.G + v2, 0, 1), (math.clamp(v1.B + v2, 0, 1)))
+        v3 = 0.1
+        local v4 = Color3.new(math.clamp(v1.R + v3, 0, 1), math.clamp(v1.G + v3, 0, 1), (math.clamp(v1.B + v3, 0, 1)))
+        a1.Frame.SkinColour.Visible = true
+        a1.Frame.SkinColour.BackgroundColor3 = v1
+    end
+    ;(function() -- Line: 347 -- upvalues: a1 (val), a3 (val), Data (upval), Util (upval)
+        a1.Frame.ItemCost.Visible = false
+        if a3.price then
+            local v1
+            local v2 = a3
+            local purchased_items = Data.avatar.purchased_items
+            if purchased_items then
+                v1 = false
+                if v2.price ~= nil then
+                    v1 = purchased_items[v2.item_name]
+                end
+            else
+                v1 = false
+            end
+            a1.Frame.ItemCost.Visible = true
+            if v1 then
+                a1.Frame.ItemCost.Text = "Owned"
+                return
+            end
+            a1.Frame.ItemCost.Text = ("Cost: $%*"):format((Util.add_commas(a3.price)))
+        end
+    end)()
+
+    local function attempt_purchase() -- Line: 365
+        -- upvalues: Net (upval), a3 (val), Data (upval), Audio (upval), a1 (val)
+        if not Net.get("purchase_item", a3.item_name) then
+            Audio.error()
+            return
+        end
+        local avatar = Data.avatar
+        local purchased_items = Data.avatar.purchased_items or {}
+        avatar.purchased_items = purchased_items
+        Data.avatar.purchased_items[a3.item_name] = true
+        Audio.play(104437872859975)
+        a1.Frame.ItemCost.Text = "Owned"
+    end
+
+    local function on_click() -- Line: 382
+        -- upvalues: a3 (val), Data (upval), BuyPromptUI (upval), Util (upval), attempt_purchase (val), u178 (upval)
+        -- upvalues: u4 (val), a1 (val), ItemEquipped (val), Audio (upval), run_equipped_sound_effect (upval)
+        local v1
+        script.Sounds.Scroll:Play()
+        local v2 = a3
+        local purchased_items = Data.avatar.purchased_items
+        if purchased_items then
+            v1 = false
+            if v2.price ~= nil then
+                v1 = purchased_items[v2.item_name]
+            end
+        else
+            v1 = false
+        end
+        if not v1 and a3.price then
+            BuyPromptUI.purchase_request({image_id = a3.image_id}, a3.display_name or a3.item_name, ("Cost: $%*"):format((Util.add_commas(a3.price))), nil, nil, function(a1) -- Line: 395 -- upvalues: attempt_purchase (upval)
+                if not a1 then
+                    return
+                end
+                attempt_purchase()
+            end)
+            return
+        end
+        v2 = 0
+        for i, j in u178 do
+            if j:GetAttribute("IsEquipped") then
+                v2 = v2 + 1
+            end
+        end
+        if v2 == u4 and u4 == 1 then
+            for k, n in u178 do
+                if n ~= a1 then
+                    n.ItemEquipped.Visible = false
+                    n:SetAttribute("IsEquipped", false)
+                end
+            end
+            v2 = 0
+            for m, i5 in u178 do
+                if i5:GetAttribute("IsEquipped") then
+                    v2 = v2 + 1
+                end
+            end
+        end
+        if ItemEquipped.Visible then
+            if v2 == u4 and u4 == 1 then
+                return
+            end
+            ItemEquipped.Visible = false
+            a1:SetAttribute("IsEquipped", ItemEquipped.Visible)
+            run_equipped_sound_effect(ItemEquipped.Visible, a3)
+            return
+        end
+        if not (v2 < u4) then
+            Audio.error()
+            return
+        end
+        ItemEquipped.Visible = true
+        a1:SetAttribute("IsEquipped", ItemEquipped.Visible)
+        run_equipped_sound_effect(ItemEquipped.Visible, a3)
+    end
+
+    UI.on_click(a1, function() -- Line: 440 -- upvalues: on_click (val), u7 (upval), u178 (upval)
+        on_click()
+        local set = u7.item_current_selection.set
+        local v1 = 0
+        for i, j in u178 do
+            if j:GetAttribute("IsEquipped") then
+                v1 = v1 + 1
+            end
+        end
+        set(v1)
+    end)
+    ;(a1:GetAttributeChangedSignal("IsEquipped")):Connect(function() -- Line: 445 -- upvalues: ItemEquipped (val), a3 (val), u249 (upval), send_request (upval)
+        table.insert(u249, {ItemEquipped.Visible, a3})
+        task.spawn(send_request)
+    end)
+end
+
+local function get_position_for_focus_part(a1) -- Line: 451 -- upvalues: Char (val) -- types: a1: string
+    local v1 = Char.get():WaitForChild(a1, 1)
+    local v2 = Char.get_hrp()
+    if v1 and v2 then
+        return (Vector3.new(v2.Position.X, v1.Position.Y, v2.Position.Z))
+    end
+    return (Vector3.new(0, 0, 0))
+end
+
+function update_main_spring(a1, a2) -- Line: 463 -- upvalues: Char (val), u7 (val) -- types: a2: boolean
+    local v1 = Char.get()
+    local v2 = Char.get_hrp()
+    local focus_part_name = a1.focus_part_name
+    local v3 = Char.get():WaitForChild(focus_part_name, 1)
+    local v4 = Char.get_hrp()
+    local v5 = a1.page_offset + ((if not v3 then Vector3.new(0, 0, 0) else if v4 then Vector3.new(v4.Position.X, v3.Position.Y, v4.Position.Z) else Vector3.new(0, 0, 0)) - v2.Position)
+    u7.offset_spring.r = (v2.CFrame * CFrame.Angles(0.20943951023931953, 3.01941960595019, 0) * CFrame.new(v5)).Position
+    u7.current_focus_part.set(v1:FindFirstChild(a1.focus_part_name))
+    if a2 then
+        u7.offset_spring.s = u7.offset_spring.r
+    end
+end
+
+local function replicate_height() -- Line: 481
+    -- upvalues: Util (val), u237 (ref), MIN_HEIGHT (val), MAX_HEIGHT (val), u238 (ref), MIN_WIDTH (val)
+    -- upvalues: MAX_WIDTH (val), all_item_types (val), u249 (val), send_request (val)
+    table.insert(u249, {
+        true,
+        {
+            item_name = "null",
+            image_id = "null",
+            asset_id = 0,
+            item_type = all_item_types.height,
+            height_multiplier = Util.map_value(u237.get(), MIN_HEIGHT, MAX_HEIGHT),
+            width_multiplier = Util.map_value(u238.get(), MIN_WIDTH, MAX_WIDTH),
+        },
+    })
+    task.spawn(send_request)
+end
+
+local function init_height_selection() -- Line: 500
+    -- upvalues: Heights (val), u235 (ref), UI (val), u236 (ref), u237 (ref), UISlider (val), u238 (ref), u7 (val)
+    -- upvalues: replicate_height (val), Util (val), MIN_HEIGHT (val), MAX_HEIGHT (val), Char (val)
+    -- upvalues: update_position_in_creator_area (val), MIN_WIDTH (val), MAX_WIDTH (val), Data (val)
+    local heights = Heights.heights
+    local widths = Heights.widths
+    u235 = UI.get("HeightSliderArea")
+    u236 = UI.get("WidthSliderArea")
+    u237 = UISlider.setup_slider(u235, 0)
+    u238 = UISlider.setup_slider(u236, 0)
+    u237.set(0.5)
+    u238.set(0.5)
+    u7.editing_height.hook(function(a1, a2) -- Line: 514 -- upvalues: replicate_height (upval)
+        if a2 and not a1 then
+            replicate_height()
+        end
+    end)
+    local Scroll = script.Sounds.Scroll
+    local u41 = Util.override(function(a1) -- Line: 523 -- upvalues: u235 (upval), heights (val), Util (upval), Scroll (val)
+        u235.Bar.Grab.Number.Visible = true
+        local v1 = ("%*"):format(heights[(math.round((Util.map_value(a1, 1, #heights))))])
+        if v1 ~= u235.Bar.Grab.Number.Text and u235.Bar.Grab.Number.Text ~= "" then
+            Scroll:Play()
+            u235.Bar.Grab.Number.Size = UDim2.fromScale(1, 0.5)
+            Util.tween(u235.Bar.Grab.Number, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Size = UDim2.fromScale(3, 1.5)})
+        end
+        u235.Bar.Grab.Number.Text = v1
+    end)
+    local u45 = Util.override(function(a1) -- Line: 534 -- upvalues: u236 (upval), widths (val), Util (upval), Scroll (val)
+        u236.Bar.Grab.Number.Visible = true
+        local v1 = ("%*"):format(widths[(math.round((Util.map_value(a1, 1, #widths))))])
+        if v1 ~= u236.Bar.Grab.Number.Text and u236.Bar.Grab.Number.Text ~= "" then
+            Scroll:Play()
+            u236.Bar.Grab.Number.Size = UDim2.fromScale(1, 0.5)
+            Util.tween(u236.Bar.Grab.Number, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Size = UDim2.fromScale(3, 1.5)})
+        end
+        u236.Bar.Grab.Number.Text = v1
+    end)
+
+    local function update_height(a1) -- Line: 547
+        -- upvalues: u7 (upval), Util (upval), MIN_HEIGHT (upval), MAX_HEIGHT (upval), Char (upval), Heights (upval)
+        -- upvalues: u41 (val), update_position_in_creator_area (upval)
+        if not u7.is_in_creator.get() then
+            return
+        end
+        local v1 = Util.map_value(a1, MIN_HEIGHT, MAX_HEIGHT)
+        local v2 = Char.get()
+        local Attribute = v2:GetAttribute("BodyType")
+        local v3 = Heights.body_types_size_multipliers[Attribute or "Masculine"]
+        Char.get_hum().BodyHeightScale.Value = v1 * v3.height
+        local Parent = v2.Parent
+        v2.Parent = game.ReplicatedStorage
+        v2.Parent = Parent
+        u41(a1)
+        update_position_in_creator_area()
+    end
+
+    u237.hook(update_height)
+
+    local function update_width(a1) -- Line: 571
+        -- upvalues: Util (upval), MIN_WIDTH (upval), MAX_WIDTH (upval), Char (upval), u45 (val)
+        -- upvalues: update_position_in_creator_area (upval)
+        local v1 = Util.map_value(a1, MIN_WIDTH, MAX_WIDTH)
+        Char.get_hum().BodyWidthScale.Value = v1
+        Char.get_hum().BodyDepthScale.Value = v1 * 0.8
+        local v2 = Char.get()
+        local Parent = v2.Parent
+        v2.Parent = game.ReplicatedStorage
+        v2.Parent = Parent
+        u45(a1)
+        update_position_in_creator_area()
+    end
+
+    u238.hook(update_width)
+    Data.hook("avatar", function() -- Line: 588
+        -- upvalues: Data (upval), u237 (upval), Util (upval), MIN_HEIGHT (upval), MAX_HEIGHT (upval), u238 (upval)
+        -- upvalues: MIN_WIDTH (upval), MAX_WIDTH (upval), update_height (val), update_width (val)
+        if Data.avatar and Data.avatar.height_multiplier then
+            u237.set(Util.normalize_value_between(Data.avatar.height_multiplier, MIN_HEIGHT, MAX_HEIGHT))
+        end
+        if Data.avatar and Data.avatar.width_multiplier then
+            u238.set(Util.normalize_value_between(Data.avatar.width_multiplier, MIN_WIDTH, MAX_WIDTH))
+        end
+        update_height(u237.get())
+        update_width(u238.get())
+    end)
+end
+
+local function discard_all_templates() -- Line: 606 -- upvalues: u178 (ref)
+    for i, j in u178 do
+        j:Destroy()
+    end
+    u178 = {}
+end
+
+local function on_update_page_change() -- Line: 613 -- upvalues: u175 (ref), u174 (ref), u7 (val)
+    if not (u175 ~= u174[#u174]) then
+        u7.is_final_page.set(true)
+        return
+    end
+    u7.is_final_page.set(false)
+end
+
+function u7.next_page(a1) -- Line: 621 -- upvalues: u175 (ref), u174 (ref), u7 (val) -- types: a1: number
+    if not u175 then
+        u175 = u174[1]
+        u7.page_number.set(1)
+        return true
+    end
+    if a1 == 1 and not (u175 ~= u174[#u174]) then
+        return false
+    end
+    if a1 == -1 and not (u175 ~= u174[1]) then
+        return false
+    end
+    for i, j in u174 do
+        if j == u175 then
+            u175 = u174[i + a1]
+            u7.page_number.set(i + a1)
+            return true
+        end
+    end
+    return false
+end
+
+function u7.unload_page() -- Line: 645 -- upvalues: u7 (val)
+    u7.editing_height.set(false)
+end
+
+function u7.load_page(a1) -- Line: 649
+    -- upvalues: u175 (ref), Char (val), CharacterCreatorSlot (val), u7 (val), update_position_in_creator_area (val)
+    -- upvalues: UI (val), u178 (ref), page_display_types (val), AvatarItemTemplate (val), init_item_template (val)
+    if not u175 then
+        return
+    end
+    Char.get()
+    Char.get_hrp()
+    local HeightTeleport = CharacterCreatorSlot.get_my_creator_model().HeightTeleport
+    if not u7.is_a_world_creator.get() then
+        update_position_in_creator_area()
+    end
+    update_main_spring(u175, a1)
+    local AvatarPageLabel = UI.get("AvatarPageLabel")
+    AvatarPageLabel.Text = u175.page_name
+    local v1 = nil
+    local v2 = nil
+    for i, j in u178, v1, v2 do
+        j:Destroy()
+    end
+    u178 = {}
+    local AvatarItemsScrollingFrame = UI.get("AvatarItemsScrollingFrame")
+    AvatarItemsScrollingFrame.Visible = false
+    local AvatarHeightSelection = UI.get("AvatarHeightSelection")
+    AvatarHeightSelection.Visible = false
+    if u175.display_type == page_display_types.height_selection then
+        u7.editing_height.set(true)
+        local AvatarHeightSelection_2 = UI.get("AvatarHeightSelection")
+        AvatarHeightSelection_2.Visible = true
+        return
+    end
+    local AvatarItemsScrollingFrame_2 = UI.get("AvatarItemsScrollingFrame")
+    AvatarItemsScrollingFrame_2.Visible = true
+    u7.item_max_selection.set(u175.equipped_max)
+    u7.item_current_selection.set(0)
+    if u175.items then
+        local v3
+        v1 = nil
+        v2 = nil
+        for k, n in u175.items, v1, v2 do
+            if not n.price or u7.display_paid_items.get() then
+                v3 = AvatarItemTemplate:Clone()
+                table.insert(u178, v3)
+                init_item_template(v3, u175, n)
+                v3.Visible = true
+                v3.Parent = UI.get("AvatarItemsScrollingFrame")
+            end
+        end
+    end
+end
+
+local function shadow_boxing_animation() -- Line: 703 -- upvalues: Char (val), u7 (val), UI (val), Animations (val)
+    local v1 = Char.get_hrp()
+    u7.offset_spring.r = (v1.CFrame * CFrame.Angles(0.20943951023931953, 3.01941960595019, 0) * CFrame.new((Vector3.new(0, 0, 15)))).Position
+    local CharacterCreator = UI.get("CharacterCreator")
+    CharacterCreator.Enabled = false
+    task.wait(0.7)
+    task.wait((Animations.shadow_box()).Length * 0.7)
+end
+
+function u7.finish(a1) -- Line: 720
+    -- upvalues: u7 (val), Char (val), shadow_boxing_animation (val), TransitionUI (val), LocalPlayer (val), Net (val)
+    -- upvalues: u179 (ref), ShoulderCamera (val), CurrentCamera (val), UI (val), Animations (val)
+    if u7.finish_transition.get() then
+        return
+    end
+    local v1 = Char.get()
+    script.Sounds.Confirm:Play()
+    u7.finish_transition.set(true)
+    if not u7.is_a_world_creator.get() then
+        shadow_boxing_animation()
+        task.spawn(TransitionUI.conditional_transition, 1, 1)
+        if not LocalPlayer.Character or LocalPlayer.Character == v1 then
+            LocalPlayer.CharacterAdded:Once(function() -- Line: 749 -- upvalues: TransitionUI (upval)
+                TransitionUI.conditional_enabled.set(false)
+                task.delay(1, function() end)
+            end)
+        else
+            TransitionUI.conditional_enabled.set(false)
+            task.delay(1, function() end)
+        end
+        task.wait(1)
+    end
+    u7.finish_transition.set(false)
+    u7.is_in_creator.set(false)
+    if not a1 then
+        Net.send("player_created_outfit")
+    end
+    if u179 then
+        u179:Disconnect()
+    end
+    local v2 = Char.get_hum()
+    LocalPlayer.CameraMinZoomDistance = 0.5
+    ShoulderCamera.spring_zoom.r = 0
+    CurrentCamera.CameraSubject = v2
+    local CharacterCreator = UI.get("CharacterCreator")
+    CharacterCreator.Enabled = false
+    u7.unload_page()
+    Char.get():WaitForChild("Animate").idle.Animation1.AnimationId = game.StarterPlayer.StarterCharacterScripts.Animate.idle.Animation1.AnimationId
+    Animations.stop()
+end
+
+function u7.start(a1) -- Line: 791
+    -- upvalues: u7 (val), Data (val), Net (val), u174 (ref), FillPages (val), u175 (ref), LocalPlayer (val)
+    -- upvalues: ShoulderCamera (val), UI (val), u179 (ref), update_camera (val), Animations (val)
+    if u7.is_in_creator.get() then
+        return
+    end
+    local avatar = Data.avatar and Data.avatar.has_created_outfit
+    if not avatar and u7.FLAG_USE_MENU_CHARACTER_CREATOR then
+        Net.send("random_outfit")
+    end
+    u7.is_in_creator.set(true)
+    u7.is_final_page.set(false)
+    u174 = FillPages.fill_pages(a1)
+    u175 = nil
+    u7.next_page(1)
+    u7.load_page(true)
+    if not not (u175 ~= u174[#u174]) then
+        u7.is_final_page.set(false)
+    else
+        u7.is_final_page.set(true)
+    end
+    LocalPlayer.CameraMinZoomDistance = 5
+    ShoulderCamera.spring_zoom.r = 1.75
+    local CharacterCreator = UI.get("CharacterCreator")
+    CharacterCreator.Enabled = true
+    if u179 then
+        u179:Disconnect()
+    end
+    u179 = (game:GetService("RunService")).RenderStepped:Connect(update_camera)
+    Animations.start()
+    if u7.FLAG_USE_MENU_CHARACTER_CREATOR then
+        if not u7.is_a_world_creator.get() then
+            u7.is_in_menu_page.set(true)
+            return
+        end
+        u7.is_in_menu_page.set(false)
+    end
+end
+
+local u268 = false
+local u269 = false
+
+local function prompt_first_time_opening() -- Line: 837
+    -- upvalues: Char (val), u268 (ref), u269 (ref), Net (val), u7 (val)
+    Char.get()
+    if u268 then
+        return
+    end
+    if workspace:GetAttribute("SkipCreator") then
+        if not u269 then
+            u269 = true
+            Net.send("skipped_character_creator")
+        end
+        return
+    end
+    if not u7.is_in_creator.get() then
+        u268 = true
+        u7.is_a_world_creator.set(false)
+        u7.display_paid_items.set(false)
+        u7.start()
+    end
+end
+
+local function init_menu_buttons() -- Line: 862
+    -- upvalues: UI (val), u7 (val), u175 (ref), u174 (ref), Keybinds (val), Char (val), prompt_first_time_opening (val)
+    -- upvalues: Util (val)
+    local MenuFrame = (UI.get("CharacterCreator")).MenuFrame
+
+    local function click_items_next_button() -- Line: 866 -- upvalues: u7 (upval), u175 (upval), u174 (upval)
+        if not u7.next_page(1) then
+            u7.finish(false)
+            return
+        end
+        script.Sounds.Scroll:Play()
+        u7.unload_page()
+        u7.load_page(false)
+        if not (u175 ~= u174[#u174]) then
+            u7.is_final_page.set(true)
+            return
+        end
+        u7.is_final_page.set(false)
+    end
+
+    local function click_items_back_button() -- Line: 880
+        -- upvalues: UI (upval), u7 (upval), u175 (upval), u174 (upval)
+        local EditorFrame = UI.get("CharacterCreator").EditorFrame
+        if u7.page_number.get() == 1 and u7.FLAG_USE_MENU_CHARACTER_CREATOR then
+            u7.is_in_menu_page.set(true)
+            return
+        end
+        if u7.next_page(-1) then
+            script.Sounds.Scroll:Play()
+            u7.unload_page()
+            u7.load_page(false)
+            if not (u175 ~= u174[#u174]) then
+                u7.is_final_page.set(true)
+                return
+            end
+            u7.is_final_page.set(false)
+        end
+    end
+
+    local u9 = {}
+
+    local function listen_to_gamepad_buttons() -- Line: 907
+        -- upvalues: u9 (ref), Keybinds (upval), MenuFrame (val), u7 (upval), click_items_next_button (val), UI (upval)
+        -- upvalues: click_items_back_button (val)
+        table.insert(u9, (Keybinds.hook_action("button_confirm", function(a1) -- Line: 908 -- upvalues: MenuFrame (upval), u7 (upval), click_items_next_button (upval)
+            if not a1 then
+                return
+            end
+            if MenuFrame.Visible then
+                u7.finish(false)
+                return
+            end
+            click_items_next_button()
+        end)))
+        table.insert(u9, (Keybinds.hook_action("button_back", function(a1) -- Line: 922 -- upvalues: MenuFrame (upval), u7 (upval), UI (upval), click_items_back_button (upval)
+            if not a1 then
+                return
+            end
+            if MenuFrame.Visible then
+                u7.is_in_menu_page.set(false)
+                return
+            end
+            if UI.get("ItemsBackButton").Visible then
+                click_items_back_button()
+            end
+        end)))
+    end
+
+    local function silence_gamepad_buttons() -- Line: 938 -- upvalues: u9 (ref)
+        for i, j in u9 do
+            j.unhook()
+        end
+        u9 = {}
+    end
+
+    Keybinds.hook_action_icon("button_confirm", function(a1) -- Line: 945 -- upvalues: UI (upval)
+        local PromptButton = UI.get("ItemsNextButton").PromptButton
+        PromptButton.Visible = not not a1
+        local PromptButton_2 = UI.get("AvatarMenuSkipButton").PromptButton
+        PromptButton_2.Visible = not not a1
+        if a1 then
+            UI.get("ItemsNextButton").PromptButton.Image = a1
+            UI.get("AvatarMenuSkipButton").PromptButton.Image = a1
+        end
+    end)
+    Keybinds.hook_action_icon("button_back", function(a1) -- Line: 955 -- upvalues: UI (upval)
+        local PromptButton = UI.get("AvatarMenuEditButton").PromptButton
+        PromptButton.Visible = not not a1
+        local PromptButton_2 = UI.get("ItemsBackButton").PromptButton
+        PromptButton_2.Visible = not not a1
+        if a1 then
+            UI.get("AvatarMenuEditButton").PromptButton.Image = a1
+            UI.get("ItemsBackButton").PromptButton.Image = a1
+        end
+    end)
+    UI.on_click("ItemsNextButton", click_items_next_button)
+    UI.on_click("ItemsBackButton", click_items_back_button)
+    UI.on_click("AvatarMenuSkipButton", function() -- Line: 897 -- upvalues: u7 (upval)
+        u7.finish(false)
+    end)
+    UI.on_click("AvatarMenuEditButton", function() -- Line: 901 -- upvalues: u7 (upval)
+        u7.is_in_menu_page.set(false)
+    end)
+    u7.is_in_creator.hook(function(a1, a2) -- Line: 974 -- upvalues: listen_to_gamepad_buttons (val), u9 (ref)
+        if a1 then
+            listen_to_gamepad_buttons()
+            return
+        end
+        if a2 then
+            for i, j in u9 do
+                j.unhook()
+            end
+            u9 = {}
+        end
+    end)
+    Char.hook(function(a1) -- Line: 984 -- upvalues: prompt_first_time_opening (upval), Char (upval), Util (upval), u7 (upval)
+        prompt_first_time_opening()
+        local v1 = Char.get_hum()
+        Util.watch_property(v1, "SeatPart", function(a1) -- Line: 988 -- upvalues: u7 (upval)
+            if a1
+                and u7.is_in_creator.get()
+                and u7.is_a_world_creator.get()
+                and a1:IsDescendantOf(workspace.Vehicles) then
+                u7.finish(false)
+            end
+        end)
+    end)
+end
+
+function u7.initiate() -- Line: 998 -- upvalues: CharacterCreatorSlot (val)
+    CharacterCreatorSlot.initiate()
+end
+
+function u7.loaded() -- Line: 1002
+    -- upvalues: CharacterCreatorSlot (val), UI (val), SplashScreen (val), prompt_first_time_opening (val)
+    -- upvalues: AvatarItemTemplate (val), init_menu_buttons (val), u7 (val), Char (val), u180 (ref)
+    -- upvalues: update_position_in_creator_area (val), Timer (val), get_cframe_in_creator_area (val), Net (val)
+    -- upvalues: ResetCallback (val), State (val), init_height_selection (val)
+    CharacterCreatorSlot.loaded()
+    local CharacterCreator = UI.get("CharacterCreator")
+    CharacterCreator.Enabled = false
+    SplashScreen.in_loading_screen.hook(function(a1, a2) -- Line: 1007 -- upvalues: prompt_first_time_opening (upval)
+        if not a1 and a2 == true then
+            prompt_first_time_opening()
+        end
+    end)
+    for i, j in UI.get("AvatarItemsScrollingFrame"):GetChildren() do
+        if j.Name == AvatarItemTemplate.Name then
+            j:Destroy()
+        end
+    end
+    init_menu_buttons()
+    local u33 = CharacterCreatorSlot.get_my_creator_model()
+    local u34 = nil
+    u7.place_in_creator_model.hook(function(a1, a2) -- Line: 1025
+        -- upvalues: Char (upval), u180 (upval), update_position_in_creator_area (upval), u34 (ref), Timer (upval)
+        -- upvalues: CharacterCreatorSlot (upval)
+        local PrimaryPart = Char.get().PrimaryPart
+        if a1 then
+            u180 = PrimaryPart.CFrame
+            update_position_in_creator_area()
+            PrimaryPart.Anchored = true
+            u34 = Timer.new(0.2, function() -- Line: 1033 -- upvalues: update_position_in_creator_area (upval)
+                update_position_in_creator_area()
+            end)
+        elseif a2 == true then
+            if u34 then
+                u34.stop()
+                u34 = nil
+            end
+            PrimaryPart.CFrame = u180
+            PrimaryPart.Anchored = false
+        end
+        CharacterCreatorSlot.play_music.set(a1)
+    end)
+    u7.editing_height.hook(function(a1, a2) -- Line: 1050 -- upvalues: u33 (val)
+        local Height = u33:WaitForChild("Height")
+        local Decal = Height:WaitForChild("Decal")
+        Height.Transparency = if not a1 then 1 else 0
+        Decal.Transparency = if not a1 then 1 else 0
+    end)
+    u7.is_in_creator.hook(function(a1, a2) -- Line: 1058
+        -- upvalues: u7 (upval), get_cframe_in_creator_area (upval), Net (upval), Char (upval), ResetCallback (upval)
+        if not a1 then
+            if a2 then
+                u7.leaving_creator.set(true)
+                Char.enable_controls("character_creator")
+                Net.send("leave_character_creator")
+                ResetCallback.enable_reset_button("character_creator")
+            end
+            return
+        end
+        u7.leaving_creator.set(false)
+        local v1 = get_cframe_in_creator_area()
+        local v2 = not u7.is_a_world_creator.get()
+        Net.send("enter_character_creator", v1, v2)
+        local v3 = Char.get()
+        if v3:FindFirstChildOfClass("ForceField") then
+            local ForceField = v3:FindFirstChildOfClass("ForceField")
+            ForceField.Visible = false
+        end
+        Char.disable_controls("character_creator")
+        ResetCallback.disable_reset_button("character_creator")
+    end)
+    u7.is_final_page.hook(function(a1, a2) -- Line: 1089 -- upvalues: UI (upval) -- types: a1: boolean
+        local TextLabel = UI.get("ItemsNextButton").TextLabel
+        TextLabel.Text = if not a1 then "Next" else "Finish"
+    end)
+    u7.display_quantity_state.hook(function(a1) -- Line: 1093 -- upvalues: UI (upval)
+        UI.get("AvatarQuantityLabel").Visible = a1
+    end)
+    u7.item_current_selection.hook(function(a1) -- Line: 1097 -- upvalues: u7 (upval), UI (upval) -- types: a1: number
+        local v1 = u7.item_max_selection.get()
+        local AvatarQuantityLabel = UI.get("AvatarQuantityLabel")
+        AvatarQuantityLabel.Text = a1 .. "/" .. v1
+    end)
+    State.new(function() -- Line: 1102 -- upvalues: u7 (upval), UI (upval)
+        local ItemsBackButton_2
+        local v1 = u7.page_number.get()
+        local v2 = u7.is_in_menu_page.get()
+        local EditorFrame = (UI.get("CharacterCreator")).EditorFrame
+        local MenuFrame = (UI.get("CharacterCreator")).MenuFrame
+        EditorFrame.Visible = not v2
+        MenuFrame.Visible = v2
+        local ItemsNextButton = UI.get("ItemsNextButton")
+        ItemsNextButton.Visible = not v2
+        if v1 > 1 then
+            ItemsBackButton_2 = UI.get("ItemsBackButton")
+            ItemsBackButton_2.Visible = true
+            return
+        end
+        if u7.FLAG_USE_MENU_CHARACTER_CREATOR and not u7.is_a_world_creator.get() and not v2 then
+            ItemsBackButton_2 = UI.get("ItemsBackButton")
+            ItemsBackButton_2.Visible = true
+            return
+        end
+        local ItemsBackButton = UI.get("ItemsBackButton")
+        ItemsBackButton.Visible = false
+    end)
+    init_height_selection()
+    Char.hook(function(a1) -- Line: 1127 -- upvalues: prompt_first_time_opening (upval)
+        prompt_first_time_opening()
+    end)
+end
+
+return u7

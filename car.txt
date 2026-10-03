@@ -1,0 +1,206 @@
+-- Path : ReplicatedStorage.Modules.Game.VehicleSystem.Vehicle.VehicleTypes.car
+-- Script path: ReplicatedStorage.Modules.Game.VehicleSystem.Vehicle.VehicleTypes.car
+-- Decompile time: 5.34 ms
+
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local Spring = require(game.ReplicatedStorage.Modules.Core.Spring)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+game:GetService("Players")
+game:GetService("RunService")
+local LocalPlayer = game.Players.LocalPlayer
+local u48 = {}
+
+function u48.steering_wheel(a1) -- Line: 15 -- upvalues: State (val), Spring (val), Char (val)
+    local instance = a1.instance
+    local DriverSeat = instance:WaitForChild("DriverSeat")
+    local u11 = State.watch(DriverSeat, "SteerFloat")
+    local u16 = State.watch(DriverSeat, "Occupant")
+    local u22 = Spring.new(3, 0.9, 0)
+    ;(State.new(function() -- Line: 25 -- upvalues: Char (upval), u16 (val), u11 (val)
+        local v1 = Char.current_hum.get()
+        local v2 = false
+        if u16.get() == v1 then
+            v2 = v1 and 0 < v1.Health
+        end
+        local v3 = u11.get()
+        return v2 and (if not ((math.abs(v3)) < 0.1) then v3 else 0) or 0
+    end)).hook(function(a1) -- Line: 31 -- upvalues: u22 (val)
+        u22.r = 0.6981317007977318 * a1
+        u22.f = if a1 ~= 0 then 2 else 3
+    end)
+    local SteeringWheel = instance:WaitForChild("SteeringWheel")
+    if SteeringWheel then
+        SteeringWheel = SteeringWheel:WaitForChild("Main")
+    end
+    local Attachment = SteeringWheel:WaitForChild("Attachment")
+    local CFrame = SteeringWheel.Attachment.CFrame
+    u22.hook(function(a1) -- Line: 44 -- upvalues: instance (val), Attachment (val), CFrame (val)
+        local v1 = a1 / math.clamp(instance.Body.Base.AssemblyLinearVelocity.Magnitude, 1, 9000000000) ^ 0.1
+        CFrame.Angles(v1, 0, 0)
+        Attachment.CFrame = CFrame * CFrame.Angles(-1.25 * v1, 0, 0)
+    end)
+    return function() end
+end
+
+function u48.setup_damaging(a1) -- Line: 59 -- upvalues: Util (val), Char (val), Net (val), LocalPlayer (val)
+    local instance = a1.instance
+    local Base = instance.Body.Base
+    local VehicleSeat = instance:FindFirstChildWhichIsA("VehicleSeat")
+    local Sound = Instance.new("Sound")
+    Sound.Name = "FireLoopSound"
+    Sound.SoundId = "rbxassetid://75638102319594"
+    Sound.PlaybackSpeed = Util.rand(1.4, 1.7)
+    Sound.RollOffMaxDistance = 170
+    Sound.RollOffMinDistance = 10
+    Sound.Volume = 0.4
+    Sound.Looped = true
+    Sound.Parent = Base
+    local u26 = script.PointLight:Clone()
+    u26.Parent = Base
+    u26.Enabled = false
+    local u32 = script.Fire:Clone()
+    u32.Parent = Base
+    u32.Enabled = false
+    local DamageSmokeAttachment = instance.Body.Base:FindFirstChild("DamageSmokeAttachment", true)
+    if not DamageSmokeAttachment then
+        DamageSmokeAttachment = Instance.new("Attachment")
+        DamageSmokeAttachment.Parent = Base
+        DamageSmokeAttachment.WorldCFrame = Base.CFrame + Base.CFrame.LookVector * ((math.max(Base.Size.X, Base.Size.Y, Base.Size.Z)) * 0.35)
+    end
+    local u63 = script.DamageSmokeParticles:Clone()
+    u63.Parent = DamageSmokeAttachment
+    u63.Enabled = false
+    local u66 = nil
+    local u67 = 0
+    local u72 = Util.create_cache_table(2, false)
+    instance.Destroying:Connect(function() -- Line: 99 -- upvalues: u66 (ref)
+        if u66 then
+            u66:Disconnect()
+            u66 = nil
+        end
+    end)
+    return function() -- Line: 106
+        -- upvalues: a1 (val), Sound (val), u32 (val), u26 (val), Base (val), u63 (val), u66 (ref), Char (upval)
+        -- upvalues: u67 (ref), VehicleSeat (val), Net (upval), instance (val), LocalPlayer (upval), u72 (val)
+        a1.states.health.hook(function(a1, a2) -- Line: 107 -- upvalues: Sound (upval), u32 (upval), u26 (upval), Base (upval), u63 (upval)
+            local v1
+            if not (a1 <= 0) or not (a2 > 0) then
+                Sound:Stop()
+            else
+                Sound:Play()
+            end
+            u32.Enabled = a1 <= 0
+            u26.Enabled = a1 <= 0
+            if a1 <= 0 and a2 > 0 then
+                v1 = script.Explosion:Clone()
+                v1.Parent = Base
+                v1:Play()
+                game.Debris:AddItem(v1, 3)
+            end
+            u63.Enabled = a1 <= 1000
+            v1 = u63
+            local v2 = if not (a1 <= 500) then ColorSequence.new(Color3.new(1, 1, 1), Color3.new(1, 1, 1)) else ColorSequence.new(Color3.new(0.5, 0.5, 0.5), Color3.new(0, 0, 0))
+            v1.Color = v2
+            v1 = u63
+            v2 = if not (a1 <= 500) then NumberSequence.new(1, 1.5) else NumberSequence.new(2, 3)
+            v1.Size = v2
+        end)
+        a1.states.driver.hook(function(a1) -- Line: 126
+            -- upvalues: u66 (upval), Char (upval), u67 (upval), VehicleSeat (upval), Net (upval), instance (upval)
+            -- upvalues: LocalPlayer (upval), u72 (upval), Base (upval)
+            if u66 then
+                u66:Disconnect()
+                u66 = nil
+            end
+            if a1 and a1 == Char.current_hum.get() then
+                u67 = VehicleSeat.AssemblyLinearVelocity.Magnitude
+                u66 = (game:GetService("RunService")).Heartbeat:Connect(function() -- Line: 133
+                    -- upvalues: VehicleSeat (upval), u67 (upval), Net (upval), instance (upval), Char (upval)
+                    -- upvalues: LocalPlayer (upval), u72 (upval), Base (upval)
+                    local AssemblyLinearVelocity = VehicleSeat.AssemblyLinearVelocity
+                    local v1 = math.abs(AssemblyLinearVelocity.Magnitude - u67)
+                    if AssemblyLinearVelocity.Magnitude < u67 and v1 > 15 then
+                        Net.send("crashed_car", instance, v1)
+                    end
+                    if 15 < AssemblyLinearVelocity.Magnitude then
+                        local BoundingBox_2, HumanoidRootPart
+                        _, BoundingBox_2 = instance:GetBoundingBox()
+                        for i, j in Char.get_all() do
+                            if LocalPlayer.Character ~= j and not u72[j] then
+                                HumanoidRootPart = j:FindFirstChild("HumanoidRootPart")
+                                if HumanoidRootPart
+                                    and (HumanoidRootPart.Position - (Base.Position + AssemblyLinearVelocity.Unit * BoundingBox_2.Magnitude * 0.5)).Magnitude < BoundingBox_2.Magnitude * 0.333 then
+                                    u72[j] = true
+                                    Net.send("run_over", instance, j, AssemblyLinearVelocity)
+                                end
+                            end
+                        end
+                    end
+                    u67 = AssemblyLinearVelocity.Magnitude
+                end)
+            end
+        end)
+    end
+end
+
+function u48.setup_alarm(a1) -- Line: 160
+    local Base = a1.instance.Body.Base
+    local u8 = script.Alarm:Clone()
+    u8.Parent = Base
+    return function() -- Line: 168 -- upvalues: a1 (val), u8 (val)
+        a1.states.alarm.hook(function(a1) -- Line: 169 -- upvalues: u8 (upval)
+            if a1 then
+                u8:Play()
+                return
+            end
+            u8:Stop()
+        end)
+    end
+end
+
+function u48.setup_preview_attributes(a1) -- Line: 179 -- upvalues: Util (val)
+    local instance = a1.instance
+    local Suspension = instance.Suspension
+    local Motors = instance.Motors
+    local u4 = {}
+    u4.suspension = {
+        front_camber = Suspension:GetAttribute("frontCamber"),
+        front_suspension_damping = Suspension:GetAttribute("frontSuspensionDamping"),
+        front_suspension_length = Suspension:GetAttribute("frontSuspensionLength"),
+        front_suspension_stiffness = Suspension:GetAttribute("frontSuspensionStiffness"),
+        rear_camber = Suspension:GetAttribute("rearCamber"),
+        rear_suspension_damping = Suspension:GetAttribute("rearSuspensionDamping"),
+        rear_suspension_length = Suspension:GetAttribute("rearSuspensionLength"),
+        rear_suspension_stiffness = Suspension:GetAttribute("rearSuspensionStiffness"),
+    }
+    Util.watch_attribute(Suspension, "suspensionMultiplier", function(a1) -- Line: 197 -- upvalues: Suspension (val), u4 (val), Motors (val)
+        if a1 then
+            Suspension.FL.FreeLength = u4.suspension.front_suspension_length * a1
+            Suspension.FR.FreeLength = u4.suspension.front_suspension_length * a1
+            Suspension.RL.FreeLength = u4.suspension.rear_suspension_length * a1
+            Suspension.RR.FreeLength = u4.suspension.rear_suspension_length * a1
+            Motors.FL.LowerLimit = -a1
+            Motors.FR.LowerLimit = -a1
+            Motors.RL.LowerLimit = -a1
+            Motors.RR.LowerLimit = -a1
+        end
+    end)
+    return function() end
+end
+
+function u48.init_vehicle(a1) -- Line: 216 -- upvalues: u48 (val)
+    local u4 = u48.steering_wheel(a1)
+    local u8 = u48.setup_damaging(a1)
+    local u12 = u48.setup_alarm(a1)
+    local u16 = u48.setup_preview_attributes(a1)
+    return function() -- Line: 223 -- upvalues: u4 (val), u8 (val), u12 (val), u16 (val)
+        u4()
+        u8()
+        u12()
+        u16()
+    end
+end
+
+return u48

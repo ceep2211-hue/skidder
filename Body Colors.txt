@@ -1,0 +1,18 @@
+-- Path : Workspace.Map.Tiles.ShoppingTile.Garage1.Interior.Crates.Garage Crate.CrateOptions.Body Colors
+-- Script path: Workspace.Map.Tiles.ShoppingTile.Garage1.Interior.Crates.Garage Crate.CrateOptions.Body Colors
+-- Decompile time: 0.19 ms
+
+return {
+    crate_name = script.Name,
+    crate_color_type = "Advanced",
+    layout_order = 1,
+    bias = 2.1315095825444335,
+    category = "vehicle_body_color",
+    items = {
+        {name = "Forest Green", item_type = "cosmetic"},
+        {name = "Pure White", item_type = "cosmetic"},
+        {name = "Really Black", item_type = "cosmetic"},
+        {name = "Bright Red", item_type = "cosmetic"},
+        {name = "Deep Blue", item_type = "cosmetic"},
+    },
+}

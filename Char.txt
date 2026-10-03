@@ -1,0 +1,446 @@
+-- Path : ReplicatedStorage.Modules.Core.Char
+-- Script path: ReplicatedStorage.Modules.Core.Char
+-- Decompile time: 9.54 ms
+
+require(game.ReplicatedStorage.Modules.Core.Net)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+require(game.ReplicatedStorage.Modules.Core.Tbl)
+local Input = require(game.ReplicatedStorage.Modules.Core.Input)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local Signal = require(game.ReplicatedStorage.Modules.Core.Signal)
+local Timer = require(game.ReplicatedStorage.Modules.Core.Timer)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local FlagManager = require(ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local u67 = {}
+local LocalPlayer = game.Players.LocalPlayer
+local u71 = nil
+u67.current_char = State.new(nil)
+u67.current_hum = State.new(nil)
+u67.current_hrp = State.new(nil)
+u67.current_head = State.new(nil)
+u67.current_animator = State.new(nil)
+u67.current_picking_up_player = State.new(nil)
+u67.current_driving_vehicle = State.new(nil)
+u67.current_vehicle = State.new(nil)
+u67.held_tool = State.new(nil)
+u67.holding_tool = State.new(false)
+u67.moving = State.new(false)
+u67.sitting = State.new(false)
+u67.died = Signal.new()
+local u110 = {}
+
+function u67.get() -- Line: 39 -- upvalues: u67 (val)
+    local v1
+    while true do
+        v1 = u67.current_char.get()
+        if not v1 then
+            task.wait()
+            continue
+        end
+        if v1.Parent then
+            break
+        end
+        task.wait()
+    end
+    return u67.current_char.get()
+end
+
+function u67.get_hrp() -- Line: 55 -- upvalues: LocalPlayer (val), u67 (val)
+    local v1
+    if LocalPlayer:GetAttribute("IsAdmin") and not LocalPlayer.Character then
+        warn("WARNING: module.get_hrp() is called.\n" .. debug.traceback())
+    end
+    repeat
+    until (u67.get():FindFirstChild("HumanoidRootPart")) or not task.wait()
+    return v1
+end
+
+function u67.get_hum() -- Line: 66 -- upvalues: LocalPlayer (val), u67 (val)
+    local v1
+    if LocalPlayer:GetAttribute("IsAdmin") and not LocalPlayer.Character then
+        warn("WARNING: module.get_hrp() is called.\n" .. debug.traceback())
+    end
+    repeat
+    until (u67.get():FindFirstChild("Humanoid")) or not task.wait()
+    return v1
+end
+
+function u67.get_animator() -- Line: 77 -- upvalues: u67 (val)
+    return u67.get_hum():WaitForChild("Animator")
+end
+
+local u115 = {}
+
+function u67.get_desc_from_id(a1) -- Line: 83 -- upvalues: u115 (ref)
+    local u4 = tonumber(a1)
+    if u115[u4] == nil then
+        local success, result = pcall(function() -- Line: 86 -- upvalues: u4 (ref)
+            return game.Players:GetHumanoidDescriptionFromUserId(u4)
+        end)
+        if success then
+            u115[u4] = result
+        end
+    end
+    return u115[u4]
+end
+
+function u67.get_desc() -- Line: 96 -- upvalues: u67 (val)
+    return u67.get_hum():GetAppliedDescription()
+end
+
+function u67.get_head() -- Line: 101 -- upvalues: u67 (val)
+    local v1
+    repeat
+    until (u67.get():FindFirstChild("Head")) or not task.wait()
+    return v1
+end
+
+function u67.get_tool() -- Line: 107 -- upvalues: u67 (val)
+    return u67.get():FindFirstChildWhichIsA("Tool")
+end
+
+function u67.get_all_tools() -- Line: 111 -- upvalues: u67 (val), LocalPlayer (val)
+    local v1 = {}
+    table.insert(v1, (u67.get_tool()))
+    for i, j in LocalPlayer.Backpack:GetChildren() do
+        if j:IsA("Tool") then
+            table.insert(v1, j)
+        end
+    end
+    return v1
+end
+
+function u67.hook(a1) -- Line: 123 -- upvalues: LocalPlayer (val)
+    if LocalPlayer.Character then
+        task.spawn(a1, LocalPlayer.Character)
+    end
+    LocalPlayer.CharacterAdded:Connect(a1)
+end
+
+local u122 = {}
+
+function u67.anim(a1, a2, a3) -- Line: 132 -- upvalues: u67 (val), u122 (val)
+    local u5 = u67.get_hum()
+    if not u122[u5] then
+        table.clear(u122)
+        u122[u5] = {}
+        u5.Destroying:Connect(function() -- Line: 137 -- upvalues: u122 (upval), u5 (val)
+            u122[u5] = nil
+        end)
+    end
+    if u122[u5][a1] then
+        return u122[u5][a1]
+    end
+    local v1 = a1
+    if typeof(a1) == "number" then
+        v1 = Instance.new("Animation")
+        v1.AnimationId = "rbxassetid://" .. a1
+    end
+    local v2 = u5:LoadAnimation(v1)
+    if #u5:GetPlayingAnimationTracks() > 250 then
+        warn((("Over 250 animation tracks playing on instance '%*'. Traceback: %*"):format(u5:GetFullName(), (debug.traceback()))))
+    end
+    if a2 then
+        v2.Looped = true
+    elseif a2 == false then
+        v2.Looped = false
+    end
+    if a3 then
+        v2.Priority = a3
+    end
+    u122[u5][a1] = v2
+    return v2
+end
+
+function u67.get_loaded_anim(a1) -- Line: 166 -- upvalues: u67 (val), u122 (val)
+    local v1 = u67.get_hum()
+    if not u122[v1] then
+        table.clear(u122)
+        u122[v1] = {}
+    end
+    if u122[v1][a1] then
+        return u122[v1][a1]
+    end
+end
+
+function u67.get_animation_track(a1) -- Line: 177 -- upvalues: u67 (val)
+    local v1 = next
+    local PlayingAnimationTracks, PlayingAnimationTracks_2 = u67.get_hum():GetPlayingAnimationTracks()
+    for k, v in v1, PlayingAnimationTracks, PlayingAnimationTracks_2 do
+        if (v.Animation.AnimationId:match("%d+")) == tostring(a1):match("%d+") then
+            return v
+        end
+    end
+end
+
+function u67.hook_others(a1) -- Line: 185 -- upvalues: LocalPlayer (val)
+    local v1 = next
+    local Players, Players_2 = game.Players:GetPlayers()
+    for k, v in v1, Players, Players_2 do
+        if v ~= LocalPlayer then
+            if v.Character then
+                a1(v.Character, v)
+            end
+            v.CharacterAdded:Connect(function(a1_2) -- Line: 191 -- upvalues: a1 (val), v (val)
+                a1(a1_2, v)
+            end)
+        end
+    end
+    game.Players.ChildAdded:Connect(function(a1_2) -- Line: 196 -- upvalues: LocalPlayer (upval), a1 (val)
+        if a1_2:IsA("Player") then
+            if a1_2 ~= LocalPlayer and a1_2.Character then
+                a1(a1_2.Character, a1_2)
+            end
+            if a1_2 ~= LocalPlayer then
+                a1_2.CharacterAdded:Connect(function(a1_3) -- Line: 202 -- upvalues: a1 (upval), a1_2 (val)
+                    a1(a1_3, a1_2)
+                end)
+            end
+        end
+    end)
+end
+
+function u67.hook_all(a1) -- Line: 210
+    local v1 = next
+    local Players, Players_2 = game.Players:GetPlayers()
+    for k, v in v1, Players, Players_2 do
+        if v.Character then
+            a1(v.Character, v)
+        end
+        v.CharacterAdded:Connect(function(a1_2) -- Line: 215 -- upvalues: a1 (val), v (val)
+            a1(a1_2, v)
+        end)
+    end
+    game.Players.ChildAdded:Connect(function(a1_2) -- Line: 219 -- upvalues: a1 (val)
+        if a1_2:IsA("Player") then
+            if a1_2.Character then
+                a1(a1_2.Character, a1_2)
+            end
+            a1_2.CharacterAdded:Connect(function(a1_3) -- Line: 224 -- upvalues: a1 (upval), a1_2 (val)
+                a1(a1_3, a1_2)
+            end)
+        end
+    end)
+end
+
+local u128 = nil
+
+function u67.enable_controls(a1) -- Line: 232 -- upvalues: u128 (ref), UI (val), u71 (ref)
+    if u128 == a1 then
+        UI.mobile_controls(true)
+        while not u71 do
+            task.wait()
+        end
+        u71:Enable()
+    end
+end
+
+function u67.disable_controls(a1) -- Line: 240 -- upvalues: u128 (ref), UI (val), u71 (ref)
+    u128 = a1
+    UI.mobile_controls(false)
+    while not u71 do
+        task.wait()
+    end
+    u71:Disable()
+end
+
+function u67.get_all() -- Line: 247 -- upvalues: u110 (val)
+    local v1 = {}
+    for i, j in u110 do
+        table.insert(v1, j.character)
+    end
+    return v1
+end
+
+function u67.get_all_hrps() -- Line: 255 -- upvalues: u110 (val)
+    local v1 = {}
+    for i, j in u110 do
+        table.insert(v1, j.prim)
+    end
+    return v1
+end
+
+function u67.get_all_hums() -- Line: 263 -- upvalues: u110 (val)
+    local v1 = {}
+    for i, j in u110 do
+        table.insert(v1, j.humanoid)
+    end
+    return v1
+end
+
+local u134 = {}
+
+local function on_humanoid_added(a1) -- Line: 273 -- upvalues: u67 (val), Util (val), u134 (val) -- types: a1: userdata
+    u67.current_hum.set(a1)
+    Util.watch_attribute(a1, "IsDead", function(a1) -- Line: 275 -- upvalues: u67 (upval)
+        if a1 then
+            u67.died:Fire()
+        end
+    end)
+    u67.current_animator.set(a1:WaitForChild("Animator"))
+    if (a1:GetState()) ~= Enum.HumanoidStateType.Dead then
+        a1.Died:Connect(function() -- Line: 285 -- upvalues: u134 (upval), a1 (val)
+            for i in u134 do
+                task.spawn(i, a1)
+            end
+        end)
+        return
+    end
+    for i in u134 do
+        task.spawn(i, a1)
+    end
+end
+
+local function on_character_added(a1) -- Line: 291
+    -- upvalues: on_humanoid_added (val), u67 (val)
+    if not a1:FindFirstChildWhichIsA("Humanoid") then
+        local u11 = nil
+        local v1 = a1.ChildAdded:Connect(function(a1) -- Line: 296 -- upvalues: u11 (ref), on_humanoid_added (upval)
+            if not a1:IsA("Humanoid") then
+                return
+            end
+            u11:Disconnect()
+            on_humanoid_added(a1)
+        end)
+    else
+        on_humanoid_added(a1:FindFirstChildWhichIsA("Humanoid"))
+    end
+    u67.current_hrp.set(a1:WaitForChild("HumanoidRootPart"))
+    u67.current_head.set(a1:WaitForChild("Head"))
+end
+
+function u67.connectToDied(a1) -- Line: 307 -- upvalues: u134 (val) -- types: a1: function
+    u134[a1] = true
+    return {
+        Connected = true,
+        Disconnect = function(self) -- Line: 310 -- upvalues: u134 (upval), a1 (val)
+            if not self.Connected then
+                return
+            end
+            self.Connected = false
+            u134[a1] = nil
+        end,
+    }
+end
+
+function u67.initiate() -- Line: 318 -- upvalues: LocalPlayer (val), u67 (val), on_character_added (val)
+    if LocalPlayer.Character then
+        u67.current_char.set(LocalPlayer.Character)
+        on_character_added(u67.current_char.get())
+    end
+    LocalPlayer.CharacterAdded:Connect(function(a1) -- Line: 323 -- upvalues: u67 (upval), on_character_added (upval)
+        u67.current_char.set(a1)
+        on_character_added(u67.current_char.get())
+    end)
+end
+
+function u67.loaded() -- Line: 329
+    -- upvalues: u71 (ref), u67 (val), Util (val), LocalPlayer (val), Input (val), Timer (val), u115 (ref), u110 (val)
+    -- upvalues: FlagManager (val)
+    u71 = require(game:GetService("Players").LocalPlayer.PlayerScripts:WaitForChild("PlayerModule")):GetControls()
+    u67.hook(function(a1) -- Line: 332 -- upvalues: u67 (upval), Util (upval), LocalPlayer (upval)
+        a1.ChildRemoved:Connect(function() -- Line: 333 -- upvalues: a1 (val), u67 (upval)
+            local Tool = a1:FindFirstChildWhichIsA("Tool")
+            u67.holding_tool.set(not not Tool)
+            u67.held_tool.set(Tool)
+        end)
+        Util.hook_children(a1, function(a1_2) -- Line: 338 -- upvalues: a1 (val), u67 (upval)
+            if a1_2:IsA("Tool") then
+                local Tool = a1:FindFirstChildWhichIsA("Tool")
+                u67.holding_tool.set(not not Tool)
+                u67.held_tool.set(Tool)
+            end
+        end)
+        LocalPlayer.CharacterAdded:Connect(function() -- Line: 345 -- upvalues: u67 (upval)
+            u67.held_tool.set(nil)
+        end)
+        local Humanoid = a1:WaitForChild("Humanoid")
+        u67.sitting.set(Humanoid.SeatPart)
+        ;(Humanoid:GetPropertyChangedSignal("SeatPart")):Connect(function() -- Line: 350 -- upvalues: u67 (upval), Humanoid (val)
+            u67.sitting.set(Humanoid.SeatPart)
+            if Humanoid.SeatPart and Humanoid.SeatPart:IsDescendantOf(workspace.Vehicles) then
+                u67.current_driving_vehicle.set(Humanoid.SeatPart.Parent)
+                if Humanoid.SeatPart:HasTag("DriverSeat") then
+                    u67.current_vehicle.set(Humanoid.SeatPart.Parent)
+                    return
+                end
+                if Humanoid.SeatPart:HasTag("PassengerSeat") then
+                    u67.current_vehicle.set(Humanoid.SeatPart.Parent)
+                    u67.current_driving_vehicle.set(nil)
+                    return
+                end
+                u67.current_vehicle.set(nil)
+                u67.current_driving_vehicle.set(nil)
+                return
+            end
+            u67.current_vehicle.set(nil)
+            u67.current_driving_vehicle.set(nil)
+        end)
+        Util.watch_attribute(Humanoid, "PickingUp", function(a1) -- Line: 369 -- upvalues: u67 (upval)
+            u67.current_picking_up_player.set(a1)
+        end)
+    end)
+    local u20 = false
+    Util.run(function() -- Line: 375 -- upvalues: Input (upval), u20 (ref), u67 (upval)
+        local v1 = 1e-05 < Input.move_vector().Magnitude
+        if v1 ~= u20 then
+            u20 = v1
+            if v1 then
+                u67.moving.set(true)
+                return
+            end
+            u67.moving.set(false)
+        end
+    end)
+    Timer.new(600, function() -- Line: 388 -- upvalues: u115 (upval)
+        u115 = {}
+    end)
+    game.Players.PlayerAdded:Connect(function(a1) -- Line: 393 -- upvalues: u110 (upval)
+        u110[a1] = {}
+    end)
+    game.Players.PlayerRemoving:Connect(function(a1) -- Line: 397 -- upvalues: u110 (upval)
+        u110[a1] = nil
+    end)
+    u67.hook_all(function(a1, a2) -- Line: 401 -- upvalues: u110 (upval)
+        u110[a2] = {
+            character = a1,
+            humanoid = a1:WaitForChild("Humanoid"),
+            prim = a1:WaitForChild("HumanoidRootPart"),
+        }
+    end)
+    u67.hook_others(function(a1, a2) -- Line: 410 -- upvalues: FlagManager (upval), Util (upval) -- types: a1: userdata, a2: userdata
+        local Backpack = a2:WaitForChild("Backpack")
+        local Tool = a1:FindFirstChildOfClass("Tool")
+
+        local function randomise_tool(a1) -- Line: 414 -- upvalues: FlagManager (upval) -- types: a1: userdata
+            if not FlagManager.FLAG_TOOL_HIDE_NAMES then
+                return
+            end
+            a1:SetAttribute("Description", "I HAVE NUTHINGGGGGGG")
+            a1:SetAttribute("ImageId", "rbxassetid://93909275221626")
+            a1.Name = tostring((math.random(10000, 990000)))
+            a1.TextureId = "rbxassetid://93909275221626"
+        end
+
+        if Tool and FlagManager.FLAG_TOOL_HIDE_NAMES then
+            Tool:SetAttribute("Description", "I HAVE NUTHINGGGGGGG")
+            Tool:SetAttribute("ImageId", "rbxassetid://93909275221626")
+            Tool.Name = tostring((math.random(10000, 990000)))
+            Tool.TextureId = "rbxassetid://93909275221626"
+        end
+        Util.hook_children(Backpack, function(a1) -- Line: 426 -- upvalues: FlagManager (upval)
+            if a1:IsA("Tool") then
+                if not FlagManager.FLAG_TOOL_HIDE_NAMES then
+                    return
+                end
+                a1:SetAttribute("Description", "I HAVE NUTHINGGGGGGG")
+                a1:SetAttribute("ImageId", "rbxassetid://93909275221626")
+                a1.Name = tostring((math.random(10000, 990000)))
+                a1.TextureId = "rbxassetid://93909275221626"
+            end
+        end)
+    end)
+end
+
+return u67

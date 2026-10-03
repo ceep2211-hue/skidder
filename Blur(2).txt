@@ -1,0 +1,21 @@
+-- Path : ReplicatedStorage.Modules.Core.Blur
+-- Script path: ReplicatedStorage.Modules.Core.Blur
+-- Decompile time: 0.52 ms
+
+local Tween = require(game.ReplicatedStorage.Modules.Core.Tween)
+local u7 = {}
+
+function u7.tween(a1, a2) -- Line: 5 -- upvalues: Tween (val)
+    local play = Tween.play
+    local v1 = TweenInfo.new(a2 or 1, Enum.EasingStyle.Back)
+    local v2 = {Size = a1}
+    play(game.Lighting:FindFirstChild("Blur") or Instance.new("BlurEffect", game.Lighting), v1, v2)
+end
+
+function u7.set(a1) -- Line: 10 -- upvalues: u7 (val)
+    u7.tween(a1, 0)
+end
+
+function u7.initiate() end
+
+return u7

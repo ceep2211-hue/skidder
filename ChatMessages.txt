@@ -1,0 +1,60 @@
+-- Path : ReplicatedStorage.Modules.Game.ChatMessages
+-- Script path: ReplicatedStorage.Modules.Game.ChatMessages
+-- Decompile time: 1.17 ms
+
+local Timer = require(game.ReplicatedStorage.Modules.Core.Timer)
+local PolicyInfo = require(game.ReplicatedStorage.Modules.Game.PolicyInfo)
+local TextChatService = game:GetService("TextChatService")
+local u19 = {
+    messages = {
+        {
+            text = "Join our Discord server! 🔪 discord.gg/blockspin",
+            fallback_text = "Want to join our community? Check the game page for our server invite.",
+            policy_info_checks = {AllowedExternalLinkReferences = {"Discord"}},
+        },
+        {
+            text = "Join our Discord server! 🔪 discord.gg/blockspin",
+            fallback_text = "Want to check out future updates? Check the game page for our server invite.",
+            policy_info_checks = {AllowedExternalLinkReferences = {"Discord"}},
+        },
+    },
+}
+
+local function passes_policy_checks(a1) -- Line: 26 -- upvalues: PolicyInfo (val)
+    if not a1.policy_info_checks then
+        return true
+    end
+    if not PolicyInfo.info then
+        return false
+    end
+    local v1 = nil
+    local v2 = nil
+    for i, j in a1.policy_info_checks, v1, v2 do
+        if i == "AllowedExternalLinkReferences" then
+            for k, n in j do
+                if not table.find(PolicyInfo.info.AllowedExternalLinkReferences, n) then
+                    return false
+                end
+            end
+        elseif PolicyInfo.info[i] ~= j then
+            return false
+        end
+    end
+    return true
+end
+
+function u19.loaded() -- Line: 50 -- upvalues: Timer (val), u19 (val), passes_policy_checks (val), TextChatService (val)
+    Timer.new(600, function() -- Line: 51 -- upvalues: u19 (upval), passes_policy_checks (upval), TextChatService (upval)
+        local v1 = u19.messages[math.random(#u19.messages)]
+        local text = v1.text
+        if not passes_policy_checks(v1) then
+            text = v1.fallback_text
+        end
+        if not text then
+            return
+        end
+        TextChatService.TextChannels.RBXSystem:DisplaySystemMessage(text)
+    end)
+end
+
+return u19

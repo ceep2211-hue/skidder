@@ -1,0 +1,63 @@
+-- Path : ReplicatedStorage.Modules.Core.UIFX.Buttons
+-- Script path: ReplicatedStorage.Modules.Core.UIFX.Buttons
+-- Decompile time: 1.56 ms
+
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local Spring = require(game.ReplicatedStorage.Modules.Core.Spring)
+local u28 = {}
+local u29 = {}
+
+local function get_scaler(a1) -- Line: 8 -- upvalues: UI (val), u28 (val), Spring (val)
+    local v1 = UI.get(a1)
+    local u8 = u28[v1]
+    if not u8 then
+        u8 = {}
+        u28[v1] = u8
+        local UIScale = v1:FindFirstChildWhichIsA("UIScale") or Instance.new("UIScale", v1)
+        u8.scaler = UIScale
+        u8.spring = Spring.new(3, 0.8, 1)
+        u8.spring.hook(function(a1) -- Line: 16 -- upvalues: u8 (ref)
+            u8.scaler.Scale = a1
+        end)
+    end
+    return u8
+end
+
+return {
+    shrink_click = function(a1) -- Line: 24 -- upvalues: get_scaler (val)
+        local u3 = get_scaler(a1)
+        a1.MouseButton1Down:Connect(function() -- Line: 26 -- upvalues: u3 (val)
+            u3.spring.a = -1.5
+            u3.spring.r = 0.925
+        end)
+        a1.MouseButton1Up:Connect(function() -- Line: 30 -- upvalues: u3 (val)
+            u3.spring.r = 1
+        end)
+        a1.MouseLeave:Connect(function() -- Line: 33 -- upvalues: u3 (val)
+            u3.spring.r = 1
+        end)
+    end,
+    toggle_slider = function(a1) -- Line: 37 -- upvalues: u29 (val), Spring (val), Util (val), State (val)
+        local u9 = u29[a1]
+        if not u9 then
+            u9 = Spring.new(3, 0.75, 0)
+            u29[a1] = u9
+        end
+        local u16 = Util.wait_for_descendant(a1, "NotificationsToggle")
+        local u21 = Util.wait_for_descendant(a1, "Circle")
+        local BackgroundColor3 = u16.BackgroundColor3
+        local u27 = Color3.fromRGB(110, 220, 95)
+        local v1 = {on = State.new(false)}
+        u9.hook(function(a1) -- Line: 54 -- upvalues: u21 (val), u16 (val), BackgroundColor3 (val), u27 (val)
+            u21.Position = UDim2.fromScale(a1, 0)
+            u21.AnchorPoint = Vector2.new(a1, 0)
+            u16.BackgroundColor3 = BackgroundColor3:Lerp(u27, a1)
+        end)
+        v1.on.hook(function(a1) -- Line: 60 -- upvalues: u9 (ref)
+            u9.r = if not a1 then 0 else 1
+        end)
+        return v1
+    end,
+}

@@ -1,0 +1,19 @@
+-- Path : ReplicatedStorage.Modules.Game.Character.CameraModifications
+-- Script path: ReplicatedStorage.Modules.Game.Character.CameraModifications
+-- Decompile time: 0.59 ms
+
+local v1 = {}
+local CurrentCamera = game.Workspace.CurrentCamera
+
+function v1.initiate() end
+
+function v1.loaded() -- Line: 9 -- upvalues: CurrentCamera (val)
+    (game:GetService("RunService")):BindToRenderStep("CAMERA_CLAMP", Enum.RenderPriority.Last.Value + 1, function(a1) -- Line: 10 -- upvalues: CurrentCamera (upval)
+        if CurrentCamera.CameraType == Enum.CameraType.Custom then
+            local v1, v2 = CurrentCamera.CFrame:ToOrientation()
+            CurrentCamera.CFrame = (CFrame.new(CurrentCamera.CFrame.Position)) * CFrame.fromOrientation(math.clamp(v1, -1.4, 1.4), v2, 0)
+        end
+    end)
+end
+
+return v1
