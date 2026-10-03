@@ -1,0 +1,84 @@
+-- Path : Workspace.Vehicles.Rezvani.Scripts.Client.Input
+-- Script path: Workspace.Vehicles.Rezvani.Scripts.Client.Input
+-- Decompile time: 2.13 ms
+
+local GuiService = game:GetService("GuiService")
+local RunService = game:GetService("RunService")
+local Keybinds = require(game.ReplicatedStorage.Modules.Game.Keybinds)
+require(game.ReplicatedStorage.Modules.Game.CrouchSystem)
+local Constants = require(script.Parent.Parent.Constants)
+local InputCategorizer = require(script.Parent.InputCategorizer)
+local u35 = {}
+u35[InputCategorizer.InputCategory.KeyboardAndMouse] = (require(script.KeyboardAndMouse))
+u35[InputCategorizer.InputCategory.Gamepad] = (require(script.Gamepad))
+u35[InputCategorizer.InputCategory.Touch] = (require(script.Touch))
+local disconnectAndClear = require(script.Parent.disconnectAndClear)
+local handBrakeHandler = require(script.handBrakeHandler)
+local LocalPlayer = game.Players.LocalPlayer
+local Inputs = script.Parent.Parent.Parent.Inputs
+local u72 = InputCategorizer.getLastInputCategory()
+local u73 = false
+local u74 = {}
+
+local function onLastInputCategoryChanged(a1) -- Line: 23 -- upvalues: u72 (ref), u35 (val)
+    u72 = a1
+    for i, j in u35 do
+        if i ~= a1 then
+            j:disable()
+        else
+            j:enable()
+        end
+    end
+end
+
+local function update() -- Line: 35 -- upvalues: u35 (val), u72 (ref), LocalPlayer (val), Inputs (val), Constants (val)
+    local v1 = u35[u72]
+    if not v1 then
+        return
+    end
+    local v2, v3 = v1:getThrottleAndSteering()
+    if LocalPlayer.Character == nil or LocalPlayer.Character.Humanoid.Health <= 0 then
+        v2 = 0
+        v3 = 0
+    end
+    Inputs:SetAttribute(Constants.THROTTLE_INPUT_ATTRIBUTE, v2)
+    Inputs:SetAttribute(Constants.STEERING_INPUT_ATTRIBUTE, v3)
+end
+
+return {
+    enable = function(a1) -- Line: 54
+        -- upvalues: u73 (ref), GuiService (val), u74 (val), InputCategorizer (val), onLastInputCategoryChanged (val)
+        -- upvalues: RunService (val), update (val), Keybinds (val), handBrakeHandler (val)
+        if u73 then
+            return
+        end
+        u73 = true
+        GuiService.TouchControlsEnabled = false
+        table.insert(u74, (InputCategorizer.lastInputCategoryChanged:Connect(onLastInputCategoryChanged)))
+        table.insert(u74, (RunService.Stepped:Connect(update)))
+        Keybinds.hook_action("vehicle_handbrake", function(a1) -- Line: 67 -- upvalues: handBrakeHandler (upval)
+            if a1 then
+                handBrakeHandler(nil, Enum.UserInputState.Begin)
+                return
+            end
+            handBrakeHandler(nil, Enum.UserInputState.End)
+        end, {label = "Handbrake", priority = 4})
+        onLastInputCategoryChanged(InputCategorizer.getLastInputCategory())
+    end,
+    disable = function(a1) -- Line: 78
+        -- upvalues: u73 (ref), GuiService (val), u35 (val), disconnectAndClear (val), u74 (val), Keybinds (val)
+        -- upvalues: Inputs (val), Constants (val)
+        if not u73 then
+            return
+        end
+        u73 = false
+        GuiService.TouchControlsEnabled = true
+        for i, j in u35 do
+            j:disable()
+        end
+        disconnectAndClear(u74)
+        Keybinds.unhook_action("vehicle_handbrake")
+        Inputs:SetAttribute(Constants.THROTTLE_INPUT_ATTRIBUTE, 0)
+        Inputs:SetAttribute(Constants.STEERING_INPUT_ATTRIBUTE, 0)
+    end,
+}

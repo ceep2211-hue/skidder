@@ -1,0 +1,139 @@
+-- Path : ReplicatedStorage.Modules.Game.MoneyUI
+-- Script path: ReplicatedStorage.Modules.Game.MoneyUI
+-- Decompile time: 4.27 ms
+
+local StoreUI = require(game.ReplicatedStorage.Modules.Game.Store.StoreUI)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local Data = require(game.ReplicatedStorage.Modules.Core.Data)
+local Spring = require(game.ReplicatedStorage.Modules.Core.Spring)
+require(game.ReplicatedStorage.Modules.Core.State)
+local Signal = require(game.ReplicatedStorage.Modules.Core.Signal)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+require(game.ReplicatedStorage.Modules.Game.UI.NotificationsUI)
+local u58 = {}
+local RunService = game:GetService("RunService")
+game:GetService("UserInputService")
+local u69 = Vector3.new(0, 0, 0)
+local u70 = Vector3.new(0, 0, 0)
+local u71 = 0
+local u72 = 0
+u58.visual_money_amount = Spring.new(0.8, 0.99, 0)
+
+local function apply_angular_impulse(a1) -- Line: 37 -- upvalues: u70 (ref)
+    local v1 = math.random() * 0.2 + -0.1
+    local v2 = math.random() * 2 + -7
+    local v3 = (math.random()) * 0.2 + -0.1
+    u70 = u70 + Vector3.new(v1, v2 * a1, v3)
+end
+
+local function apply_size_impulse() -- Line: 51 -- upvalues: u72 (ref)
+    u72 = u72 + 8
+end
+
+function u58.apply_effect(a1) -- Line: 57 -- upvalues: apply_angular_impulse (val), u72 (ref)
+    apply_angular_impulse(a1 or 1)
+    u72 = u72 + 8
+end
+
+local function mod(a1, a2) -- Line: 63
+    return a1 - math.floor(a1 / a2) * a2
+end
+
+local u82 = 0
+local u84 = tick()
+local u85 = false
+u58.adjust_money_signal = Signal.new()
+
+function u58.change_money_visual(a1, a2) -- Line: 74 -- upvalues: UI (val), u58 (val), u82 (ref), u84 (ref), u85 (ref)
+    local v1
+    local MoneyChangeTextLabel = UI.get("MoneyChangeTextLabel")
+    u58.visual_money_amount.r = a1
+    u82 = u82 + a2
+    u84 = tick()
+    MoneyChangeTextLabel.Text = (("%*$"):format(if not (u82 >= 0) then "-" else "+")) .. math.abs(u82)
+    if not v1 then
+        MoneyChangeTextLabel.TextColor3 = Color3.fromRGB(234, 169, 178)
+    else
+        MoneyChangeTextLabel.TextColor3 = Color3.fromRGB(178, 234, 169)
+    end
+    MoneyChangeTextLabel.Visible = u82 ~= 0
+    if not u85 then
+        u85 = true
+        task.spawn(function() -- Line: 100 -- upvalues: u84 (upval), u82 (upval), MoneyChangeTextLabel (val), u85 (upval)
+            while true do
+                if not (tick() - u84 < 2) then
+                    break
+                end
+                wait(0.2)
+            end
+            u82 = 0
+            MoneyChangeTextLabel.Visible = false
+            MoneyChangeTextLabel.Text = ""
+            u85 = false
+        end)
+    end
+end
+
+function u58.initiate() -- Line: 113 -- upvalues: Net (val), u58 (val), Data (val)
+    local u0 = false
+    Net.hook("adjust_money", function(a1, a2) -- Line: 119 -- upvalues: u58 (upval) -- types: a1: string
+        if a1 ~= "hand" then
+            return
+        end
+        u58.adjust_money_signal:Fire()
+        local v1 = a2.hand - u58.visual_money_amount.r
+        local hand = a2.hand
+        u58.change_money_visual(hand, v1)
+        if v1 > 0 then
+            u58.apply_effect(10)
+            return
+        end
+        u58.apply_effect(-10)
+    end)
+    Data.on_connect(function() -- Line: 150 -- upvalues: u58 (upval), Data (upval), u0 (ref)
+        u58.change_money_visual(Data.money.hand, 0)
+        if 0 < Data.money.hand then
+            u58.apply_effect(10)
+        end
+        u0 = true
+    end)
+end
+
+function u58.loaded() -- Line: 159
+    -- upvalues: UI (val), RunService (val), u69 (ref), u70 (ref), u71 (ref), u72 (ref), u58 (val), StoreUI (val)
+    local Pivot = UI.get("MoneyModel"):GetPivot()
+    local Scale = UI.get("MoneyModel"):GetScale()
+    RunService.RenderStepped:Connect(function(a1) -- Line: 164
+        -- upvalues: u69 (upval), u70 (upval), UI (upval), Pivot (val), u71 (upval), u72 (upval), Scale (val)
+        local v1 = u69.X + 1.5707963267948966
+        local v2 = v1 - math.floor(v1 / 3.141592653589793) * 3.141592653589793 - 1.5707963267948966
+        local v3 = u69.Y + 1.5707963267948966
+        local v4 = v3 - math.floor(v3 / 3.141592653589793) * 3.141592653589793 - 1.5707963267948966
+        local v5 = u69.Z + 1.5707963267948966
+        local v6 = Vector3.new(v2, v4, v5 - (math.floor(v5 / 3.141592653589793)) * 3.141592653589793 - 1.5707963267948966)
+        v2 = Vector3.new(-10, -10, -10) * v6 - Vector3.new(2, 2, 2) * u70
+        u70 = u70 + v2 * a1
+        u69 = u69 + u70 * a1
+        ;(UI.get("MoneyModel")):PivotTo(Pivot.Rotation * CFrame.fromOrientation(u69.X, u69.Y, u69.Z) + Pivot.Position)
+        v1 = u71 * -40 - u72 * 10
+        u72 = u72 + v1 * a1
+        u71 = u71 + u72 * a1
+        if u71 > 1.5 then
+            u71 = 1.5
+        elseif u71 <= 0 then
+            u71 = 1e-05
+        end
+        ;(UI.get("MoneyModel")):ScaleTo(Scale + u71)
+    end)
+    u58.visual_money_amount.hook(function(a1) -- Line: 206 -- upvalues: UI (upval)
+        local v1 = math.max(math.round(a1), 0)
+        local MoneyTextLabel = UI.get("MoneyTextLabel")
+        MoneyTextLabel.Text = ("$%*"):format(if v1 ~= 0 then v1 else 0)
+    end)
+    UI.on_click("OpenCashStoreButton", function() -- Line: 211 -- upvalues: StoreUI (upval)
+        StoreUI.focus_on.set("money")
+        StoreUI.enabled.set(not StoreUI.enabled.get())
+    end)
+end
+
+return u58

@@ -1,0 +1,43 @@
+-- Path : ReplicatedStorage.Modules.Game.World.Highlight
+-- Script path: ReplicatedStorage.Modules.Game.World.Highlight
+-- Decompile time: 1.05 ms
+
+local Timer = require(game.ReplicatedStorage.Modules.Core.Timer)
+require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+require(game.ReplicatedStorage.Modules.Core.State)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local u26 = {}
+local StatefulObject_2 = require(ReplicatedStorage.Modules.Core.StatefulObject)
+local State = require(ReplicatedStorage.Modules.Core.State)
+u26.class = StatefulObject_2.new_class(function() -- Line: 10 -- upvalues: State (val)
+    return {max_distance = State.new(-1)}
+end, script.Name)
+
+function u26.initiate() end
+
+function u26.loaded() -- Line: 20 -- upvalues: u26 (val), Timer (val)
+    u26.class.hook(function(a1) -- Line: 21 -- upvalues: Timer (upval)
+        local instance = a1.instance
+        local u6 = Timer.new(0.5, function() -- Line: 24 -- upvalues: a1 (val), instance (val)
+            local v1 = a1.states.max_distance.get()
+            local Parent = instance.Parent
+            if Parent and Parent:IsA("Model") and v1 > 0 then
+                if v1 < (workspace.CurrentCamera.CFrame.Position - Parent:GetPivot().Position).Magnitude then
+                    instance.Enabled = false
+                    return
+                end
+                instance.Enabled = true
+            end
+        end)
+        a1.streamed.hook(function(a1) -- Line: 39 -- upvalues: u6 (val)
+            if a1 then
+                u6.start()
+                return
+            end
+            u6.stop()
+        end)
+        return function() end
+    end)
+end
+
+return u26

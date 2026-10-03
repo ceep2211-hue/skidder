@@ -1,0 +1,44 @@
+-- Path : ReplicatedStorage.Modules.Game.Jobs.JobUtil
+-- Script path: ReplicatedStorage.Modules.Game.Jobs.JobUtil
+-- Decompile time: 0.82 ms
+
+local v1 = {}
+local v2 = script.ArrowDirection:Clone()
+local Attachment = Instance.new("Attachment")
+local Attachment_2 = Instance.new("Attachment")
+v2.Attachment0 = Attachment
+v2.Attachment1 = Attachment_2
+local Beacon = script.Beacon
+local LocalPlayer = (game:GetService("Players")).LocalPlayer
+
+function v1.create_arrow(a1, a2) -- Line: 13 -- types: a1: userdata, a2: userdata
+    local v1 = script.ArrowDirection:Clone()
+    local Attachment = Instance.new("Attachment")
+    local Attachment_2 = Instance.new("Attachment")
+    v1.Attachment0 = Attachment
+    v1.Attachment1 = Attachment_2
+    Attachment.Parent = a2
+    Attachment_2.Parent = a1
+    v1.Parent = game.Workspace
+    v1.Destroying:Connect(function() -- Line: 22 -- upvalues: Attachment (val), Attachment_2 (val)
+        Attachment:Destroy()
+        Attachment_2:Destroy()
+    end)
+    return v1
+end
+
+function v1.place_beacon(a1, a2) -- Line: 39 -- upvalues: LocalPlayer (val) -- types: a1: vector, a2: boolean
+    local u6 = script.Beacon:Clone()
+    u6:PivotTo((CFrame.new(a1)))
+    u6.Parent = workspace
+    if a2 then
+        (LocalPlayer:GetAttributeChangedSignal("Job")):Once(function() -- Line: 45 -- upvalues: u6 (val)
+            if u6.Parent then
+                u6:Destroy()
+            end
+        end)
+    end
+    return u6
+end
+
+return v1

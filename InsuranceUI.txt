@@ -1,0 +1,851 @@
+-- Path : ReplicatedStorage.Modules.Game.Insurance.InsuranceUI
+-- Script path: ReplicatedStorage.Modules.Game.Insurance.InsuranceUI
+-- Decompile time: 22.37 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local v1 = {}
+if not RunService:IsClient() then
+    function v1.initiate() end
+
+    function v1.loaded() end
+
+    return v1
+end
+local UI = require(ReplicatedStorage.Modules.Core.UI)
+local Net = require(ReplicatedStorage.Modules.Core.Net)
+local Data = require(ReplicatedStorage.Modules.Core.Data)
+local State = require(ReplicatedStorage.Modules.Core.State)
+local ItemsUI = require(ReplicatedStorage.Modules.Game.Inventory.ItemsUI)
+local StoreUI = require(ReplicatedStorage.Modules.Game.Store.StoreUI)
+local NotificationsUI = require(ReplicatedStorage.Modules.Game.UI.NotificationsUI)
+local InsuranceShared = require(ReplicatedStorage.Modules.Game.Insurance.InsuranceShared)
+local BuyPromptUI = require(ReplicatedStorage.Modules.Game.UI.BuyPromptUI)
+local ItemUtils = require(ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+local Char = require(ReplicatedStorage.Modules.Core.Char)
+local states = InsuranceShared.states
+local u97 = Color3.fromRGB(76, 207, 255)
+local u102 = Color3.fromRGB(126, 136, 145)
+local u103 = {"DropItemButton", "EquipItemButton", "RepairItemButton"}
+local u113 = TweenInfo.new(1.1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
+local u116 = State.new(false)
+local u119 = State.new(false)
+local u120 = nil
+local LocalPlayer = Players.LocalPlayer
+local u122 = {}
+local u123 = {}
+local u124 = {}
+local u125 = nil
+local u126 = nil
+
+local function get_records() -- Line: 153 -- upvalues: u116 (val), InsuranceShared (val), Data (val)
+    if not u116.get() then
+        return {}
+    end
+    return InsuranceShared.get_records(Data)
+end
+
+local function get_prompt_row() -- Line: 182 -- upvalues: UI (val)
+    local DropItemButton = UI.get("DropItemButton")
+    if DropItemButton and typeof(DropItemButton) == "Instance" then
+        local Parent = DropItemButton.Parent
+        if Parent and Parent:IsA("GuiObject") then
+            if not Parent:FindFirstChild("EquipItemButton") then
+                return nil
+            end
+            return Parent
+        end
+        return nil
+    end
+    return nil
+end
+
+local function stop_glow(a1) -- Line: 199 -- upvalues: u123 (val) -- types: a1: userdata
+    local v1 = u123[a1]
+    if v1 then
+        v1:Cancel()
+        u123[a1] = nil
+    end
+end
+
+local function set_insured_highlight(a1, a2) -- Line: 212
+    -- upvalues: u122 (val), u123 (val), u97 (val), TweenService (val), u113 (val)
+    local v1
+    local Frame = a1:FindFirstChild("Frame")
+    if not Frame then
+        return
+    end
+    local UIStroke = Frame:FindFirstChildOfClass("UIStroke")
+    if not UIStroke then
+        return
+    end
+    if not u122[UIStroke] then
+        u122[UIStroke] = {
+            color = UIStroke.Color,
+            thickness = UIStroke.Thickness,
+            transparency = UIStroke.Transparency,
+            enabled = UIStroke.Enabled,
+        }
+        a1.Destroying:Once(function() -- Line: 229 -- upvalues: UIStroke (val), u123 (upval), u122 (upval)
+            local v1 = UIStroke
+            local v2 = u123[v1]
+            if v2 then
+                v2:Cancel()
+                u123[v1] = nil
+            end
+            u122[UIStroke] = nil
+        end)
+    end
+    if a2 then
+        if u123[UIStroke] then
+            return
+        end
+        UIStroke.Color = u97
+        UIStroke.Thickness = 3
+        UIStroke.Transparency = 0
+        UIStroke.Enabled = true
+        v1 = TweenService:Create(UIStroke, u113, {Transparency = 0.4})
+        u123[UIStroke] = v1
+        v1:Play()
+        return
+    end
+    v1 = u123[UIStroke]
+    if v1 then
+        v1:Cancel()
+        u123[UIStroke] = nil
+    end
+    v1 = u122[UIStroke]
+    if v1 then
+        UIStroke.Color = v1.color
+        UIStroke.Thickness = v1.thickness
+        UIStroke.Transparency = v1.transparency
+        UIStroke.Enabled = v1.enabled
+    end
+end
+
+local u134 = Vector2.new(0, 1)
+local u138 = UDim2.fromScale(0.03, 0.96)
+local u142 = UDim2.fromScale(0.3, 0.3)
+
+local function ensure_badge(a1) -- Line: 265 -- upvalues: u134 (val), u138 (val), u142 (val) -- types: a1: userdata
+    local InsuredItemIcon = a1:FindFirstChild("InsuredItemIcon")
+    if InsuredItemIcon and InsuredItemIcon:IsA("ImageLabel") then
+        InsuredItemIcon.AnchorPoint = u134
+        InsuredItemIcon.Position = u138
+        InsuredItemIcon.Size = u142
+        return InsuredItemIcon
+    end
+    local DropItemIcon = a1:FindFirstChild("DropItemIcon")
+    if DropItemIcon and DropItemIcon:IsA("ImageLabel") then
+        local v1 = DropItemIcon:Clone()
+        v1.Name = "InsuredItemIcon"
+        v1.Image = "rbxassetid://114286790575033"
+        v1.Visible = false
+        v1.ZIndex = DropItemIcon.ZIndex + 2
+        v1.AnchorPoint = u134
+        v1.Position = u138
+        v1.Size = u142
+        v1.BackgroundTransparency = 1
+        v1.ImageColor3 = Color3.new(1, 1, 1)
+        v1.Parent = a1
+        return v1
+    end
+    return nil
+end
+
+local u147 = Vector2.new(1, 0)
+local u151 = UDim2.fromScale(0.96, 0.04)
+local u155 = UDim2.fromScale(0.34, 0.34)
+
+local function ensure_hotbar_badge(a1) -- Line: 314
+    -- upvalues: u147 (val), u151 (val), u155 (val), u97 (val)
+    local ToolFrame = a1:FindFirstChild("ToolFrame")
+    if ToolFrame and ToolFrame:IsA("GuiObject") then
+        local InsuredHotbarStroke = ToolFrame:FindFirstChild("InsuredHotbarStroke")
+        if InsuredHotbarStroke then
+            InsuredHotbarStroke:Destroy()
+        end
+        local InsuredHotbarIcon = ToolFrame:FindFirstChild("InsuredHotbarIcon")
+        if InsuredHotbarIcon and InsuredHotbarIcon:IsA("ImageLabel") then
+            InsuredHotbarIcon.AnchorPoint = u147
+            InsuredHotbarIcon.Position = u151
+            InsuredHotbarIcon.Size = u155
+            return InsuredHotbarIcon
+        end
+        local ImageLabel = Instance.new("ImageLabel")
+        ImageLabel.Name = "InsuredHotbarIcon"
+        ImageLabel.Image = "rbxassetid://114286790575033"
+        ImageLabel.ImageColor3 = u97
+        ImageLabel.BackgroundTransparency = 1
+        ImageLabel.AnchorPoint = u147
+        ImageLabel.Position = u151
+        ImageLabel.Size = u155
+        ImageLabel.ZIndex = ToolFrame.ZIndex + 5
+        ImageLabel.Visible = false
+        local UIAspectRatioConstraint = Instance.new("UIAspectRatioConstraint")
+        UIAspectRatioConstraint.AspectRatio = 1
+        UIAspectRatioConstraint.Parent = ImageLabel
+        ImageLabel.Parent = ToolFrame
+        return ImageLabel
+    end
+    return nil
+end
+
+local function set_hotbar_highlight(a1, a2) -- Line: 357
+    -- upvalues: ensure_hotbar_badge (val)
+    local v1 = ensure_hotbar_badge(a1)
+    if v1 then
+        v1.Visible = a2
+    end
+end
+
+local function get_hotbar_list() -- Line: 364 -- upvalues: UI (val)
+    local HotbarHolder = UI.get("HotbarHolder")
+    if HotbarHolder and typeof(HotbarHolder) == "Instance" then
+        return HotbarHolder:FindFirstChild("List")
+    end
+    return nil
+end
+
+local function refresh_hotbar() -- Line: 372
+    -- upvalues: UI (val), InsuranceShared (val), get_records (val), ensure_hotbar_badge (val)
+    local Attribute, Tool, Value, v1, v2, v3
+    local HotbarHolder = UI.get("HotbarHolder")
+    if not (if not HotbarHolder then nil else if typeof(HotbarHolder) == "Instance" then HotbarHolder:FindFirstChild("List") else nil) then
+        return
+    end
+    local v4 = InsuranceShared.get_protected_guids(get_records())
+    for i, j in v1:GetChildren() do
+        if j:IsA("GuiButton") then
+            Tool = j:FindFirstChild("Tool")
+            Value = Tool and Tool:IsA("ObjectValue") and Tool.Value
+            Attribute = Value and Value:GetAttribute("ItemGUID")
+            if type(Attribute) == "string" then
+                v2 = v4[Attribute] == true
+                v3 = ensure_hotbar_badge(j)
+                if v3 then
+                    v3.Visible = v2
+                end
+            end
+        end
+    end
+end
+
+v1.refresh_hotbar = refresh_hotbar
+
+local function refresh_badges() -- Line: 395
+    -- upvalues: refresh_hotbar (val), InsuranceShared (val), get_records (val), UI (val), ensure_badge (val)
+    -- upvalues: set_insured_highlight (val)
+    local Attribute, v1, v2
+    refresh_hotbar()
+    local v3 = InsuranceShared.get_protected_guids(get_records())
+    local v4 = {UI.get("ItemsScrollingFrame"), (UI.get("SafeScrollingFrame"))}
+    local v5 = nil
+    local v6 = nil
+    for i, j in v4, v5, v6 do
+        if j then
+            for k, n in j:GetChildren() do
+                if n:IsA("GuiButton") then
+                    Attribute = n:GetAttribute("GUID")
+                    if Attribute ~= nil then
+                        v1 = v3[Attribute] == true
+                        v2 = ensure_badge(n)
+                        if v2 then
+                            v2.Visible = v1
+                        end
+                        set_insured_highlight(n, v1)
+                    end
+                end
+            end
+        end
+    end
+end
+
+local function layout_prompt_buttons(a1) -- Line: 434
+    -- upvalues: get_prompt_row (val), u103 (val), u124 (val), u125 (ref), u126 (ref), u120 (ref)
+    local v1
+    local v2 = get_prompt_row()
+    if not v2 then
+        return
+    end
+    local v3 = {}
+    local v4 = nil
+    local v5 = nil
+    for i, j in u103, v4, v5 do
+        v1 = v2:FindFirstChild(j)
+        if v1 and v1:IsA("GuiObject") then
+            if not u124[v1] then
+                u124[v1] = v1.Size
+            end
+            if v1.Visible then
+                table.insert(v3, v1)
+            end
+        end
+    end
+    if not a1 then
+        for m, i5 in u124 do
+            m.Size = i5
+        end
+        local UIListLayout = v2:FindFirstChildOfClass("UIListLayout")
+        if UIListLayout and u125 then
+            UIListLayout.Padding = u125
+        end
+        if u126 and v2:IsA("GuiObject") then
+            v2.Size = u126
+        end
+        return
+    end
+    if v2:IsA("GuiObject") then
+        if not u126 then
+            u126 = v2.Size
+        end
+        v2.Size = UDim2.new(0.98, 0, v2.Size.Y.Scale, v2.Size.Y.Offset)
+    end
+    local UIListLayout_2 = v2:FindFirstChildOfClass("UIListLayout")
+    if UIListLayout_2 then
+        if not u125 then
+            u125 = UIListLayout_2.Padding
+        end
+        UIListLayout_2.Padding = UDim.new(0.012, 0)
+    end
+    local X = v2.AbsoluteSize.X
+    local Y = v2.AbsoluteSize.Y
+    if not (X <= 0) and not (Y <= 0) then
+        local v6 = #v3
+        local v7 = 0.012 * X
+        v1 = v6 * 2.5 + 1.25
+        local v8 = X * 0.97 - v6 * v7
+        if not (v1 <= 0) and not (v8 <= 0) then
+            local v9 = math.min(v8 / v1 / Y, 0.7)
+            for k, n in v3 do
+                n.Size = UDim2.new(1, 0, v9, 0)
+            end
+            if u120 then
+                u120.Size = UDim2.new(1, 0, v9 * 1, 0)
+            end
+            return
+        end
+        return
+    end
+end
+
+local function viewed_item() -- Line: 512 -- upvalues: ItemsUI (val)
+    if not ItemsUI.viewing_item then
+        return nil
+    end
+    return ItemsUI.viewing_item.get()
+end
+
+local function viewed_item_is_eligible() -- Line: 520 -- upvalues: ItemsUI (val), InsuranceShared (val)
+    local v1
+    if not (if ItemsUI.viewing_item then ItemsUI.viewing_item.get() else nil) then
+        return false
+    end
+    return (InsuranceShared.is_item_eligible(v1))
+end
+
+local function viewed_item_is_protected() -- Line: 529
+    -- upvalues: ItemsUI (val), InsuranceShared (val), u116 (val), Data (val)
+    local v1 = if ItemsUI.viewing_item then ItemsUI.viewing_item.get() else nil
+    if v1 and type(v1.guid) == "string" then
+        local find_claim_for_item = InsuranceShared.find_claim_for_item
+        return find_claim_for_item(if u116.get() then InsuranceShared.get_records(Data) else {}, v1.guid) ~= nil
+    end
+    return false
+end
+
+local function build_button() -- Line: 589 -- upvalues: get_prompt_row (val)
+    local v1 = get_prompt_row()
+    if not v1 then
+        warn("[Insurance] prompt button row not found")
+        return nil
+    end
+    local ProtectItemButton = v1:FindFirstChild("ProtectItemButton")
+    if ProtectItemButton and ProtectItemButton:IsA("ImageButton") then
+        return ProtectItemButton
+    end
+    local DropItemButton = v1:FindFirstChild("DropItemButton")
+    if DropItemButton and DropItemButton:IsA("GuiButton") then
+        local v2 = DropItemButton:Clone()
+        v2.Name = "ProtectItemButton"
+        v2.Visible = false
+        v2.LayoutOrder = -1
+        v2:SetAttribute("being_listened_to", nil)
+        local TextLabel = v2:FindFirstChild("TextLabel")
+        if TextLabel then
+            TextLabel:Destroy()
+        end
+        local HoldStroke = v2:FindFirstChild("HoldStroke")
+        if HoldStroke then
+            HoldStroke:Destroy()
+        end
+        local UIAspectRatioConstraint = v2:FindFirstChildOfClass("UIAspectRatioConstraint")
+        if UIAspectRatioConstraint then
+            UIAspectRatioConstraint.AspectRatio = 1.25
+        end
+        local Image = v2:FindFirstChild("Image")
+        if Image and Image:IsA("ImageLabel") then
+            Image.Image = ""
+            Image.BackgroundTransparency = 0
+            Image.BackgroundColor3 = Color3.new(1, 1, 1)
+            Image.AnchorPoint = Vector2.new(0.5, 0.5)
+            Image.Position = UDim2.fromScale(0.5, 0.5)
+            Image.Size = UDim2.fromScale(0.94, 0.82)
+            if not Image:FindFirstChild("ProtectCorner") then
+                local UICorner = Instance.new("UICorner")
+                UICorner.Name = "ProtectCorner"
+                UICorner.CornerRadius = UDim.new(0.26, 0)
+                UICorner.Parent = Image
+            end
+            if not Image:FindFirstChild("ProtectOutline") then
+                local UIStroke = Instance.new("UIStroke")
+                UIStroke.Name = "ProtectOutline"
+                UIStroke.Color = Color3.fromRGB(0, 0, 0)
+                UIStroke.Thickness = 2
+                UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                UIStroke.Parent = Image
+            end
+            if not Image:FindFirstChild("ProtectGradient") then
+                local UIGradient = Instance.new("UIGradient")
+                UIGradient.Name = "ProtectGradient"
+                UIGradient.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(126, 212, 250)),
+                    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(52, 163, 228)),
+                    (ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 108, 170))),
+                })
+                UIGradient.Rotation = 90
+                UIGradient.Parent = Image
+            end
+            if not Image:FindFirstChild("ProtectIcon") then
+                local ProtectIcon = (function(a1) -- Line: 716 -- upvalues: Image (val) -- types: a1: string
+                    local ImageLabel = Instance.new("ImageLabel")
+                    ImageLabel.Name = a1
+                    ImageLabel.BackgroundTransparency = 1
+                    ImageLabel.Image = "rbxassetid://114286790575033"
+                    ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+                    ImageLabel.Position = UDim2.fromScale(0.5, 0.5)
+                    ImageLabel.Size = UDim2.fromScale(1, 0.85)
+                    local UIAspectRatioConstraint = Instance.new("UIAspectRatioConstraint")
+                    UIAspectRatioConstraint.AspectRatio = 1
+                    UIAspectRatioConstraint.DominantAxis = Enum.DominantAxis.Height
+                    UIAspectRatioConstraint.Parent = ImageLabel
+                    ImageLabel.Parent = Image
+                    return ImageLabel
+                end)("ProtectIcon")
+                ProtectIcon.ImageColor3 = Color3.new(1, 1, 1)
+                ProtectIcon.ZIndex = Image.ZIndex + 2
+            end
+        end
+        v2.Parent = v1
+        return v2
+    end
+    warn("[Insurance] DropItemButton style source not found")
+    return nil
+end
+
+local u170 = Color3.fromRGB(126, 136, 145)
+local u171 = {}
+local u172 = nil
+local u173 = false
+local refresh_button = nil
+
+local function set_drop_locked(a1) -- Line: 776 -- upvalues: UI (val), u171 (val), u170 (val) -- types: a1: boolean
+    local DropItemButton = UI.get("DropItemButton")
+    if DropItemButton and typeof(DropItemButton) == "Instance" and DropItemButton:IsA("GuiButton") then
+        local Image = DropItemButton:FindFirstChild("Image")
+        if not Image or not Image:IsA("ImageLabel") then
+            Image = nil
+        end
+        if not u171[DropItemButton] then
+            local v1 = {active = DropItemButton.Active, auto = DropItemButton.AutoButtonColor}
+            local BackgroundColor3 = Image and Image.BackgroundColor3 or Color3.new(1, 1, 1)
+            v1.tint = BackgroundColor3
+            u171[DropItemButton] = v1
+        end
+        local v2 = u171[DropItemButton]
+        if a1 then
+            DropItemButton.AutoButtonColor = false
+            if not Image then
+                return
+            end
+            Image.BackgroundColor3 = u170
+            return
+        end
+        DropItemButton.Active = v2.active
+        DropItemButton.AutoButtonColor = v2.auto
+        if Image then
+            Image.BackgroundColor3 = v2.tint
+        end
+        return
+    end
+end
+
+local function is_downed() -- Line: 819 -- upvalues: Char (val)
+    local v1 = Char.current_hum.get()
+    if not v1 then
+        return false
+    end
+    local v2 = true
+    if not (v1.Health <= 0) then
+        v2 = v1:GetAttribute("IsDead") == true
+    end
+    return v2
+end
+
+local function drop_should_be_locked() -- Line: 834
+    -- upvalues: Char (val), u172 (ref), u173 (ref), refresh_button (ref)
+    local v1
+    local v2 = Char.current_hum.get()
+    if v2 then
+        v1 = true
+        if not (v2.Health <= 0) then
+            v1 = v2:GetAttribute("IsDead") == true
+        end
+    else
+        v1 = false
+    end
+    if v1 then
+        u172 = os.clock() + 1.5
+        return true
+    end
+    if u172 and os.clock() < u172 then
+        if not u173 then
+            u173 = true
+            task.delay(math.max(0, u172 - (os.clock())) + 0.05, function() -- Line: 845 -- upvalues: u173 (upval), refresh_button (upval)
+                u173 = false
+                refresh_button()
+            end)
+        end
+        return true
+    end
+    return false
+end
+
+function refresh_button() -- Line: 856
+    -- upvalues: set_drop_locked (val), drop_should_be_locked (val), ItemsUI (val), InsuranceShared (val), u116 (val)
+    -- upvalues: Data (val), u120 (ref), layout_prompt_buttons (val), u119 (val), states (val), u102 (val)
+    local v1, v2
+    local v3 = drop_should_be_locked()
+    if v3 then
+        v1 = if ItemsUI.viewing_item then ItemsUI.viewing_item.get() else nil
+        if not v1 then
+            v3 = false
+        elseif type(v1.guid) == "string" then
+            local find_claim_for_item = InsuranceShared.find_claim_for_item
+            v3 = find_claim_for_item(if u116.get() then InsuranceShared.get_records(Data) else {}, v1.guid) ~= nil
+        else
+            v3 = false
+        end
+    end
+    set_drop_locked(v3)
+    if not u120 then
+        return
+    end
+    local v4 = if u116.get() then InsuranceShared.get_records(Data) else {}
+    v1 = if ItemsUI.viewing_item then ItemsUI.viewing_item.get() else nil
+    if not v1 then
+        v3 = false
+    elseif type(v1.guid) == "string" then
+        local find_claim_for_item_2 = InsuranceShared.find_claim_for_item
+        v3 = find_claim_for_item_2(if u116.get() then InsuranceShared.get_records(Data) else {}, v1.guid) ~= nil
+    else
+        v3 = false
+    end
+    v1 = u116.get()
+    if v1 then
+        v2 = if ItemsUI.viewing_item then ItemsUI.viewing_item.get() else nil
+        v1 = (if v2 then InsuranceShared.is_item_eligible(v2) else false) and not v3
+    end
+    u120.Visible = v1
+    if not v1 then
+        layout_prompt_buttons(false)
+        return
+    end
+    v2 = u119.get() or InsuranceShared.find_by_state(v4, states.Pending) ~= nil
+    local v5 = InsuranceShared.is_at_capacity(v4)
+    local v6 = not v2 and not v5
+    u120.Active = v6
+    u120.AutoButtonColor = v6
+    local Image = u120:FindFirstChild("Image")
+    if Image and Image:IsA("ImageLabel") then
+        Image.BackgroundColor3 = v6 and Color3.new(1, 1, 1) or u102
+    end
+    layout_prompt_buttons(true)
+end
+
+local function refusal_text(a1) -- Line: 898
+    if type(a1) == "string" and a1 ~= "" then
+        return a1
+    end
+    return "One moment - try that again"
+end
+
+local u180 = false
+
+local function on_protect_clicked() -- Line: 911
+    -- upvalues: u116 (val), u120 (ref), u180 (ref), ItemsUI (val), InsuranceShared (val), Data (val), states (val)
+    -- upvalues: Net (val), NotificationsUI (val), refresh_button (ref), refresh_badges (val), u119 (val), StoreUI (val)
+    if u116.get() and u120 and u120.Active then
+        if u180 then
+            return
+        end
+        local v1 = if ItemsUI.viewing_item then ItemsUI.viewing_item.get() else nil
+        if v1 and type(v1.guid) == "string" then
+            local result_2, success_2, v2, v3
+            local guid_2 = v1.guid
+            u180 = true
+            local find_by_state = InsuranceShared.find_by_state
+            if find_by_state(if u116.get() then InsuranceShared.get_records(Data) else {}, states.Credit) then
+                local result, success
+                success, result, v2 = pcall(Net.get, "insurance_claim_credit", guid_2)
+                u180 = false
+                if not success or result ~= true then
+                    local v4 = success and v2 or nil
+                    NotificationsUI.show_notification(
+                        nil,
+                        if type(v4) ~= "string" then "One moment - try that again" else if v4 == "" then "One moment - try that again" else v4
+                    )
+                end
+                refresh_button()
+                refresh_badges()
+                return
+            end
+            success_2, result_2, v2, v3 = pcall(Net.get, "insurance_request_purchase", guid_2)
+            u180 = false
+            if success_2 and result_2 == true and type(v3) == "number" then
+                u119.set(true)
+                refresh_button()
+                StoreUI.external_prompt_product_purchase(v3, InsuranceShared.PURCHASE_LOCATION)
+                return
+            end
+            local v5 = success_2 and v2 or nil
+            NotificationsUI.show_notification(
+                nil,
+                if type(v5) ~= "string" then "One moment - try that again" else if v5 == "" then "One moment - try that again" else v5
+            )
+            refresh_button()
+            return
+        end
+        return
+    end
+end
+
+local u182 = false
+
+local function ensure_built() -- Line: 960
+    -- upvalues: u182 (ref), u120 (ref), build_button (val), UI (val), on_protect_clicked (val), Data (val)
+    -- upvalues: InsuranceShared (val), u116 (val), states (val), u119 (val), refresh_button (ref), refresh_badges (val)
+    -- upvalues: ItemsUI (val), MarketplaceService (val), LocalPlayer (val), Net (val)
+    if u182 then
+        return u120 ~= nil
+    end
+    u120 = build_button()
+    if not u120 then
+        return false
+    end
+    u182 = true
+    UI.on_click(u120, on_protect_clicked)
+    Data.hook(InsuranceShared.DATA_KEY, function() -- Line: 974
+        -- upvalues: InsuranceShared (upval), u116 (upval), Data (upval), states (upval), u119 (upval)
+        -- upvalues: refresh_button (upval), refresh_badges (upval)
+        local find_by_state = InsuranceShared.find_by_state
+        if not find_by_state(if u116.get() then InsuranceShared.get_records(Data) else {}, states.Pending) then
+            u119.set(false)
+        end
+        refresh_button()
+        refresh_badges()
+    end)
+    Data.hook("items", function() -- Line: 982 -- upvalues: refresh_button (upval), refresh_badges (upval)
+        refresh_button()
+        refresh_badges()
+    end)
+    if ItemsUI.viewing_item then
+        ItemsUI.viewing_item.hook(function() -- Line: 989 -- upvalues: refresh_button (upval)
+            task.defer(refresh_button)
+        end)
+    end
+    if ItemsUI.is_open then
+        ItemsUI.is_open.hook(function() -- Line: 995 -- upvalues: refresh_button (upval), refresh_badges (upval)
+            task.defer(refresh_button)
+            refresh_badges()
+        end)
+    end
+    MarketplaceService.PromptProductPurchaseFinished:Connect(function(a1, a2, a3) -- Line: 1002
+        -- upvalues: LocalPlayer (upval), InsuranceShared (upval), u119 (upval), Net (upval), refresh_button (upval)
+        if a1 ~= LocalPlayer.UserId or a2 ~= InsuranceShared.INSURE_ITEM_PRODUCT_ID then
+            return
+        end
+        if not a3 then
+            u119.set(false)
+            Net.send("insurance_cancel_pending")
+        end
+        refresh_button()
+    end)
+    return true
+end
+
+local function set_enabled(a1) -- Line: 1019
+    -- upvalues: u116 (val), u120 (ref), layout_prompt_buttons (val), refresh_badges (val), refresh_button (ref)
+    -- upvalues: ensure_built (val)
+    u116.set(a1 == true)
+    if not u116.get() then
+        if u120 then
+            u120.Visible = false
+        end
+        layout_prompt_buttons(false)
+        refresh_badges()
+        refresh_button()
+        return
+    end
+    if not ensure_built() then
+        task.spawn(function() -- Line: 1038 -- upvalues: u116 (upval), ensure_built (upval), refresh_button (upval), refresh_badges (upval)
+            for i = 1, 20 do
+                task.wait(0.5)
+                if not u116.get() then
+                    return
+                end
+                if ensure_built() then
+                    refresh_button()
+                    refresh_badges()
+                    return
+                end
+            end
+            warn("[Insurance] gave up building the Protect button")
+        end)
+        return
+    end
+    refresh_button()
+    refresh_badges()
+end
+
+function v1.initiate() -- Line: 1059 -- upvalues: Net (val), set_enabled (val)
+    Net.hook("insurance_enabled", function(a1) -- Line: 1062 -- upvalues: set_enabled (upval)
+        set_enabled(a1 == true)
+    end)
+end
+
+local u186 = {
+    safe = "Moving %s to your safe will REMOVE its protection",
+    drop = "Dropping %s will REMOVE its protection",
+}
+local u187 = {safe = "Hold to move", drop = "Hold to drop"}
+
+local function install_removal_guard() -- Line: 1106
+    -- upvalues: ItemsUI (val), u116 (val), u186 (val), InsuranceShared (val), get_records (val), Char (val)
+    -- upvalues: NotificationsUI (val), ItemUtils (val), BuyPromptUI (val), u187 (val), UI (val)
+    function ItemsUI.removal_guard(a1, a2, a3, a4) -- Line: 1107
+        -- upvalues: u116 (upval), u186 (upval), InsuranceShared (upval), get_records (upval), Char (upval)
+        -- upvalues: NotificationsUI (upval), ItemUtils (upval), BuyPromptUI (upval), u187 (upval), UI (upval)
+        if type(a2) == "string" and u116.get() then
+            local v1, v2
+            if not u186[a3] or not InsuranceShared.get_protected_guids(get_records())[a2] then
+                return true
+            end
+            if a3 == "drop" then
+                v1 = Char.current_hum.get()
+                v2 = false
+                if v1 ~= nil then
+                    v2 = true
+                    if not (v1.Health <= 0) then
+                        v2 = v1:GetAttribute("IsDead") == true
+                    end
+                end
+                if v2 then
+                    NotificationsUI.show_notification(nil, "You can not drop a protected item while downed")
+                    return false
+                end
+            end
+            v1 = tostring(a1 and a1.name or "this item")
+            v2 = ItemUtils.get_item_icon(v1)
+            BuyPromptUI.drop_request_with_slider(v2, v1, 1, 1, "Remove protection?", u187[a3], function(a1) -- Line: 1141 -- upvalues: a4 (val)
+                if a1 then
+                    task.delay(0.25, a4)
+                end
+            end, 3000)
+            local BuyItemName = UI.get("BuyItemName")
+            if BuyItemName then
+                BuyItemName.Text = string.format(u186[a3], v1)
+            end
+            return false
+        end
+        return true
+    end
+end
+
+function v1.loaded() -- Line: 1173
+    -- upvalues: ItemsUI (val), u116 (val), u186 (val), InsuranceShared (val), get_records (val), Char (val)
+    -- upvalues: NotificationsUI (val), ItemUtils (val), BuyPromptUI (val), u187 (val), UI (val), refresh_button (ref)
+    -- upvalues: refresh_hotbar (val), Net (val), set_enabled (val)
+    function ItemsUI.removal_guard(a1, a2, a3, a4) -- Line: 1107
+        -- upvalues: u116 (upval), u186 (upval), InsuranceShared (upval), get_records (upval), Char (upval)
+        -- upvalues: NotificationsUI (upval), ItemUtils (upval), BuyPromptUI (upval), u187 (upval), UI (upval)
+        if type(a2) == "string" and u116.get() then
+            local v1, v2
+            if not u186[a3] or not InsuranceShared.get_protected_guids(get_records())[a2] then
+                return true
+            end
+            if a3 == "drop" then
+                v1 = Char.current_hum.get()
+                v2 = false
+                if v1 ~= nil then
+                    v2 = true
+                    if not (v1.Health <= 0) then
+                        v2 = v1:GetAttribute("IsDead") == true
+                    end
+                end
+                if v2 then
+                    NotificationsUI.show_notification(nil, "You can not drop a protected item while downed")
+                    return false
+                end
+            end
+            v1 = tostring(a1 and a1.name or "this item")
+            v2 = ItemUtils.get_item_icon(v1)
+            BuyPromptUI.drop_request_with_slider(v2, v1, 1, 1, "Remove protection?", u187[a3], function(a1) -- Line: 1141 -- upvalues: a4 (val)
+                if a1 then
+                    task.delay(0.25, a4)
+                end
+            end, 3000)
+            local BuyItemName = UI.get("BuyItemName")
+            if BuyItemName then
+                BuyItemName.Text = string.format(u186[a3], v1)
+            end
+            return false
+        end
+        return true
+    end
+
+    Char.current_hum.hook(function(a1) -- Line: 1179 -- upvalues: refresh_button (upval)
+        refresh_button()
+        if not a1 then
+            return
+        end
+        a1.HealthChanged:Connect(refresh_button)
+        ;(a1:GetAttributeChangedSignal("IsDead")):Connect(refresh_button)
+    end)
+    task.spawn(function() -- Line: 1192 -- upvalues: UI (upval), refresh_hotbar (upval)
+        local v1
+        local HotbarHolder = UI.get("HotbarHolder")
+        if not (if not HotbarHolder then nil else if typeof(HotbarHolder) == "Instance" then HotbarHolder:FindFirstChild("List") else nil) then
+            return
+        end
+        v1.ChildAdded:Connect(function() -- Line: 1197 -- upvalues: refresh_hotbar (upval)
+            task.defer(refresh_hotbar)
+        end)
+        refresh_hotbar()
+    end)
+    task.spawn(function() -- Line: 1205 -- upvalues: Net (upval), set_enabled (upval)
+        local success, result = pcall(function() -- Line: 1206 -- upvalues: Net (upval)
+            return Net.get("insurance_get_state")
+        end)
+        if success and type(result) == "table" then
+            set_enabled(result.enabled == true)
+            return
+        end
+        set_enabled(false)
+    end)
+end
+
+return v1

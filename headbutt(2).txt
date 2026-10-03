@@ -1,0 +1,21 @@
+-- Path : ReplicatedStorage.Modules.Game.MultiAnimations.MultiPlayerAnimation.Sequences.headbutt
+-- Script path: ReplicatedStorage.Modules.Game.MultiAnimations.MultiPlayerAnimation.Sequences.headbutt
+-- Decompile time: 0.32 ms
+
+require(script.Parent.Parent.Types)
+return {
+    unequip_items_while_playing = true,
+    camera = {player = "player_a", attach_to = "HumanoidRootPart", object = script.CamPart},
+    audio_track = {sound_id = 92791057039270, volume = 5},
+    sequences = {
+        player_a = {
+            start_teleport = {offset = CFrame.new(0, 0, 0)},
+            animation = {animation_id = 93594099454178, yield_animation = true},
+        },
+        player_b = {
+            start_teleport = {offset = CFrame.new(0, 0, 0)},
+            animation = {animation_id = 138097586735628, yield_animation = true},
+        },
+    },
+    overlay = script.LiveStreamUI,
+}

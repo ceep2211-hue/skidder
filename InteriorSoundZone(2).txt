@@ -1,0 +1,55 @@
+-- Path : ReplicatedStorage.Modules.Game.InteriorSoundZone
+-- Script path: ReplicatedStorage.Modules.Game.InteriorSoundZone
+-- Decompile time: 1.20 ms
+
+local Spring = require(game.ReplicatedStorage.Modules.Core.Spring)
+local Zone = require(game.ReplicatedStorage.Modules.Core.Zone)
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+require(game.ReplicatedStorage.Modules.Core.State)
+local u28 = {}
+u28.class = StatefulObject.new_class(function() -- Line: 14
+    return {}
+end, script.Name)
+
+function u28.initiate() end
+
+local u36 = {}
+local u37 = {}
+
+local function setup_sound_muffle_effect(a1) -- Line: 33 -- upvalues: Spring (val), u37 (val) -- types: a1: userdata
+    local EqualizerSoundEffect = Instance.new("EqualizerSoundEffect")
+    EqualizerSoundEffect.Name = "ExteriorMuffleSoundEffect"
+    EqualizerSoundEffect.Parent = a1
+    local v1 = Spring.new(2, 0.9, 1)
+    v1.hook(function(a1) -- Line: 39 -- upvalues: EqualizerSoundEffect (val)
+        EqualizerSoundEffect.LowGain = a1 * 5
+        EqualizerSoundEffect.MidGain = a1 * -60
+        EqualizerSoundEffect.HighGain = a1 * -80
+    end)
+    u37[a1] = v1
+end
+
+function u28.loaded() -- Line: 48
+    -- upvalues: u28 (val), setup_sound_muffle_effect (val), u36 (val), Zone (val), u37 (val)
+    u28.class.hook(function(a1) -- Line: 51 -- upvalues: setup_sound_muffle_effect (upval), u36 (upval), Zone (upval), u37 (upval)
+        local SoundZoneModel = a1.get("SoundZoneModel")
+        local Value = SoundZoneModel.Value
+        if Value == nil then
+            SoundZoneModel.Changed:Wait()
+            Value = SoundZoneModel.Value
+        end
+        setup_sound_muffle_effect(a1.instance)
+        if not u36[Value] then
+            u36[Value] = (Zone.new(Value, "hrp"))
+        end
+        u36[Value].inside.hook(function(a1_2) -- Line: 65 -- upvalues: u37 (upval), a1 (val)
+            local v1 = u37[a1.instance]
+            v1.f = if not a1_2 then 0.1 else 2
+            v1 = u37[a1.instance]
+            v1.r = if not a1_2 then 1 else 0
+        end)
+        return false
+    end)
+end
+
+return u28

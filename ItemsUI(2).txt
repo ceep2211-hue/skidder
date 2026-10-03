@@ -1,0 +1,1307 @@
+-- Path : ReplicatedStorage.Modules.Game.Inventory.ItemsUI
+-- Script path: ReplicatedStorage.Modules.Game.Inventory.ItemsUI
+-- Decompile time: 43.66 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local BlockSpinSubscriptionClient = require(ReplicatedStorage.Modules.Game.Store.BlockSpinSubscriptionClient)
+local Signal = require(game.ReplicatedStorage.Modules.Core.Signal)
+local Keybinds = require(game.ReplicatedStorage.Modules.Game.Keybinds)
+local ReplicatedStorage_2 = game:GetService("ReplicatedStorage")
+local Audio = require(game.ReplicatedStorage.Modules.Core.Audio)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local UIFX = require(game.ReplicatedStorage.Modules.Core.UIFX)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local Data = require(game.ReplicatedStorage.Modules.Core.Data)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local StoreUI = require(game.ReplicatedStorage.Modules.Game.Store.StoreUI)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+require(game.ReplicatedStorage.Modules.Game.DataTypes.ItemDataTypes)
+local ItemUtils = require(game.ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+local SubMenuBackground = require(ReplicatedStorage_2.Modules.Game.UI.SubMenuBackground)
+local BuyPromptUI = require(game.ReplicatedStorage.Modules.Game.UI.BuyPromptUI)
+local Recovery = require(game.ReplicatedStorage.Modules.Game.Inventory.Recovery)
+local PawnShop = require(ReplicatedStorage_2.Modules.Game.Inventory.PawnShop)
+local InfoPromptUI = require(ReplicatedStorage_2.Modules.Game.UI.InfoPromptUI)
+local RarityIndicator = require(ReplicatedStorage_2.Modules.Game.Inventory.RarityIndicator)
+local FlagManager = require(ReplicatedStorage_2.Modules.Game.GameInfo.FlagManager)
+local SidebarMenu = require(ReplicatedStorage_2.Modules.Game.UI.SidebarMenu)
+local StoreData = require(game.ReplicatedStorage.Modules.Game.Store.StoreData)
+require(game.ReplicatedStorage.Modules.Game.VehicleSystem.Vehicle)
+local Melee = require(ReplicatedStorage_2.Modules.Game.ItemTypes.Melee)
+local Gun = require(ReplicatedStorage_2.Modules.Game.ItemTypes.Gun)
+local Throwable = require(ReplicatedStorage_2.Modules.Game.ItemTypes.Throwable)
+local ItemCustomizationUI = require(ReplicatedStorage_2.Modules.Game.ItemCustomization.ItemCustomizationUI)
+local Crate = require(ReplicatedStorage_2.Modules.Game.CrateSystem.Crate)
+local RepairExtras = require(game.ReplicatedStorage.Modules.Game.GameInfo.RepairExtras)
+local Timer = require(game.ReplicatedStorage.Modules.Core.Timer)
+local NotificationsUI = require(ReplicatedStorage.Modules.Game.UI.NotificationsUI)
+local MarketplaceService = game:GetService("MarketplaceService")
+local FLAG_ROBUX_INVENTORY_SLOTS = FlagManager.FLAG_ROBUX_INVENTORY_SLOTS
+local FLAG_BLOCKSPIN_PLUS_INVENTORY_SLOT = FlagManager.FLAG_BLOCKSPIN_PLUS_INVENTORY_SLOT
+local u236 = {}
+local LocalPlayer = game.Players.LocalPlayer
+local u242 = State.new(0)
+u236.is_open = State.new(false)
+u236.can_open = State.new(function() -- Line: 49 -- upvalues: Crate (val), ItemCustomizationUI (val)
+    local v1 = Crate.spinning.get()
+    local v2 = ItemCustomizationUI.enabled.get()
+    return not (v1 or v2)
+end)
+u236.inventory_type = State.new("hand")
+u236.click_type = State.new("equip")
+u236.bulk_sell_mode = State.new(false)
+u236.on_bulk_item_clicked = Signal.new()
+u236.bulk_drop_mode = State.new(false)
+u236.on_bulk_drop_item_clicked = Signal.new()
+u236.removal_guard = nil
+
+local function guarded(a1, a2, a3, a4) -- Line: 93 -- upvalues: u236 (val) -- types: a3: string, a4: function
+    if u236.removal_guard and not u236.removal_guard(a1, a2, a3, a4) then
+        return
+    end
+    a4()
+end
+
+u236.choosing_ammo_guid = State.new("")
+u236.viewing_item = State.new(nil)
+u236.viewing_item_button = State.new(nil)
+u236.get_item_icon = ItemUtils.get_item_icon
+local u278 = Signal.new()
+u236.display_check_func = State.new(nil)
+local u282 = {}
+local u283 = {}
+u283.FULL_INVENTORY = Color3.fromRGB(208, 53, 41)
+u283.INVENTORY_WITH_SPACE = Color3.fromRGB(255, 255, 255)
+
+function create_item(a1, a2) -- Line: 117
+    -- upvalues: UI (val), ItemUtils (val), RarityIndicator (val), u236 (val), u282 (val), RepairExtras (val)
+    -- upvalues: Data (val), NotificationsUI (val), Net (val), Audio (val), UIFX (val), PawnShop (val)
+    -- upvalues: InfoPromptUI (val), BuyPromptUI (val), u278 (val), Char (val), LocalPlayer (val), Gun (val), Util (val)
+    -- upvalues: Recovery (val)
+    local ItemTemplate = UI.get("ItemTemplate")
+    local guid = a1.guid
+    local u9 = ItemTemplate:Clone()
+    u9:SetAttribute("ItemButton", true)
+    u9:SetAttribute("GUID", guid)
+    u9.Name = guid
+    local u23 = ItemUtils.get_item_instance(a1.name)
+    if not u23 then
+        warn("Skipping: ", a1.name, " as it no longer exists")
+        u9.Visible = false
+        return u9
+    end
+    task.spawn(function() -- Line: 132 -- upvalues: u9 (val), ItemUtils (upval), a1 (ref), RarityIndicator (upval)
+        u9.ItemName.Visible = true
+        u9.Frame.ItemImage.Visible = false
+        local v1 = ItemUtils.get_item_icon(a1.name)
+        if v1 then
+            u9.ItemName.Visible = false
+            u9.Frame.ItemImage.Image = v1.image_id
+            u9.Frame.ItemImage.ImageColor3 = v1.color
+            u9.Frame.ItemImage.Visible = true
+            RarityIndicator.apply_rarity_color(a1.name, u9)
+        end
+    end)
+    if not a1.class then
+        if a1.item_type and a1.item_type ~= "car" and a1.item_type ~= "bike" then end
+        u9.ItemName.Text = a1.name or "Unknown"
+    else
+        u9.ItemName.Text = a1.class.name or "Unknown"
+    end
+    local u56 = ItemUtils.get_item_type(a1.name)
+    local u60 = ItemUtils.get_item_instance(a1.name)
+    u9.ItemEquipped.Visible = false
+    u9.Visible = ItemUtils.shows_in_items_ui(a1.name)
+    u9.ItemCount.Visible = false
+    u9.Parent = a2
+    u9.Destroying:Connect((u236.click_type.hook(function(a1_2) -- Line: 174
+        -- upvalues: a1 (ref), u282 (upval), guid (val), u9 (val), RepairExtras (upval), u23 (val), ItemUtils (upval)
+        -- upvalues: u56 (val), u60 (val), Data (upval), u236 (upval)
+        local v1
+        local v2 = u282[guid] or a1
+        a1 = v2
+        local RepairsLeft = u9.RepairsLeft
+        local FLAG_DESTROY_AFTER_SOME_REPAIRS = false
+        if a1_2 == "repair" then
+            FLAG_DESTROY_AFTER_SOME_REPAIRS = RepairExtras.FLAG_DESTROY_AFTER_SOME_REPAIRS
+        end
+        RepairsLeft.Visible = FLAG_DESTROY_AFTER_SOME_REPAIRS
+        if a1_2 == "repair" then
+            if u23:GetAttribute("Durability") == nil then
+                u9.Visible = false
+                return
+            end
+            v2 = RepairExtras.new_durability(a1, u23:GetAttribute("Durability"), a1.repairs)
+            if a1.durability and not (v2 <= a1.durability) and v2 ~= nil then
+                u9.Visible = true
+                if not RepairExtras.FLAG_DESTROY_AFTER_SOME_REPAIRS then
+                    return
+                end
+                v1 = math.round((math.max(0, 1 - (a1.repairs or 0) / RepairExtras.TOTAL_REPAIR_PERCENTAGE_WHEN_TO_DESTROY)) * 100)
+                u9.RepairsLeft.Count.Text = ("%*%%"):format(v1)
+                if v1 == 0 then
+                    u9.RepairsLeft.Count.TextColor3 = Color3.fromRGB(220, 0, 0)
+                    return
+                end
+                u9.RepairsLeft.Count.TextColor3 = Color3.fromRGB(255, 255, 255)
+                return
+            end
+            u9.Visible = false
+            return
+        end
+        if a1_2 == "select" then
+            return
+        end
+        if a1_2 == "sell" then
+            u9.Visible = ItemUtils.shows_in_pawn_shop(a1.name)
+            return
+        end
+        u9.Visible = ItemUtils.shows_in_items_ui(a1.name)
+        if u56 == "ammo" or a1.amount then
+            local Visible = u9.Visible and 0 < a1.amount
+            u9.Visible = Visible
+        end
+        u9.DropItemIcon.Visible = a1_2 == "drop"
+        v2 = u9:GetAttribute("ItemType") == "gun"
+        v1 = u60:GetAttribute("FishingItem") == "rod"
+        if (v2 or v1) and a1_2 == "choose_ammo" then
+            local Attribute_2 = ItemUtils.get_item_instance(a1.name):GetAttribute("AmmoType")
+            local name = (ItemUtils.get_item_info(Data, (u236.choosing_ammo_guid.get()))).class.name
+            u9.ChooseWeaponForAmmoIcon.Visible = string.find(name, Attribute_2) ~= nil
+            return
+        end
+        u9.ChooseWeaponForAmmoIcon.Visible = false
+    end)).unhook)
+    u9.Destroying:Connect((u236.display_check_func.hook(function(a1_2) -- Line: 236 -- upvalues: a1 (ref), u56 (val), u9 (val), UI (upval)
+        if a1_2 then
+            local v1 = a1_2(a1, u56, u9)
+            u9.Visible = v1
+            if v1 then
+                local NoItemsSelection = UI.get("NoItemsSelection")
+                NoItemsSelection.Visible = false
+            end
+        end
+    end)).unhook)
+    UI.on_click(u9, function() -- Line: 246
+        -- upvalues: a1 (ref), u282 (upval), guid (val), u9 (val), NotificationsUI (upval), u236 (upval), Net (upval)
+        -- upvalues: Audio (upval), UIFX (upval), PawnShop (upval), ItemUtils (upval), InfoPromptUI (upval)
+        -- upvalues: BuyPromptUI (upval), u278 (upval), Data (upval), Char (upval), LocalPlayer (upval), Gun (upval)
+        -- upvalues: Util (upval), Recovery (upval)
+        local v1, v2, v3, v4
+        local v5 = u282[guid] or a1
+        a1 = v5
+        if u9.Frame.LockedFrame.Visible then
+            NotificationsUI.show_notification(nil, "Inventory is full, clear some space first")
+            return
+        end
+        if u236.click_type.get() == "equip" then
+            if u236.bulk_drop_mode.get() then
+                v3 = u9
+                u236.on_bulk_drop_item_clicked:Fire(a1, v3)
+                return
+            end
+            u236.viewing_item_button.set(u9)
+            u236.viewing_item.set(a1)
+            return
+        end
+        if u236.click_type.get() == "transfer" then
+            if (if a1.location ~= "safe" then "safe" else "hand") ~= "safe" then
+                v2 = "safe"
+                if a1.location == "safe" then
+                    v2 = "hand"
+                end
+                if not Net.get("request_change_item_location", guid, v2) then
+                    Audio.error()
+                    UIFX.error_effect(u9.Frame.UIStroke)
+                    return
+                end
+                return
+            end
+            v3 = guid
+            if u236.removal_guard
+                and not u236.removal_guard(a1, v3, "safe", function() -- Line: 266 -- upvalues: a1 (upval), Net (upval), guid (upval), Audio (upval), UIFX (upval), u9 (upval)
+                    local v0, v2
+                    v0 = "safe"
+                    if a1.location == "safe" then
+                        v0 = "hand"
+                    end
+                    if not Net.get("request_change_item_location", guid, v0) then
+                        Audio.error()
+                        UIFX.error_effect(u9.Frame.UIStroke)
+                    end
+                    return
+                end) then
+                return
+            end
+            v4 = "safe"
+            if a1.location == "safe" then
+                v4 = "hand"
+            end
+            if Net.get("request_change_item_location", guid, v4) then
+                return
+            end
+            Audio.error()
+            UIFX.error_effect(u9.Frame.UIStroke)
+            return
+        end
+        if u236.click_type.get() == "sell" then
+            if u236.bulk_sell_mode.get() then
+                v3 = u9
+                u236.on_bulk_item_clicked:Fire(a1, v3)
+                return
+            end
+            u9:GetAttribute("ItemType")
+            v1 = PawnShop.get_sell_price_for_item(a1)
+            v2 = ItemUtils.get_item_icon(a1.name)
+            if v1 == 0 then
+                InfoPromptUI.prompt_info("Error", (("You can not sell %* at this time"):format(a1.name)))
+                return
+            end
+            BuyPromptUI.sell_request_with_slider(v2, a1.name, v1, 1, a1.amount, function(a1, a2) -- Line: 336
+                -- upvalues: Net (upval), guid (upval), Audio (upval), UIFX (upval), u9 (upval), u236 (upval)
+                if a1 and not Net.get("sell_item", guid, a2) then
+                    Audio.error()
+                    UIFX.error_effect(u9.Frame.UIStroke)
+                end
+                u236.is_open.set(true)
+                u236.inventory_type.set("sell")
+            end)
+            return
+        end
+        if u236.click_type.get() == "select" then
+            u278:Fire(a1)
+            u236.is_open.set(false)
+            u236.inventory_type.set("equip")
+            return
+        end
+        if u236.click_type.get() == "drop" then
+            v1 = guid
+            if u236.removal_guard
+                and not u236.removal_guard(a1, v1, "drop", function() -- Line: 364 -- upvalues: ItemUtils (upval), a1 (upval), BuyPromptUI (upval), Net (upval), guid (upval)
+                    local amount, drop_request_with_slider, name, v0, v1, v3, v5
+                    v0 = ItemUtils.get_item_icon(a1.name)
+                    v1 = BuyPromptUI
+                    drop_request_with_slider = v1.drop_request_with_slider
+                    v3 = a1
+                    name = v3.name
+                    v5 = a1
+                    amount = v5.amount
+                    drop_request_with_slider(v0, name, 1, amount, nil, nil, function(a1, a2) -- Line: 372 -- upvalues: Net (upval), guid (upval)
+                        local v2
+                        if not a1 then
+                            return
+                        else
+                            Net.send("drop_item", guid, a2)
+                            return
+                        end
+                    end)
+                    return
+                end) then
+                return
+            end
+            v3 = ItemUtils.get_item_icon(a1.name)
+            BuyPromptUI.drop_request_with_slider(v3, a1.name, 1, a1.amount, nil, nil, function(a1, a2) -- Line: 372 -- upvalues: Net (upval), guid (upval)
+                if not a1 then
+                    return
+                end
+                Net.send("drop_item", guid, a2)
+            end)
+            return
+        end
+        if u236.click_type.get() ~= "choose_ammo" then
+            if u236.click_type.get() == "repair" then
+                if u9.RepairsLeft.Visible and u9.RepairsLeft.Count.Text == "0%" then
+                    return false
+                end
+                v5 = Recovery.get_repair_price_for_item(a1.name, a1.durability, a1)
+                v1 = ItemUtils.get_item_icon(a1.name)
+                BuyPromptUI.purchase_request(v1, "Repair Item", ("Cost: $%*"):format(v5), nil, nil, function(a1) -- Line: 457 -- upvalues: Net (upval), guid (upval), Audio (upval), UIFX (upval), u9 (upval)
+                    if a1 and not Net.get("repair_item", guid) then
+                        Audio.error()
+                        UIFX.error_effect(u9.Frame.UIStroke)
+                    end
+                end)
+            end
+            return
+        end
+        if not u9.ChooseWeaponForAmmoIcon.Visible then
+            u236.click_type.set("equip")
+            return
+        end
+        u236.click_type.set("equip")
+        v5 = ItemUtils.get_item_info(Data, guid)
+        local u231 = ItemUtils.get_item_info(Data, u236.choosing_ammo_guid.get())
+        if ItemUtils.get_item_type(v5.name) ~= "gun" then
+            v2, v3 = Net.get("equip_ammo_on_item", guid, u236.choosing_ammo_guid.get())
+            if v2 and v3 then
+                v5.ammo_amount = v2
+                v5.override_ammo_type = v3
+                Char.get_hum():UnequipTools()
+                script.BulletBox:Play()
+                require(game.ReplicatedStorage.Modules.Game.Inventory.Hotbar).fire_hooks(guid)
+                return
+            end
+            Audio.error()
+            UIFX.error_effect(u9.Frame.UIStroke)
+            return
+        end
+        v2 = if not Char.held_tool.get() then nil else if (Char.held_tool.get():GetAttribute("ItemGUID")) ~= guid then nil else Char.held_tool.get()
+        if v2 == nil then
+            for i, j in LocalPlayer.Backpack:GetChildren() do
+                if (j:GetAttribute("ItemGUID")) == guid then
+                    v2 = j
+                end
+            end
+        end
+        if v2 then
+            if Char.held_tool.get() ~= v2 then
+                Char.get_hum():EquipTool(v2)
+            end
+            Gun.class.get(v2).reload(u231.class.name)
+            return
+        end
+        Net.get("toggle_equip_item", v5.guid)
+        u236.viewing_item.set(nil)
+        u236.is_open.set(false)
+        local u322 = nil
+        v4 = Util.hook_children(LocalPlayer.Backpack, function(a1) -- Line: 417 -- upvalues: guid (upval), u322 (ref), Char (upval), Gun (upval), u231 (val)
+            if (a1:GetAttribute("ItemGUID")) == guid then
+                u322:Disconnect()
+                Char.get_hum():EquipTool(a1)
+                Gun.class.get(a1).reload(u231.class.name)
+            end
+        end)
+    end)
+    return u9
+end
+
+function u236.initiate() end
+
+function u236.is_car_equipped(a1) -- Line: 478
+    for i, j in workspace.Vehicles:GetChildren() do
+        if j:GetAttribute("ItemGUID") == a1 then
+            return j
+        end
+    end
+end
+
+local function get_local_class_for_item_type(a1) -- Line: 486
+    -- upvalues: Gun (val), Throwable (val), Melee (val)
+    if a1 == "gun" then
+        return Gun.class
+    end
+    if a1 == "throwable" then
+        return Throwable.class
+    end
+    if a1 == "melee" then
+        return Melee.class
+    end
+end
+
+local function get_inst_state_value(a1, a2, a3) -- Line: 496
+    -- upvalues: Gun (val), Throwable (val), Melee (val)
+    local Attribute = a1:GetAttribute(a2)
+    if Attribute then
+        return Attribute
+    end
+    local class = if a3 ~= "gun" then if a3 ~= "throwable" then if a3 ~= "melee" then nil else Melee.class else Throwable.class else Gun.class
+    if class then
+        local v1 = class.find(a1)
+        if v1 and v1.states[a2] then
+            return v1.states[a2].get()
+        end
+    end
+end
+
+function separate_uppercase_words(a1) -- Line: 515
+    return a1:gsub("(%l)(%u)", "%1 %2")
+end
+
+function u236.select_an_item(a1, a2) -- Line: 519 -- upvalues: u236 (val), UI (val), u278 (val)
+    u236.is_open.set(true)
+    u236.inventory_type.set("select")
+    local NoItemsSelection = UI.get("NoItemsSelection")
+    NoItemsSelection.Visible = true
+    u236.display_check_func.set(a1)
+    local u22 = nil
+    local u29 = u278:Once(function(a1) -- Line: 526 -- upvalues: u236 (upval), u22 (ref), a2 (val)
+        u236.display_check_func.set(nil)
+        u22.unhook()
+        if a2 then
+            a2(a1)
+        end
+    end)
+    local v1 = u236.is_open.hook(function(a1) -- Line: 533 -- upvalues: UI (upval), u236 (upval), u22 (ref), u29 (ref)
+        local SellAllFishButton = UI.get("SellAllFishButton")
+        SellAllFishButton.Visible = false
+        if not a1 then
+            u236.display_check_func.set(nil)
+            u22.unhook()
+            u29:Disconnect()
+        end
+    end)
+end
+
+local u301 = nil
+local u302 = nil
+
+function update_item_amounts() -- Line: 557
+    -- upvalues: UI (val), Net (val), ItemUtils (val), Data (val), u283 (val), FlagManager (val)
+    local ItemsScrollingFrame = UI.get("ItemsScrollingFrame")
+    local get_max_inventory_space = Net.get("get_max_inventory_space")
+    local v1 = ItemUtils.get_inventory_count(Data)
+    local DefaultItemsMaxItems = UI.get("DefaultItemsMaxItems")
+    local TransferSafeMaxItems = UI.get("TransferSafeMaxItems")
+    local TransferItemsMaxItems = UI.get("TransferItemsMaxItems")
+    local AdditionalInventorySlots = UI.get("AdditionalInventorySlots")
+    DefaultItemsMaxItems.Text = ("%*/%*"):format(v1.hand, get_max_inventory_space.hand)
+    TransferSafeMaxItems.Text = ("%*/%*"):format(v1.safe, get_max_inventory_space.safe)
+    TransferItemsMaxItems.Text = ("%*/%*"):format(v1.hand, get_max_inventory_space.hand)
+    local v2 = get_max_inventory_space.hand - get_max_inventory_space.default_hand
+    AdditionalInventorySlots.Text = ("(+%*)"):format(v2)
+    AdditionalInventorySlots.Visible = v2 > 0
+    local FULL_INVENTORY = get_max_inventory_space.hand <= v1.hand and u283.FULL_INVENTORY or u283.INVENTORY_WITH_SPACE
+    DefaultItemsMaxItems.TextColor3 = FULL_INVENTORY
+    local FULL_INVENTORY_2 = get_max_inventory_space.safe <= v1.safe and u283.FULL_INVENTORY or u283.INVENTORY_WITH_SPACE
+    TransferSafeMaxItems.TextColor3 = FULL_INVENTORY_2
+    TransferItemsMaxItems.TextColor3 = DefaultItemsMaxItems.TextColor3
+    if FlagManager.FLAG_LOCK_ITEMS_FULL_INVENTORY then
+        local v3
+        local v4 = 0
+        local v5 = {}
+        for i, j in ItemsScrollingFrame:GetChildren() do
+            if j:IsA("GuiButton") and j:GetAttribute("location") == "hand" then
+                j.Frame.LockedFrame.Visible = true
+                table.insert(v5, j)
+            end
+        end
+        table.sort(v5, function(a1, a2) -- Line: 589
+            return a1.LayoutOrder < a2.LayoutOrder
+        end)
+        while v4 <= get_max_inventory_space.hand do
+            v3 = nil
+            for k, n in v5 do
+                if n:IsA("GuiButton") and n.Frame.LockedFrame.Visible then
+                    v3 = n
+                    break
+                end
+            end
+            if not v3 then
+                break
+            end
+            v4 = v4 + 1
+            v3.Frame.LockedFrame.Visible = false
+        end
+    end
+end
+
+function run_timer_on_item_button(a1, a2) -- Line: 611
+    -- upvalues: Util (val), u236 (val), UI (val)
+    local v1, v2, v3
+    a1:SetAttribute("EndTime", a2)
+    if a1:GetAttribute("RunningTimer") then
+        return
+    end
+    a1:SetAttribute("RunningTimer", true)
+    a1.Frame.CooldownFrame.Visible = true
+    local ServerTimeNow = workspace:GetServerTimeNow()
+    local u257 = a2 - ServerTimeNow
+    local v4 = 0
+    local ServerTimeNow_2 = workspace:GetServerTimeNow()
+    local v5 = Util.watch_attribute(a1, "EndTime", function(a1) -- Line: 624 -- upvalues: a2 (ref), u257 (ref), ServerTimeNow (val)
+        u257 = a1 - ServerTimeNow
+    end)
+    local v6 = a1
+    while v6 ~= nil do
+        if v6.Parent == nil then
+            break
+        end
+        v1 = a2 - (workspace:GetServerTimeNow() + v4)
+        if v1 <= 0 then
+            v6.Frame.CooldownFrame.Visible = false
+            v6:SetAttribute("RunningTimer", false)
+            v5:Disconnect()
+            if u236.viewing_item.get() and u236.viewing_item.get().guid == v6:GetAttribute("GUID") then
+                UI.get("EquipItemButton").Image.ImageColor3 = Color3.new(1, 1, 1)
+                UI.get("EquipItemButton").Image.Image = "rbxassetid://125530753785660"
+                if u236.viewing_item.get().destroyed then
+                    UI.get("EquipItemButton").TextLabel.Text = "Repair"
+                elseif not u236.is_car_equipped(v6:GetAttribute("GUID")) then
+                    UI.get("EquipItemButton").TextLabel.Text = "Spawn"
+                else
+                    UI.get("EquipItemButton").Image.Image = "rbxassetid://112393117775900"
+                    UI.get("EquipItemButton").TextLabel.Text = "Despawn"
+                end
+            end
+            return
+        end
+        if u236.viewing_item.get() and u236.viewing_item.get().guid == v6:GetAttribute("GUID") then
+            UI.get("EquipItemButton").Image.Image = "rbxassetid://112393117775900"
+            UI.get("EquipItemButton").Image.ImageColor3 = Color3.new(0.3, 0.3, 0.3)
+            v2 = math.floor(v1 / 60)
+            v3 = math.round(v1 % 60)
+            if v3 < 10 then
+                v3 = (string.rep("0", 1)) .. tostring(v3)
+            end
+            UI.get("EquipItemButton").TextLabel.Text = ("%*:%*"):format(v2, v3)
+        end
+        v2 = {}
+        table.insert(v2, (NumberSequenceKeypoint.new(0, 0.5)))
+        table.insert(v2, (NumberSequenceKeypoint.new(math.max(0.001, v1 / u257 - 0.01), 0.5)))
+        table.insert(v2, (NumberSequenceKeypoint.new(math.max(0.002, v1 / u257 - 0.01 + 0.001), 1)))
+        table.insert(v2, (NumberSequenceKeypoint.new(1, 1)))
+        v6.Frame.CooldownFrame.UIGradient.Transparency = NumberSequence.new(v2)
+        v4 = math.min(1, v4 + (task.wait()))
+        if workspace:GetServerTimeNow() ~= ServerTimeNow_2 then
+            ServerTimeNow_2 = workspace:GetServerTimeNow()
+        end
+    end
+end
+
+function u236.get_item_button_by_guid(a1, a2) -- Line: 685 -- upvalues: UI (val)
+    local ItemsScrollingFrame = UI.get("ItemsScrollingFrame")
+    local SafeScrollingFrame = UI.get("SafeScrollingFrame")
+    return ((not (a2 ~= "safe") and SafeScrollingFrame or ItemsScrollingFrame):FindFirstChild(a1))
+end
+
+function update_item(a1, a2, a3) -- Line: 693
+    -- upvalues: UI (val), u302 (ref), u242 (val), u282 (val), ItemUtils (val), RepairExtras (val), u301 (ref)
+    local v1
+    local ItemsScrollingFrame = UI.get("ItemsScrollingFrame")
+    local SafeScrollingFrame = UI.get("SafeScrollingFrame")
+    local guid = a1.guid
+    local location = a1.location
+    local v2 = not (location ~= "safe") and SafeScrollingFrame or ItemsScrollingFrame
+    local v3 = v2:FindFirstChild(guid) or create_item(a1, v2)
+    if u302[location] then
+        v1 = u302
+        v1[location] = v1[location] + 1
+    end
+    v3.DurabilityFrame.Visible = false
+    v3.FreshnessFrame.Visible = false
+    v3.DestroyedItemIcon.Visible = false
+    v3.LayoutOrder = a1.stamp or 0
+    if location ~= "large_storage" then
+        v3.LayoutOrder = v3.LayoutOrder - 200000000
+    end
+    local LayoutOrder = v3.LayoutOrder
+    if u242.get() < LayoutOrder then
+        u242.set(v3.LayoutOrder)
+    end
+    v3:SetAttribute("location", location)
+    u282[guid] = a1
+    if a2 == "ammo" or a1.amount then
+        v3.ItemCount.Text = ("x%*"):format(a1.amount)
+        v3.ItemCount.Visible = 1 < a1.amount
+    end
+    if a2 == "car" or a2 == "bike" then
+        local Attribute = game.Players.LocalPlayer:GetAttribute("SpawnVehicleNext")
+        v3:SetAttribute("EndTime", Attribute or 0)
+        if Attribute and 0 < Attribute - workspace:GetServerTimeNow() then
+            task.spawn(run_timer_on_item_button, v3, Attribute)
+        end
+    end
+    if ItemUtils.has_durability(a3) then
+        v1 = ItemUtils.get_item_instance(a1.name)
+        if not v1 then
+            warn("No instance for: ", a1.name)
+        end
+        local Attribute_2 = v1:GetAttribute("Health") or RepairExtras.new_durability(a1, v1:GetAttribute("Durability"), a1.repairs)
+        local health = a1.health or a1.durability or Attribute_2
+        if Attribute_2 then
+            local v4 = math.clamp(health / Attribute_2, 0, 1)
+            v3.DurabilityFrame.Durability.Size = UDim2.fromScale(1, v4)
+            if v4 <= 0.25 then
+                v3.DurabilityFrame.Durability.BackgroundColor3 = Color3.fromRGB(225, 0, 0)
+            elseif not (v4 <= 0.5) then
+                v3.DurabilityFrame.Durability.BackgroundColor3 = Color3.fromRGB(0, 225, 0)
+            else
+                v3.DurabilityFrame.Durability.BackgroundColor3 = Color3.fromRGB(225, 225, 0)
+            end
+            v3.DurabilityFrame.Visible = true
+        end
+        if health <= 0 or a1.destroyed then
+            v3.DestroyedItemIcon.Visible = true
+        end
+    end
+    if ItemUtils.has_freshness(a3) then
+        v1 = ItemUtils.calculate_fish_freshness(a1.name, a1.caught_stamp)
+        v3.FreshnessFrame.Freshness.Size = UDim2.fromScale(1, v1)
+        v3.FreshnessFrame.FreshnessIcon.Image = ("rbxassetid://%*"):format(if not (v1 <= 0.01) then "68072538" else "9583486345")
+        v3.FreshnessFrame.Visible = true
+    end
+    v3:SetAttribute("ItemType", a2)
+    v3.Parent = v2
+    if u301[location] then
+        v1 = u301[location]
+        v1[guid] = true
+    end
+end
+
+function update_item_by_guid(a1) -- Line: 795 -- upvalues: ItemUtils (val), Data (val) -- types: a1: string
+    local v1 = ItemUtils.get_item_info(Data, a1)
+    local name = v1.name
+    local v2 = ItemUtils.get_item_type(name)
+    update_item(v1, v2, name)
+end
+
+u236.update_item_by_guid = update_item_by_guid
+
+function create_item_stat_template(a1) -- Line: 803 -- upvalues: UI (val)
+    local StatTemplate = UI.get("StatTemplate")
+    local v1 = StatTemplate:Clone()
+    v1.Visible = true
+    v1.Name = "ToDelete"
+    v1.Parent = StatTemplate.Parent
+    v1.ItemStat.Text = a1
+end
+
+local function handle_upgrade_purchasing() -- Line: 812
+    -- upvalues: UI (val), StoreUI (val), u242 (val), BlockSpinSubscriptionClient (val), MarketplaceService (val)
+    -- upvalues: NotificationsUI (val), Data (val), StoreData (val), FLAG_ROBUX_INVENTORY_SLOTS (val), Util (val)
+    -- upvalues: LocalPlayer (val), FLAG_BLOCKSPIN_PLUS_INVENTORY_SLOT (val)
+    local BlockSpinPlusInventorySlot1 = UI.get("BlockSpinPlusInventorySlot1")
+    local RobuxInventorySlot1 = UI.get("RobuxInventorySlot1")
+
+    local function attempt_purchase_slot(a1, a2) -- Line: 816 -- upvalues: StoreUI (upval)
+        local v1 = table.clone(a2)
+        for i = #v1, 1, -1 do
+            if table.find(a1, v1[i]) then
+                table.remove(v1, i)
+            end
+        end
+        local v2 = v1[1] or a2[#a2]
+        if v2 then
+            StoreUI.external_prompt_product_purchase(v2, "ItemsUI")
+            return
+        end
+        warn("No extra safe slot product id left?")
+    end
+
+    u242.hook(function(a1) -- Line: 835 -- upvalues: BlockSpinPlusInventorySlot1 (val), RobuxInventorySlot1 (val)
+        BlockSpinPlusInventorySlot1.LayoutOrder = a1 + 1
+        RobuxInventorySlot1.LayoutOrder = a1 + 2
+    end)
+    UI.on_click(BlockSpinPlusInventorySlot1, function() -- Line: 840
+        -- upvalues: BlockSpinSubscriptionClient (upval), MarketplaceService (upval), NotificationsUI (upval)
+        local v1 = BlockSpinSubscriptionClient.get_preferred_subscription()
+        if v1.can_purchase then
+            MarketplaceService:PromptSubscriptionPurchase(game.Players.LocalPlayer, v1.subscription_id)
+            return
+        end
+        NotificationsUI.show_notification(nil, v1.error_message)
+    end)
+    UI.on_click(RobuxInventorySlot1, function() -- Line: 850 -- upvalues: attempt_purchase_slot (val), Data (upval), StoreData (upval)
+        attempt_purchase_slot(Data.purchased_inventory_slots, StoreData.EXTRA_INVENTORY_SLOTS)
+    end)
+    UI.on_click("BuyExtraSafeSlot", function() -- Line: 854 -- upvalues: attempt_purchase_slot (val), Data (upval), StoreData (upval)
+        attempt_purchase_slot(Data.purchased_safe_slots, StoreData.EXTRA_SAFE_SLOTS)
+    end)
+    Data.hook("extra_inventory_slots", function(a1) -- Line: 858 -- upvalues: StoreData (upval), FLAG_ROBUX_INVENTORY_SLOTS (upval), RobuxInventorySlot1 (val)
+        local v1 = not (#StoreData.EXTRA_INVENTORY_SLOTS <= a1)
+        if not FLAG_ROBUX_INVENTORY_SLOTS then
+            v1 = false
+        end
+        RobuxInventorySlot1.Visible = v1
+    end)
+    Util.watch_attribute(LocalPlayer, "IsSubscribed", function(a1) -- Line: 874 -- upvalues: FLAG_BLOCKSPIN_PLUS_INVENTORY_SLOT (upval), BlockSpinPlusInventorySlot1 (val)
+        local v1 = not a1
+        if not FLAG_BLOCKSPIN_PLUS_INVENTORY_SLOT then
+            v1 = false
+        end
+        BlockSpinPlusInventorySlot1.Visible = v1
+    end)
+end
+
+function u236.loaded() -- Line: 891
+    -- upvalues: UI (val), State (val), Char (val), u236 (val), SubMenuBackground (val), ItemUtils (val), Gun (val)
+    -- upvalues: Throwable (val), Melee (val), get_inst_state_value (val), RepairExtras (val), UIFX (val)
+    -- upvalues: Recovery (val), BuyPromptUI (val), Net (val), Audio (val), InfoPromptUI (val), NotificationsUI (val)
+    -- upvalues: u301 (ref), u302 (ref), Data (val), LocalPlayer (val), Timer (val), Keybinds (val), SidebarMenu (val)
+    -- upvalues: Util (val), handle_upgrade_purchasing (val)
+    local ItemsScrollingFrame = UI.get("ItemsScrollingFrame")
+    local SafeScrollingFrame = UI.get("SafeScrollingFrame")
+    local ItemInfoHolder = UI.get("ItemInfoHolder")
+    ItemInfoHolder.Visible = false
+    local u16 = State.new(false)
+    local StatTemplate = UI.get("StatTemplate")
+    StatTemplate.Visible = false
+    Char.died:Connect(function() -- Line: 903 -- upvalues: u236 (upval)
+        if u236.is_open.get() then
+            u236.is_open.set(false)
+        end
+    end)
+    u236.display_check_func.hook(function(a1) -- Line: 909 -- upvalues: UI (upval)
+        if a1 == nil then
+            local NoItemsSelection = UI.get("NoItemsSelection")
+            NoItemsSelection.Visible = false
+        end
+    end)
+    u236.viewing_item.hook(function(a1, a2) -- Line: 915
+        -- upvalues: SubMenuBackground (upval), u16 (val), UI (upval), u236 (upval), ItemUtils (upval)
+        -- upvalues: ItemInfoHolder (val), StatTemplate (val), Gun (upval), Throwable (upval), Melee (upval)
+        -- upvalues: get_inst_state_value (upval), RepairExtras (upval)
+        local Attribute_9, EquipItemButton_2, class_3, v1, v2
+        if not SubMenuBackground.can_open() then
+            return
+        end
+        if not a1 then
+            SubMenuBackground.close()
+        else
+            SubMenuBackground.open(u16, UI.get("ItemInfoGui"))
+        end
+        if not a1 then
+            u16.set(false)
+            return
+        end
+        u16.set(true)
+        local v3 = false
+        if a1.class then
+            v3 = true
+        end
+        local v4 = true
+        if a1.item_type ~= "car" then
+            v4 = a1.item_type == "bike"
+        end
+        local v5 = u236.viewing_item_button.get()
+        local v6 = ItemUtils.get_item_type(a1.name)
+        local v7 = ItemUtils.get_item_instance(a1.name)
+        if v7:IsA("Tool") or v6 == "accessory" or v4 then
+            EquipItemButton_2 = UI.get("EquipItemButton")
+            EquipItemButton_2.Visible = true
+        elseif not v3 then
+            local EquipItemButton = UI.get("EquipItemButton")
+            EquipItemButton.Visible = false
+        else
+            EquipItemButton_2 = UI.get("EquipItemButton")
+            EquipItemButton_2.Visible = true
+        end
+        UI.get("EquipItemButton").Image.ImageColor3 = Color3.new(1, 1, 1)
+        UI.get("EquipItemButton").Image.Image = "rbxassetid://125530753785660"
+        local DropItemButton = UI.get("DropItemButton")
+        DropItemButton.Visible = true
+        local RepairItemButton = UI.get("RepairItemButton")
+        RepairItemButton.Visible = false
+        if v3 then
+            UI.get("EquipItemButton").TextLabel.Text = "Load"
+        elseif v4 then
+            if v5:GetAttribute("RunningTimer") then
+                UI.get("EquipItemButton").Image.Image = "rbxassetid://112393117775900"
+                UI.get("EquipItemButton").Image.ImageColor3 = Color3.new(0.3, 0.3, 0.3)
+                UI.get("EquipItemButton").TextLabel.Text = ""
+            elseif a1.destroyed then
+                local EquipItemButton_3 = UI.get("EquipItemButton")
+                EquipItemButton_3.Visible = false
+            elseif not u236.is_car_equipped(v5:GetAttribute("GUID")) then
+                UI.get("EquipItemButton").TextLabel.Text = "Spawn"
+            else
+                UI.get("EquipItemButton").Image.Image = "rbxassetid://112393117775900"
+                UI.get("EquipItemButton").TextLabel.Text = "Despawn"
+            end
+            local DropItemButton_2 = UI.get("DropItemButton")
+            DropItemButton_2.Visible = false
+            if a1.health or a1.destroyed then
+                local Attribute = v7:GetAttribute("Health")
+                if a1.destroyed or a1.health < Attribute then
+                    local RepairItemButton_2 = UI.get("RepairItemButton")
+                    RepairItemButton_2.Visible = true
+                end
+            end
+        elseif not v5.ItemEquipped.Visible then
+            UI.get("EquipItemButton").TextLabel.Text = "Equip"
+        else
+            UI.get("EquipItemButton").Image.Image = "rbxassetid://112393117775900"
+            UI.get("EquipItemButton").TextLabel.Text = "Unequip"
+        end
+        local ItemName = ItemInfoHolder.ItemName
+        local Attribute_2 = v7:GetAttribute("DisplayName") or a1.name
+        ItemName.Text = Attribute_2
+        local ItemInfoIcon = UI.get("ItemInfoIcon")
+        ItemInfoIcon.Image = v7:GetAttribute("ImageId")
+        local DescriptionPadding = UI.get("ItemContents").DescriptionPadding
+        DescriptionPadding.Visible = v7:GetAttribute("Description") ~= nil
+        UI.get("ItemContents").DescriptionPadding.Description.Text = v7:GetAttribute("Description") or ""
+        for i, j in StatTemplate.Parent:GetChildren() do
+            if j.Name == "ToDelete" then
+                j:Destroy()
+            end
+        end
+        local v8 = {}
+        local v9 = {}
+        if v6 == "gun" then
+            v8 = {"damage", "explode_damage", "fire_rate"}
+            v9 = {"Damage", "Explosion Damage", "Fire Rate"}
+        elseif v6 == "throwable" then
+            v8 = {"damage", "explode_damage", "throw_speed"}
+            v9 = {"Damage", "Explosion Damage", "Throw Speed"}
+        elseif v6 == "melee" then
+            v8 = {"damage", "speed", "range"}
+            v9 = {"Damage", "Speed", "Range"}
+        elseif v6 == "consumable" then
+            v8 = {"HealthRestoreAmount", "StaminaRestoreAmount", "EffectDuration"}
+            v9 = {"Health Restored", "Stamina Restored", nil}
+        end
+        local v10 = v8
+        local v11 = nil
+        local v12 = nil
+        local v13 = a1
+        for k, n in v10, v11, v12 do
+            Attribute_9 = v7:GetAttribute(n)
+            if not Attribute_9 then
+                class_3 = if v6 ~= "gun" then if v6 ~= "throwable" then if v6 ~= "melee" then nil else Melee.class else Throwable.class else Gun.class
+                if not class_3 then
+                    v1 = nil
+                else
+                    v2 = class_3.find(v7)
+                    v1 = if not v2 then nil else if not v2.states[n] then nil else v2.states[n].get()
+                end
+            else
+                v1 = Attribute_9
+            end
+            if v1 then
+                if n ~= "fire_rate" or not (v1 < 300) then
+                    create_item_stat_template((("%*: %*"):format(v9[k] or separate_uppercase_words(n), v1)))
+                end
+            end
+        end
+        if v6 == "gun" then
+            local Attribute_3 = v7:GetAttribute("accuracy")
+            if not Attribute_3 then
+                local class = if v6 ~= "gun" then if v6 ~= "throwable" then if v6 ~= "melee" then nil else Melee.class else Throwable.class else Gun.class
+                if not class then
+                    v10 = nil
+                else
+                    local v14 = class.find(v7)
+                    v10 = if not v14 then nil else if not v14.states.accuracy then nil else v14.states.accuracy.get()
+                end
+            else
+                v10 = Attribute_3
+            end
+            if v10 then
+                create_item_stat_template((("Accuracy: %*%%"):format(v10 * 100)))
+            end
+            local Attribute_4 = v7:GetAttribute("MagSize")
+            if not Attribute_4 then
+                local class_2 = if v6 ~= "gun" then if v6 ~= "throwable" then if v6 ~= "melee" then nil else Melee.class else Throwable.class else Gun.class
+                if not class_2 then
+                    v11 = nil
+                else
+                    local v15 = class_2.find(v7)
+                    v11 = if not v15 then nil else if not v15.states.MagSize then nil else v15.states.MagSize.get()
+                end
+            else
+                v11 = Attribute_4
+            end
+            create_item_stat_template((("Mag: %*/%*"):format(v13.ammo_amount or 0, v11)))
+        elseif v6 ~= "melee" then
+            if v6 ~= "ammo" then
+                if v6 == "car" or v6 == "bike" then
+                    create_item_stat_template((("Health: %*/%*"):format(
+                        math.max(0, (math.round(v13.health or v7:GetAttribute("Health")))),
+                        (v7:GetAttribute("Health"))
+                    )))
+                elseif v6 == "fish" then
+                    create_item_stat_template((("Freshness: %*%%"):format((math.round((ItemUtils.calculate_fish_freshness(v13.name, v13.caught_stamp)) * 100)))))
+                    create_item_stat_template((("Weight: %* lbs"):format(v13.weight)))
+                elseif v6 ~= "misc" or not ItemUtils.get_item_instance(v13.name):HasTag("Utility") then
+                    if v6 == "rod"
+                        and ItemUtils.get_item_instance(v13.name):HasTag("Utility")
+                        and v7:GetAttribute("FishingItem") == "rod" then
+                        create_item_stat_template((("Loaded Bait: %*/1"):format(v13.ammo_amount or 0)))
+                        print(get_inst_state_value(v7, "max_distance", v6))
+                        create_item_stat_template((("Max Distance: %* studs"):format((v7:GetAttribute("MaxDistance")))))
+                    end
+                elseif v7:GetAttribute("Durability") then
+                    create_item_stat_template((("Uses: %*/%*"):format(math.round(v13.durability or v7:GetAttribute("Durability")), (v7:GetAttribute("Durability")))))
+                end
+            elseif not v7:GetAttribute("FishingItem") then
+                create_item_stat_template((("Ammo: %*/%*"):format(v13.amount or 0, 50)))
+            else
+                create_item_stat_template((("Amount: %*/%*"):format(v13.amount or 0, 50)))
+            end
+        end
+        if v6 ~= "gun" and v6 ~= "melee" then
+            return
+        end
+        if not v7:GetAttribute("Durability") then
+            return
+        end
+        v10 = RepairExtras.new_durability(v13, v7:GetAttribute("Durability"), v13.repairs)
+        create_item_stat_template((("Durability: %*/%*"):format(math.round(v13.durability or v10), v10)))
+    end)
+
+    local function reopen_logic_function(a1) -- Line: 1077 -- upvalues: u236 (upval)
+        u236.viewing_item.set(nil)
+        task.defer(function() -- Line: 1080 -- upvalues: u236 (upval)
+            u236.is_open.set(true)
+        end)
+    end
+
+    SubMenuBackground.on_closing:Connect(function(a1, a2) -- Line: 1085 -- upvalues: u16 (val), u236 (upval)
+        if a1 == u16 and a2 == "close" then
+            u236.viewing_item.set(nil)
+            task.defer(function() -- Line: 1080 -- upvalues: u236 (upval)
+                u236.is_open.set(true)
+            end)
+        end
+    end)
+    u16.hook(function(a1, a2) -- Line: 1093 -- upvalues: UIFX (upval), ItemInfoHolder (val)
+        if a1 == a2 then
+            return
+        end
+        if a1 then
+            UIFX.scale_open(ItemInfoHolder)
+            return
+        end
+        UIFX.scale_close(ItemInfoHolder)
+    end)
+    UI.on_click(ItemInfoHolder.ItemInfoCloseButton, function() -- Line: 1105 -- upvalues: u236 (upval)
+        u236.viewing_item.set(nil)
+        u236.is_open.set(true)
+    end)
+
+    local function repair_vehicle(a1, a2) -- Line: 1110
+        -- upvalues: Recovery (upval), ItemUtils (upval), BuyPromptUI (upval), Net (upval), Audio (upval), UIFX (upval)
+        -- upvalues: u236 (upval)
+        local v1 = Recovery.get_repair_price_for_vehicle(a2.name, a2.health, a2)
+        local v2 = ItemUtils.get_item_icon(a2.name)
+        BuyPromptUI.purchase_request(v2, if not a2.destroyed then "Repair Vehicle" else "Recover Vehicle", ("Cost: $%*"):format(v1), nil, nil, function(a1_2) -- Line: 1120 -- upvalues: Net (upval), a2 (val), Audio (upval), UIFX (upval), a1 (val), u236 (upval)
+            if a1_2 and not Net.get("repair_vehicle", a2.guid) then
+                Audio.error()
+                UIFX.error_effect(a1.Frame.UIStroke)
+            end
+            u236.viewing_item.set(nil)
+            u236.is_open.set(true)
+        end)
+    end
+
+    UI.on_click(UI.get("EquipItemButton"), function() -- Line: 1135
+        -- upvalues: u236 (upval), InfoPromptUI (upval), Net (upval), Audio (upval), NotificationsUI (upval)
+        -- upvalues: UIFX (upval)
+        local v1 = u236.viewing_item.get()
+        if v1 == nil then
+            return
+        end
+        local v2 = false
+        if v1.class then
+            v2 = true
+        end
+        local v3 = true
+        if v1.item_type ~= "car" then
+            v3 = v1.item_type == "bike"
+        end
+        local v4 = u236.viewing_item_button.get()
+        if v2 then
+            u236.viewing_item.set(nil)
+            u236.is_open.set(true)
+            u236.choosing_ammo_guid.set(v1.guid)
+            u236.click_type.set("choose_ammo")
+            return
+        end
+        if v1.durability and v1.durability <= 0 then
+            return InfoPromptUI.prompt_info("Error", (("You can repair your %* at any home workbench"):format(v1.name)))
+        end
+        local v5, v6 = Net.get("toggle_equip_item", v1.guid)
+        u236.viewing_item.set(nil)
+        if v5 then
+            if not v3 then
+                u236.is_open.set(true)
+            end
+            return
+        end
+        u236.is_open.set(true)
+        Audio.error()
+        if v6 == "in_other_player_vehicle" then
+            NotificationsUI.show_notification("", "Leave the vehicle before spawning one", nil, true)
+            return
+        end
+        UIFX.error_effect(v4.Frame.UIStroke)
+    end)
+    UI.on_click(UI.get("DropItemButton"), function() -- Line: 1180 -- upvalues: u236 (upval), ItemUtils (upval), BuyPromptUI (upval), Net (upval)
+        local u3 = u236.viewing_item.get()
+        if u3 == nil then
+            return
+        end
+        local guid = u3.guid
+
+        local function v1() -- Line: 1184
+            -- upvalues: ItemUtils (upval), u3 (val), BuyPromptUI (upval), Net (upval), u236 (upval)
+            local v1 = ItemUtils.get_item_icon(u3.name)
+            local drop_request_with_slider = BuyPromptUI.drop_request_with_slider
+            local name = u3.name
+            local amount = u3.amount
+            local v2 = ItemUtils.get_item_rarity_price(u3.name)
+            drop_request_with_slider(v1, name, 1, amount, nil, nil, function(a1, a2) -- Line: 1193 -- upvalues: Net (upval), u3 (upval), u236 (upval)
+                if a1 then
+                    Net.send("drop_item", u3.guid, a2)
+                    return
+                end
+                u236.viewing_item.set(nil)
+                u236.is_open.set(true)
+            end, v2 * u3.amount)
+        end
+
+        if u236.removal_guard and not u236.removal_guard(u3, guid, "drop", v1) then
+            return
+        end
+        v1()
+    end)
+    UI.on_click(UI.get("RepairItemButton"), function() -- Line: 1206 -- upvalues: u236 (upval), repair_vehicle (val)
+        local v1 = u236.viewing_item.get()
+        if v1 == nil then
+            return
+        end
+        repair_vehicle(u236.viewing_item_button.get(), v1)
+    end)
+    local ItemTemplate = UI.get("ItemTemplate")
+    ItemTemplate.Visible = false
+    local Items = UI.get("Items")
+    local ItemsHolder = UI.get("ItemsHolder")
+    Items.Enabled = true
+    UIFX.set_close(ItemsHolder)
+
+    local function update_items_ui(a1) -- Line: 1223
+        -- upvalues: u301 (upval), u302 (upval), ItemUtils (upval), Data (upval), ItemsScrollingFrame (val)
+        -- upvalues: SafeScrollingFrame (val), UI (upval)
+        u301 = {hand = {}, safe = {}, large_storage = {}}
+        u302 = {hand = 0, safe = 0, large_storage = 0}
+
+        local function clean(a1, a2) -- Line: 1228 -- upvalues: u301 (upval) -- types: a2: table
+            local v1
+            for i, j in a1:GetChildren() do
+                if j:GetAttribute("ItemButton") then
+                    v1 = false
+                    for k, n in a2 do
+                        if u301[n][j.Name] then
+                            v1 = true
+                            break
+                        end
+                    end
+                    if not v1 then
+                        j:Destroy()
+                    end
+                end
+            end
+        end
+
+        ItemUtils.iterate_through_items(Data, update_item)
+        clean(ItemsScrollingFrame, {"hand", "large_storage"})
+        clean(SafeScrollingFrame, {"safe"})
+        local v1 = false
+        for i, j in ItemsScrollingFrame:GetChildren() do
+            if j:IsA("GuiButton") and j.Visible then
+                v1 = true
+                break
+            end
+        end
+        local HandEmptyInventory = UI.get("HandEmptyInventory")
+        HandEmptyInventory.Visible = not v1 and not UI.get("NoItemsSelection").Visible
+        local SafeEmptyInventory = UI.get("SafeEmptyInventory")
+        SafeEmptyInventory.Visible = u302.safe == 0
+        local BuyExtraSafeSlot = UI.get("BuyExtraSafeSlot")
+        BuyExtraSafeSlot.Visible = 0 < u302.safe
+        update_item_amounts()
+    end
+
+    local function update_equipped() -- Line: 1266
+        -- upvalues: ItemsScrollingFrame (val), SafeScrollingFrame (val), LocalPlayer (upval), Char (upval)
+        local Attribute_3, Attribute_4, Attribute_5, Attribute_6, v1
+        local Attribute = game.Players.LocalPlayer:GetAttribute("SpawnVehicleNext")
+        local v2 = {ItemsScrollingFrame, SafeScrollingFrame}
+        local v3 = nil
+        local v4 = nil
+        for i, j in v2, v3, v4 do
+            for k, n in j:GetChildren() do
+                if n:GetAttribute("ItemButton") then
+                    Attribute_6 = n:GetAttribute("ItemType")
+                    n.ItemEquipped.Visible = false
+                    if Attribute_6 == "car" or Attribute_6 == "bike" then
+                        n:SetAttribute("EndTime", Attribute or 0)
+                        if Attribute and 0 < Attribute - workspace:GetServerTimeNow() then
+                            task.spawn(run_timer_on_item_button, n, Attribute)
+                        end
+                    end
+                end
+            end
+            for m, i5 in LocalPlayer:WaitForChild("Backpack"):GetChildren() do
+                if i5:GetAttribute("ItemGUID") then
+                    Attribute_5 = i5:GetAttribute("ItemGUID")
+                    v1 = j:FindFirstChild(Attribute_5)
+                    if v1 then
+                        v1.ItemEquipped.Visible = true
+                    end
+                end
+            end
+            for i6, i7 in Char.get():GetChildren() do
+                if i7:GetAttribute("ItemGUID") then
+                    Attribute_4 = i7:GetAttribute("ItemGUID")
+                    v1 = j:FindFirstChild(Attribute_4)
+                    if v1 then
+                        v1.ItemEquipped.Visible = true
+                    end
+                end
+            end
+            for i8, i9 in workspace.Vehicles:GetChildren() do
+                if (i9:GetAttribute("OwnerUserId")) == game.Players.LocalPlayer.UserId then
+                    Attribute_3 = i9:GetAttribute("ItemGUID")
+                    v1 = j:FindFirstChild(Attribute_3)
+                    if v1 then
+                        v1.ItemEquipped.Visible = true
+                    end
+                end
+            end
+        end
+    end
+
+    Data.hook("items", function(a1) -- Line: 1319 -- upvalues: update_items_ui (val)
+        update_items_ui(a1)
+    end)
+    Char.hook(function(a1) -- Line: 1323 -- upvalues: LocalPlayer (upval), update_equipped (val)
+        (LocalPlayer:WaitForChild("Backpack")).ChildAdded:Connect(update_equipped)
+        ;(LocalPlayer:WaitForChild("Backpack")).ChildRemoved:Connect(update_equipped)
+        a1.ChildAdded:Connect(update_equipped)
+        a1.ChildRemoved:Connect(update_equipped)
+        update_equipped()
+    end)
+    local u112 = Timer.new(1, update_items_ui, true)
+    u236.is_open.hook(function(a1, a2) -- Line: 1333
+        -- upvalues: SubMenuBackground (upval), u236 (upval), UI (upval), UIFX (upval), ItemsHolder (val)
+        -- upvalues: update_items_ui (val), u112 (val), Net (upval)
+        if a1 == a2 then
+            return
+        end
+        if not SubMenuBackground.can_open() then
+            print("returned early")
+            return
+        end
+        if a1 and u236.can_open.get() then
+            u236.viewing_item.set(nil)
+            u236.inventory_type.set("hand")
+            SubMenuBackground.open(u236.is_open, UI.get("Items"))
+            UIFX.scale_open(ItemsHolder)
+            update_items_ui()
+            u112.start()
+            Net.send("play_character_sound", "open_inventory")
+            return
+        end
+        u112.stop()
+        u236.inventory_type.set("")
+        SubMenuBackground.close()
+        UIFX.scale_close(ItemsHolder)
+        u236.is_open.set(false)
+    end)
+    u236.can_open.hook(function(a1) -- Line: 1359 -- upvalues: u236 (upval)
+        if not a1 then
+            u236.is_open.set(false)
+        end
+    end)
+    UI.on_click("InventoryButton", function() -- Line: 1365 -- upvalues: u236 (upval)
+        u236.is_open.update(function(a1) -- Line: 1366
+            return not a1
+        end)
+    end)
+    Keybinds.hook_action("open_inventory_button", function(a1) -- Line: 1372 -- upvalues: SidebarMenu (upval), UI (upval), u236 (upval)
+        if SidebarMenu.is_expanded.get() and a1 and UI.get("Sidebar").Enabled then
+            u236.is_open.update(function(a1) -- Line: 1374
+                return not a1
+            end)
+        end
+    end)
+    UI.on_click("ItemsCloseButton", function() -- Line: 1380 -- upvalues: u236 (upval)
+        u236.is_open.set(false)
+    end)
+    u236.inventory_type.hook(function(a1) -- Line: 1384 -- upvalues: UI (upval), ItemsScrollingFrame (val), u236 (upval)
+        local Safe = UI.get("ItemsHolder").Safe
+        local DefaultItemsMaxItems = UI.get("DefaultItemsMaxItems")
+        local TransferSafeMaxItems = UI.get("TransferSafeMaxItems")
+        local TransferItemsMaxItems = UI.get("TransferItemsMaxItems")
+        DefaultItemsMaxItems.Visible = false
+        if a1 == "hand" or a1 == "sell" or a1 == "select" then
+            Safe.Visible = false
+            ItemsScrollingFrame.Parent = UI.get("ItemsHolder")
+            ItemsScrollingFrame.Size = UDim2.fromScale(1, 0.9)
+            ItemsScrollingFrame.UIGridLayout.CellSize = UDim2.fromScale(0.241, 1)
+            if a1 ~= "sell" and a1 ~= "select" then
+                DefaultItemsMaxItems.Visible = true
+            end
+            TransferSafeMaxItems.Visible = false
+            TransferItemsMaxItems.Visible = false
+            UI.get("ItemsHolder").Title.Visible = true
+            if a1 == "hand" then
+                u236.click_type.set("equip")
+            elseif a1 == "sell" then
+                u236.click_type.set("sell")
+            elseif a1 == "select" then
+                u236.click_type.set("select")
+            end
+        elseif a1 == "side_by_side" then
+            Safe.Visible = true
+            ItemsScrollingFrame.Parent = Safe.ItemsSide
+            ItemsScrollingFrame.Size = UDim2.fromScale(1, 1)
+            ItemsScrollingFrame.UIGridLayout.CellSize = UDim2.fromScale(0.3, 1)
+            TransferSafeMaxItems.Visible = true
+            TransferItemsMaxItems.Visible = true
+            UI.get("ItemsHolder").Title.Visible = false
+            u236.click_type.set("transfer")
+        end
+        update_item_amounts()
+    end)
+    u236.click_type.hook(function(a1) -- Line: 1439 -- upvalues: UI (upval)
+        local ItemsModeToggle = UI.get("ItemsModeToggle")
+        ItemsModeToggle.Visible = false
+        local EquipItems = UI.get("ItemsModeToggle").EquipItems
+        EquipItems.Visible = a1 == "drop"
+        local DropItems = UI.get("ItemsModeToggle").DropItems
+        DropItems.Visible = a1 == "equip"
+        local ItemsSellImageLabel = UI.get("ItemsSellImageLabel")
+        ItemsSellImageLabel.Visible = a1 == "sell"
+        local ItemsDefaultImageLabel = UI.get("ItemsDefaultImageLabel")
+        local v1 = false
+        if a1 ~= "sell" then
+            v1 = a1 ~= "select"
+        end
+        ItemsDefaultImageLabel.Visible = v1
+        local ItemsSelectImageLabel = UI.get("ItemsSelectImageLabel")
+        ItemsSelectImageLabel.Visible = a1 == "select"
+        local v2 = "Items"
+        if a1 == "sell" then
+            v2 = "Pawn Shop"
+        end
+        if a1 == "repair" then
+            v2 = "Repair"
+        end
+        if a1 == "select" then
+            v2 = "Select"
+        end
+        UI.get("ItemsHolder").Title.Text = v2
+    end)
+    UI.on_click("ItemsModeToggle", function() -- Line: 1458 -- upvalues: UI (upval), Util (upval), u236 (upval)
+        local ClickSound = UI.get("ItemsModeToggle").ClickSound
+        ClickSound.PlaybackSpeed = 1.05 * Util.rand(0.95, 1.05)
+        ClickSound:Play()
+        u236.click_type.update(function(a1) -- Line: 1462
+            if a1 == "equip" then
+                return "drop"
+            end
+            if a1 == "drop" then
+                return "equip"
+            end
+        end)
+    end)
+    workspace:WaitForChild("Vehicles").ChildAdded:Connect(update_equipped)
+    workspace:WaitForChild("Vehicles").ChildRemoved:Connect(update_equipped)
+    ;(LocalPlayer:GetAttributeChangedSignal("SpawnVehicleNext")):Connect(update_equipped)
+    Data.hook("extra_safe_slots", function(a1) -- Line: 1479 -- upvalues: UI (upval)
+        local BuyExtraSafeSlot = UI.get("BuyExtraSafeSlot")
+        BuyExtraSafeSlot.Visible = true
+        update_item_amounts()
+    end)
+    Data.hook("extra_inventory_slots", function(a1) -- Line: 1484
+        update_item_amounts()
+    end)
+    ;(LocalPlayer:GetAttributeChangedSignal("IsSubscribed")):Connect(update_item_amounts)
+    handle_upgrade_purchasing()
+end
+
+return u236

@@ -1,0 +1,109 @@
+-- Path : ReplicatedStorage.Modules
+-- Script path: ReplicatedStorage.Modules
+-- Decompile time: 2.51 ms
+
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local v1 = {}
+if not workspace:GetAttribute("ServerReady") then
+    repeat
+        task.wait()
+    until workspace:GetAttribute("ServerReady")
+end
+
+local function get_modules() -- Line: 10
+    local v1 = {}
+    for i, j in script:GetDescendants() do
+        if j:IsA("ModuleScript") then
+            table.insert(v1, j)
+        end
+    end
+    return v1
+end
+
+local function is_top_level(a1) -- Line: 22 -- types: a1: userdata
+    return (a1:FindFirstAncestorWhichIsA("ModuleScript")) == script
+end
+
+local function get_top_level_modules(a1) -- Line: 26 -- types: a1: table
+    local v1 = {}
+    local v2 = nil
+    local v3 = nil
+    for i, j in a1, v2, v3 do
+        if (j:FindFirstAncestorWhichIsA("ModuleScript")) == script then
+            table.insert(v1, j)
+        end
+    end
+    return v1
+end
+
+local function require_modules(a1) -- Line: 38 -- types: a1: table
+    local result, success
+    local v1 = {}
+    for i, j in a1 do
+        success, result = pcall(require, j)
+        if not success then
+            task.spawn(error, (("CLIENT CRITICAL: Failed to require %* Error: %*"):format(j.Name, result)))
+        else
+            v1[j.Name] = result
+        end
+    end
+    return v1
+end
+
+local function initiate_modules(a1) -- Line: 69 -- types: a1: table
+    local v1
+    local v2 = nil
+    local v3 = nil
+    for i, j in a1, v2, v3 do
+        if j.initiate then
+            local u40 = false
+            local u41 = os.clock()
+            task.spawn(function() -- Line: 76 -- upvalues: j (val), i (val), u40 (ref), u41 (val)
+                local success, result = pcall(j.initiate)
+                if not success then
+                    task.spawn(error, (("CLIENT CRITICAL: Failed to initiate %* Error: %*"):format(i, result)))
+                end
+                u40 = true
+                local v1 = os.clock() - u41
+                if v1 > 20 then
+                    warn((("CLIENT BOOT: %*.initiate() finished after %*s"):format(i, (math.floor(v1)))))
+                end
+            end)
+            v1 = false
+            while not u40 do
+                task.wait(0.05)
+                if not v1 and 20 < os.clock() - u41 then
+                    warn((("CLIENT BOOT: %*.initiate() still running after %*s -- waiting"):format(i, 20)))
+                end
+            end
+        end
+    end
+end
+
+local function load_modules(a1) -- Line: 99 -- types: a1: table
+    for i, j in a1 do
+        if j.loaded then
+            task.defer(j.loaded)
+        end
+    end
+end
+
+function v1.initiate() -- Line: 107
+    -- upvalues: Util (val), get_modules (val), get_top_level_modules (val), require_modules (val)
+    -- upvalues: initiate_modules (val)
+    Util.load_debug_print("Client loading modules")
+    local v1 = get_top_level_modules((get_modules()))
+    Util.load_debug_print("Client requiring modules")
+    local v2 = require_modules(v1)
+    Util.load_debug_print("Client initiating modules")
+    initiate_modules(v2)
+    Util.load_debug_print("Client loading modules")
+    for i, j in v2 do
+        if j.loaded then
+            task.defer(j.loaded)
+        end
+    end
+    Util.load_debug_print("Client OK")
+end
+
+return v1

@@ -1,0 +1,38 @@
+-- Path : ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator.Items.Heights
+-- Script path: ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator.Items.Heights
+-- Decompile time: 0.95 ms
+
+local height = (require(script.Parent.Parent.CharacterCreatorTypes)).all_item_types.height
+require(game.ReplicatedStorage.Modules.Core.Util)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+
+local function almost_equal(a1, a2, a3) -- Line: 27 -- types: a1: number, a2: number, a3: number
+    if math.abs(a1 - a2) <= a3 then
+        return true
+    end
+    return false
+end
+
+return {
+    focus_part_name = "Head",
+    page_offset = Vector3.new(2, -1.5, 12),
+    MIN_HEIGHT = 0.855,
+    MAX_HEIGHT = 1.045,
+    MIN_WIDTH = 0.9,
+    MAX_WIDTH = 1.1,
+    page_name = height,
+    heights = {"5'1", "5'3", "5'5", "5'7", "5'9", "5'11", "6'1", "6'3", "6'6"},
+    widths = {"Slim", "Fit", "Average", "Big", "Fat"},
+    body_types_size_multipliers = {Masculine = {height = 1}, Feminine = {height = 0.84}},
+    run_equipped_sound_effect = function(a1, a2) end,
+    get_equipped_status = function(a1, a2) -- Line: 39 -- types: a2: userdata
+        local HeightScale = a2.HeightScale
+        if a1.height_multiplier and not not ((math.abs(HeightScale - a1.height_multiplier)) <= 0.015) then
+            return true
+        end
+        return false
+    end,
+    send_equipped_to_server = function(a1, a2) -- Line: 48 -- upvalues: Net (val) -- types: a1: boolean
+        Net.send("change_height", a1 and a2.height_multiplier or nil, a1 and a2.width_multiplier or nil)
+    end,
+}

@@ -1,0 +1,478 @@
+-- Path : ReplicatedStorage.Modules.Core.Input
+-- Script path: ReplicatedStorage.Modules.Core.Input
+-- Decompile time: 13.03 ms
+
+local u0 = {}
+require(script.Parent.Parent)
+local u6 = {}
+local UserInputService = game:GetService("UserInputService")
+local HapticService = game:GetService("HapticService")
+u6.mouse_move = {}
+u6.touch_move = {}
+u6.mouse_scroll = {}
+u6.mb1_down = {}
+u6.mb1_up = {}
+u6.mb2_down = {}
+u6.mb2_up = {}
+u6.mb3_down = {}
+u6.mb3_up = {}
+u6.touch_down = {}
+u6.touch_up = {}
+u6.tap = {}
+u6.double_tap = {}
+u6.key_down = {}
+u6.key_up = {}
+u6.left_stick_move = {}
+u6.right_stick_move = {}
+u6.left_trigger = {}
+u6.right_trigger = {}
+u6.left_trigger_up = {}
+u6.right_trigger_up = {}
+u6.drag = {}
+u6.number_keys = {}
+u0.gamepad = {}
+u0.gamepad.ts_positions = {Vector3.new(), (Vector3.new())}
+u0.gamepad.trigger_positions = {0, 0}
+u0.touches = {}
+u0.touches_gp = {}
+local u53 = nil
+
+function u0.get_type() -- Line: 39 -- upvalues: u53 (ref), UserInputService (val)
+    u53 = if not tostring((UserInputService:GetLastInputType())):find("Gamepad") then if not UserInputService.MouseEnabled then "mobile" else "pc" else "console"
+    return u53
+end
+
+function u0.cache_type() -- Line: 44 -- upvalues: u53 (ref), u0 (val)
+    return u53 or u0.get_type()
+end
+
+function u0.hook(a1, a2, ...) -- Line: 48 -- upvalues: u6 (val)
+    if not u6[a1] then
+        error("Hook '" .. a1 .. "' doesn't exist!", 0)
+    end
+    local v1 = u6[a1]
+    local v2 = #u6[a1] + 1
+    v1[v2] = {a2, ...}
+end
+
+function u0.set_mouse_lock(a1) -- Line: 55 -- upvalues: UserInputService (val)
+    UserInputService.MouseBehavior = a1 and Enum.MouseBehavior.LockCenter or Enum.MouseBehavior.Default
+end
+
+function u0.set_mouse_visible(a1) -- Line: 59 -- upvalues: UserInputService (val)
+    UserInputService.MouseIconEnabled = a1
+end
+
+function u0.get_mouse_lock() -- Line: 63 -- upvalues: UserInputService (val)
+    return UserInputService.MouseBehavior == Enum.MouseBehavior.LockCenter
+end
+
+local u60 = {Large = 0, Small = 0}
+local SetMotor = HapticService.SetMotor
+local wrap = coroutine.wrap
+
+function u0.vibrate(a1, a2, a3) -- Line: 69 -- upvalues: u60 (val), HapticService (val)
+    u60[a1] = u60[a1] + 1
+    local v1 = u60[a1]
+    HapticService:SetMotor(Enum.UserInputType.Gamepad1, Enum.VibrationMotor[a1], a2 or 1)
+    task.wait(a3 or 0.15)
+    if u60[a1] == v1 then
+        HapticService:SetMotor(Enum.UserInputType.Gamepad1, Enum.VibrationMotor[a1], 0)
+    end
+end
+
+local function sync(a1, a2, a3) -- Line: 78 -- upvalues: u60 (val), HapticService (val)
+    task.wait(a1 or 0.15)
+    if u60[a2] == a3 then
+        HapticService:SetMotor(Enum.UserInputType.Gamepad1, Enum.VibrationMotor[a2], 0)
+    end
+end
+
+function u0.vibrate_sync(a1, a2, a3) -- Line: 84 -- upvalues: u60 (val), HapticService (val), wrap (val), sync (val)
+    u60[a1] = u60[a1] + 1
+    local v1 = u60[a1]
+    HapticService:SetMotor(Enum.UserInputType.Gamepad1, Enum.VibrationMotor[a1], a2 or 1)
+    wrap(sync)(a3, a1, v1)
+end
+
+local IsKeyDown = UserInputService.IsKeyDown
+
+function u0.key_down(a1) -- Line: 94 -- upvalues: IsKeyDown (val), UserInputService (val)
+    return IsKeyDown(UserInputService, a1)
+end
+
+local IsMouseButtonPressed = UserInputService.IsMouseButtonPressed
+local IsGamepadButtonDown = UserInputService.IsGamepadButtonDown
+
+function u0.button_down(a1) -- Line: 101
+    -- upvalues: IsMouseButtonPressed (val), UserInputService (val), IsGamepadButtonDown (val)
+    if type(a1) == "number" then
+        return IsMouseButtonPressed(UserInputService, Enum.UserInputType["MouseButton" .. a1])
+    end
+    return IsGamepadButtonDown(UserInputService, Enum.UserInputType.Gamepad1, a1)
+end
+
+function u0.touching(a1) -- Line: 110 -- upvalues: u0 (val)
+    if a1 then
+        return #u0.touches_gp > 0
+    end
+    return #u0.touches > 0
+end
+
+local u72 = {"Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"}
+local u83 = 0
+local u85 = Vector3.new()
+UserInputService.InputBegan:Connect(function(a1, a2) -- Line: 122 -- upvalues: UserInputService (val), u6 (val), u0 (val), u83 (ref), u85 (ref), u72 (val)
+    local v1, v2, v3, v4
+    if UserInputService:GetFocusedTextBox() then
+        return
+    end
+    if a1.UserInputType == Enum.UserInputType.MouseButton1 then
+        v1 = #u6.mb1_down
+        for i12 = 1, v1 do
+            u6.mb1_down[i12][1](a1, a2)
+        end
+        return
+    end
+    if a1.UserInputType == Enum.UserInputType.MouseButton2 then
+        v1 = #u6.mb2_down
+        for i11 = 1, v1 do
+            u6.mb2_down[i11][1](a1, a2)
+        end
+        return
+    end
+    if a1.UserInputType == Enum.UserInputType.MouseButton3 then
+        v1 = #u6.mb3_down
+        for i10 = 1, v1 do
+            u6.mb3_down[i10][1](a1, a2)
+        end
+        return
+    end
+    if a1.UserInputType == Enum.UserInputType.Touch then
+        if not a2 then
+            if #u0.touches_gp == 0 then
+                u83 = tick()
+                u85 = a1.Position
+            end
+            u0.touches[#u0.touches + 1] = a1
+        else
+            u0.touches_gp[#u0.touches_gp + 1] = a1
+        end
+        v1 = #u6.touch_down
+        for i9 = 1, v1 do
+            u6.touch_down[i9][1](a1, a2)
+        end
+        return
+    end
+    if a1.KeyCode == Enum.KeyCode.ButtonL2 then
+        local Z = a1.Position.Z
+        v2 = u0.gamepad.trigger_positions[1]
+        if Z == 1 then
+            return
+        end
+        v3 = #u6.left_trigger
+        for i8 = 1, v3 do
+            v4 = u6.left_trigger[i8][2]
+            if v4 <= Z and v2 < v4 then
+                u6.left_trigger[i8][1](a1)
+            end
+        end
+        u0.gamepad.trigger_positions[1] = Z
+        return
+    end
+    if a1.KeyCode == Enum.KeyCode.ButtonR2 then
+        local Z_2 = a1.Position.Z
+        v2 = u0.gamepad.trigger_positions[2]
+        v3 = #u6.right_trigger
+        for i7 = 1, v3 do
+            v4 = u6.right_trigger[i7][2]
+            if v4 <= Z_2 and v2 < v4 then
+                u6.right_trigger[i7][1](a1)
+            end
+        end
+        u0.gamepad.trigger_positions[2] = Z_2
+        return
+    end
+    v2 = nil
+    v3 = nil
+    for i, j in u72, v2, v3 do
+        if a1.KeyCode == Enum.KeyCode[j] then
+            for k, n in u6.number_keys do
+                n[1](i - 1, j, a1, a2)
+            end
+        elseif a1.KeyCode == Enum.KeyCode["Keypad" .. j] then
+            for m, i5 in u6.number_keys do
+                i5[1](i - 1, j, a1, a2)
+            end
+        end
+    end
+    v1 = #u6.key_down
+    for i6 = 1, v1 do
+        if u6.key_down[i6][2] == a1.KeyCode then
+            u6.key_down[i6][1]()
+        end
+    end
+end)
+local remove = table.remove
+local u92 = 0
+UserInputService.InputEnded:Connect(function(a1, a2) -- Line: 186
+    -- upvalues: UserInputService (val), u6 (val), u0 (val), u92 (ref), u83 (ref), u85 (ref), remove (val)
+    local v1, v2
+    if UserInputService:GetFocusedTextBox() then
+        return
+    end
+    if a1.UserInputType == Enum.UserInputType.MouseButton1 then
+        v1 = #u6.mb1_up
+        for i9 = 1, v1 do
+            u6.mb1_up[i9][1](a1, a2)
+        end
+        u0.last_mouse_position = nil
+        return
+    end
+    if a1.UserInputType == Enum.UserInputType.MouseButton2 then
+        v1 = #u6.mb2_up
+        for i8 = 1, v1 do
+            u6.mb2_up[i8][1](a1, a2)
+        end
+        return
+    end
+    if a1.UserInputType == Enum.UserInputType.MouseButton3 then
+        v1 = #u6.mb3_up
+        for i7 = 1, v1 do
+            u6.mb3_up[i7][1](a1, a2)
+        end
+        return
+    end
+    if a1.UserInputType ~= Enum.UserInputType.Touch then
+        local v3, v4
+        if a1.KeyCode == Enum.KeyCode.ButtonL2 then
+            v1 = 0
+            v2 = u0.gamepad.trigger_positions[1]
+            v3 = #u6.left_trigger_up
+            for k = 1, v3 do
+                v4 = u6.left_trigger_up[k][2]
+                if v1 <= v4 and v4 < v2 then
+                    u6.left_trigger_up[k][1](a1)
+                end
+            end
+            u0.gamepad.trigger_positions[1] = v1
+            return
+        end
+        if a1.KeyCode == Enum.KeyCode.ButtonR2 then
+            v1 = 0
+            v2 = u0.gamepad.trigger_positions[2]
+            v3 = #u6.right_trigger_up
+            for j = 1, v3 do
+                v4 = u6.right_trigger_up[j][2]
+                if v1 <= v4 and v4 < v2 then
+                    u6.right_trigger_up[j][1](a1)
+                end
+            end
+            u0.gamepad.trigger_positions[2] = v1
+            return
+        end
+        v1 = #u6.key_up
+        for i = 1, v1 do
+            if u6.key_up[i][2] == a1.KeyCode then
+                u6.key_up[i][1]()
+            end
+        end
+        return
+    end
+    if not a2 then
+        v1 = #u0.touches_gp > 0
+        if not v1 then
+            v1 = tick()
+            v2 = v1 - u92
+            if v2 < 0.5 then
+                v2 = #u6.double_tap
+                for n = 1, v2 do
+                    u6.double_tap[n][1](a1, a2)
+                end
+                u92 = 0
+                u83 = 0
+            end
+            v2 = v1 - u83
+            if v2 < 0.1 then
+                u92 = v1
+                if (u85 - a1.Position).Magnitude < 10 then
+                    v2 = #u6.tap
+                    for m = 1, v2 do
+                        u6.tap[m][1](a1, a2)
+                    end
+                end
+            end
+        end
+    end
+    for k2, v in next, u0.touches do
+        if v == a1 then
+            remove(u0.touches, k2)
+            break
+        end
+    end
+    for k3, i5 in next, u0.touches_gp do
+        if i5 == a1 then
+            remove(u0.touches_gp, k3)
+            break
+        end
+    end
+    v1 = #u6.touch_up
+    for i6 = 1, v1 do
+        u6.touch_up[i6][1](a1, a2)
+    end
+    u0.last_mouse_position = nil
+end)
+local u99 = Vector3.new()
+local u100 = 0
+local u101 = false
+
+local function remap_scale(a1) -- Line: 269
+    if a1 >= 1 then
+        return a1
+    end
+    return 2 - 1 / a1
+end
+
+UserInputService.TouchPinch:Connect(function(a1, a2, a3, a4, a5) -- Line: 277 -- upvalues: u101 (ref), u100 (ref), u6 (val)
+    local v1
+    if a4 == Enum.UserInputState.Begin then
+        u101 = true
+    elseif a4 == Enum.UserInputState.End then
+        u101 = false
+    end
+    local v2 = a2
+    local v3 = if not (v2 >= 1) then 2 - 1 / v2 else v2
+    if a4 == Enum.UserInputState.Change then
+        v2 = v3 - u100
+        v1 = #u6.mouse_scroll
+        for i = 1, v1 do
+            u6.mouse_scroll[i][1](v2 * 8, a5)
+        end
+    elseif a4 == Enum.UserInputState.End then
+        v2 = v3 - u100
+        v1 = #u6.mouse_scroll
+        for j = 1, v1 do
+            u6.mouse_scroll[j][1](v2 * 8, a5)
+        end
+    end
+    u100 = v3
+end)
+UserInputService.InputChanged:Connect(function(a1, a2) -- Line: 293 -- upvalues: u6 (val), u0 (val), u101 (ref), u99 (val)
+    local v1
+    if a1.UserInputType == Enum.UserInputType.MouseMovement then
+        v1 = #u6.mouse_move
+        for i8 = 1, v1 do
+            u6.mouse_move[i8][1](a1, a2)
+        end
+        if u0.button_down(1) then
+            if u0.last_mouse_position then
+                v1 = #u6.drag
+                for i9 = 1, v1 do
+                    u6.drag[i9][1](a1.Position - u0.last_mouse_position, a2)
+                end
+            end
+        elseif u0.button_down(2) and u0.last_mouse_position then
+            v1 = #u6.drag
+            for i10 = 1, v1 do
+                u6.drag[i10][1](a1.Position - u0.last_mouse_position, a2)
+            end
+        end
+        u0.last_mouse_position = a1.Position
+        return
+    end
+    if a1.UserInputType == Enum.UserInputType.MouseWheel and not a2 then
+        v1 = #u6.mouse_scroll
+        for i = 1, v1 do
+            u6.mouse_scroll[i][1](a1.Position.Z, a2)
+        end
+        return
+    end
+    if a1.UserInputType == Enum.UserInputType.Touch then
+        if u101 then
+            return
+        end
+        if u0.last_mouse_position then
+            v1 = #u6.drag
+            for i7 = 1, v1 do
+                u6.drag[i7][1]((a1.Position - u0.last_mouse_position) * 1.2, a2)
+            end
+        end
+        u0.last_mouse_position = a1.Position
+        return
+    end
+    if a1.UserInputType == Enum.UserInputType.Gamepad1 then
+        local v2, v3, v4
+        if a1.KeyCode == Enum.KeyCode.Thumbstick1 then
+            u0.gamepad.ts_positions[1] = a1.Position.magnitude < 0.2 and u99 or a1.Position
+            v1 = #u6.left_stick_move
+            for i6 = 1, v1 do
+                u6.left_stick_move[i6][1](a1)
+            end
+            return
+        end
+        if a1.KeyCode == Enum.KeyCode.Thumbstick2 then
+            u0.gamepad.ts_positions[2] = a1.Position.magnitude < 0.2 and u99 or a1.Position
+            v1 = #u6.right_stick_move
+            for i5 = 1, v1 do
+                u6.right_stick_move[i5][1](a1)
+            end
+            return
+        end
+        if a1.KeyCode == Enum.KeyCode.ButtonL2 then
+            local Z = a1.Position.Z
+            v2 = u0.gamepad.trigger_positions[1]
+            v3 = #u6.left_trigger
+            for n = 1, v3 do
+                v4 = u6.left_trigger[n][2]
+                if v4 <= Z and v2 < v4 then
+                    u6.left_trigger[n][1](a1)
+                end
+            end
+            v3 = #u6.left_trigger_up
+            for m = 1, v3 do
+                v4 = u6.left_trigger_up[m][2]
+                if Z <= v4 and v4 < v2 then
+                    u6.left_trigger_up[m][1](a1)
+                end
+            end
+            u0.gamepad.trigger_positions[1] = Z
+            return
+        end
+        if a1.KeyCode == Enum.KeyCode.ButtonR2 then
+            local Z_2 = a1.Position.Z
+            v2 = u0.gamepad.trigger_positions[2]
+            v3 = #u6.right_trigger
+            for j = 1, v3 do
+                v4 = u6.right_trigger[j][2]
+                if v4 <= Z_2 and v2 < v4 then
+                    u6.right_trigger[j][1](a1)
+                end
+            end
+            v3 = #u6.right_trigger_up
+            for k = 1, v3 do
+                v4 = u6.right_trigger_up[k][2]
+                if Z_2 <= v4 and v4 < v2 then
+                    u6.right_trigger_up[k][1](a1)
+                end
+            end
+            u0.gamepad.trigger_positions[2] = Z_2
+        end
+    end
+end)
+UserInputService.TouchMoved:Connect(function(a1, a2) -- Line: 365 -- upvalues: u6 (val)
+    local v1 = #u6.touch_move
+    for i = 1, v1 do
+        u6.touch_move[i][1](a1, a2)
+    end
+end)
+local u118 = nil
+
+function u0.move_vector() -- Line: 372 -- upvalues: u118 (ref)
+    return u118:GetMoveVector()
+end
+
+function u0.initiate() -- Line: 376 -- upvalues: u118 (ref)
+    u118 = require((game.Players.LocalPlayer.PlayerScripts:WaitForChild("PlayerModule")):WaitForChild("ControlModule"))
+end
+
+return u0

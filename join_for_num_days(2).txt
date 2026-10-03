@@ -1,0 +1,24 @@
+-- Path : ReplicatedStorage.Modules.Game.Quests.QuestsData.Milestones.join_for_num_days
+-- Script path: ReplicatedStorage.Modules.Game.Quests.QuestsData.Milestones.join_for_num_days
+-- Decompile time: 0.23 ms
+
+return {
+    {
+        display_name = "Join 5 days in a row",
+        max_counter = 5,
+        layout_order = 2,
+        requirements = "Join {max_counter} days in a row",
+        rewards = {
+            {
+                image = "rbxassetid://91356488055288",
+                name = "+{amount} Brick",
+                item_info = {name = "Brick", item_type = "throwable", amount = 15},
+            },
+            {
+                image = "rbxassetid://109158861273815",
+                name = "+{amount} Molotov",
+                item_info = {name = "Molotov", item_type = "throwable", amount = 5},
+            },
+        },
+    },
+}

@@ -1,0 +1,507 @@
+-- Path : ReplicatedStorage.Modules.Game.ModeratorClient
+-- Script path: ReplicatedStorage.Modules.Game.ModeratorClient
+-- Decompile time: 10.66 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local UI = require(ReplicatedStorage.Modules.Core.UI)
+local Net = require(ReplicatedStorage.Modules.Core.Net)
+local Util = require(ReplicatedStorage.Modules.Core.Util)
+local NotificationsUI = require(ReplicatedStorage.Modules.Game.UI.NotificationsUI)
+local v1 = {}
+local LocalPlayer = Players.LocalPlayer
+local CurrentCamera = workspace.CurrentCamera
+local u39 = Color3.new(1, 1, 1)
+local u44 = Color3.new(0, 0, 0)
+local u49 = Color3.fromRGB(120, 20, 20)
+local u54 = Color3.new(1, 1, 1)
+local u55 = nil
+local u56 = false
+local u57 = 0
+local u58 = nil
+local u59 = nil
+local u60 = nil
+local u61 = nil
+local u62 = nil
+local u63 = nil
+local u64 = nil
+
+local function notify(a1) -- Line: 58 -- upvalues: NotificationsUI (val) -- types: a1: string
+    NotificationsUI.show_notification(nil, a1)
+end
+
+local function is_admin() -- Line: 62 -- upvalues: LocalPlayer (val)
+    return LocalPlayer:GetAttribute("IsAdmin") == true
+end
+
+local function candidates() -- Line: 67 -- upvalues: Players (val), LocalPlayer (val)
+    local v1 = {}
+    for i, j in Players:GetPlayers() do
+        if j ~= LocalPlayer then
+            table.insert(v1, j)
+        end
+    end
+    return v1
+end
+
+local function hide_copy_box() -- Line: 79 -- upvalues: u62 (ref), u63 (ref)
+    if u62 then
+        u62.Visible = false
+    end
+    if u63 then
+        u63.Visible = false
+    end
+end
+
+local function show_copy_box(a1) -- Line: 88 -- upvalues: u62 (ref), u63 (ref) -- types: a1: string
+    if u62 and u63 then
+        u62.Text = a1
+        u62.Visible = true
+        u63.Visible = true
+        u62:CaptureFocus()
+        task.defer(function() -- Line: 97 -- upvalues: u62 (upval), a1 (val)
+            if u62 and u62.Visible then
+                u62.CursorPosition = #a1 + 1
+                u62.SelectionStart = 1
+            end
+        end)
+        return
+    end
+end
+
+local function own_humanoid() -- Line: 107 -- upvalues: LocalPlayer (val)
+    local Character = LocalPlayer.Character
+    return Character and Character:FindFirstChildOfClass("Humanoid")
+end
+
+local function follow(a1) -- Line: 112
+    -- upvalues: u64 (ref), u56 (ref), u59 (ref), CurrentCamera (val)
+    if u64 then
+        u64:Disconnect()
+        u64 = nil
+    end
+    if not a1 then
+        return
+    end
+    u64 = a1.CharacterAdded:Connect(function(a1_2) -- Line: 121
+        -- upvalues: u56 (upval), u59 (upval), a1 (val), CurrentCamera (upval)
+        if not a1_2 then
+            return
+        end
+        task.spawn(function() -- Line: 125 -- upvalues: a1_2 (val), u56 (upval), u59 (upval), a1 (upval), CurrentCamera (upval)
+            local Humanoid = a1_2:FindFirstChildOfClass("Humanoid") or a1_2:WaitForChild("Humanoid", 5)
+            if Humanoid and u56 and u59 and u59.Value == a1 then
+                CurrentCamera.CameraSubject = Humanoid
+            end
+        end)
+    end)
+    local Character = a1.Character
+    if not Character then
+        return
+    end
+    task.spawn(function() -- Line: 125 -- upvalues: Character (val), u56 (upval), u59 (upval), a1 (val), CurrentCamera (upval)
+        local Humanoid = Character:FindFirstChildOfClass("Humanoid") or Character:WaitForChild("Humanoid", 5)
+        if Humanoid and u56 and u59 and u59.Value == a1 then
+            CurrentCamera.CameraSubject = Humanoid
+        end
+    end)
+end
+
+local function stop_spectating() -- Line: 141
+    -- upvalues: u56 (ref), u64 (ref), u59 (ref), u58 (ref), u61 (ref), u62 (ref), u63 (ref), LocalPlayer (val)
+    -- upvalues: CurrentCamera (val)
+    if not u56 then
+        return
+    end
+    u56 = false
+    if u64 then
+        u64:Disconnect()
+        u64 = nil
+    end
+    if u59 then
+        u59.Value = nil
+    end
+    if u58 then
+        u58.Visible = false
+    end
+    if u61 then
+        u61.Visible = false
+    end
+    if u62 then
+        u62.Visible = false
+    end
+    if u63 then
+        u63.Visible = false
+    end
+    local Character = LocalPlayer.Character
+    local v1 = Character and Character:FindFirstChildOfClass("Humanoid")
+    if v1 then
+        CurrentCamera.CameraSubject = v1
+    end
+end
+
+local function on_target_changed() -- Line: 164
+    -- upvalues: u56 (ref), u59 (ref), u60 (ref), u62 (ref), u63 (ref), follow (val)
+    if u56 and u59 and u60 then
+        if u62 then
+            u62.Visible = false
+        end
+        if u63 then
+            u63.Visible = false
+        end
+        local Value = u59.Value
+        if Value and Value.Parent then
+            u60.Text = ("Spectating %* (%*)"):format(Value.Name, Value.DisplayName)
+            follow(Value)
+            return
+        end
+        return
+    end
+end
+
+local function cycle(a1) -- Line: 178
+    -- upvalues: u59 (ref), candidates (val), u56 (ref), u64 (ref), u58 (ref), u61 (ref), u62 (ref), u63 (ref)
+    -- upvalues: LocalPlayer (val), CurrentCamera (val), NotificationsUI (val), u57 (ref)
+    local v1
+    if not u59 then
+        return
+    end
+    local v2 = candidates()
+    if #v2 ~= 0 then
+        v1 = table.find(v2, u59.Value) or u57
+        v1 = (v1 - 1 + a1) % #v2 + 1
+        u57 = v1
+        u59.Value = v2[v1]
+        return
+    end
+    if u56 then
+        u56 = false
+        if u64 then
+            u64:Disconnect()
+            u64 = nil
+        end
+        if u59 then
+            u59.Value = nil
+        end
+        if u58 then
+            u58.Visible = false
+        end
+        if u61 then
+            u61.Visible = false
+        end
+        if u62 then
+            u62.Visible = false
+        end
+        if u63 then
+            u63.Visible = false
+        end
+        local Character = LocalPlayer.Character
+        v1 = Character and Character:FindFirstChildOfClass("Humanoid")
+        if v1 then
+            CurrentCamera.CameraSubject = v1
+        end
+    end
+    NotificationsUI.show_notification(nil, "No one else to spectate")
+end
+
+local function build_actions(a1) -- Line: 194
+    -- upvalues: u60 (ref), u61 (ref), u44 (val), u54 (val), u49 (val), u62 (ref), u63 (ref), hide_copy_box (val)
+    -- upvalues: u59 (ref), stop_spectating (val)
+    local u1 = u60
+    u61 = Instance.new("Frame")
+    local u5 = u61
+    u5.Name = "ModeratorActionsFrame"
+    u5.AnchorPoint = Vector2.new(0.5, 0)
+    u5.Position = UDim2.new(0.5, 0, 0.1, 55)
+    u5.Size = UDim2.new(0.5, 0, 0, 40)
+    u5.BackgroundTransparency = 1
+    u5.Visible = false
+    u5.Parent = a1
+    local UIListLayout = Instance.new("UIListLayout")
+    UIListLayout.FillDirection = Enum.FillDirection.Horizontal
+    UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    UIListLayout.Padding = UDim.new(0, 6)
+    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    UIListLayout.Parent = u5
+
+    local function make_button(a1, a2, a3) -- Line: 215
+        -- upvalues: u44 (upval), u54 (upval), u1 (val), u5 (val)
+        local TextButton = Instance.new("TextButton")
+        TextButton.Name = a1
+        TextButton.Text = a2
+        TextButton.LayoutOrder = a3
+        TextButton.Size = UDim2.new(0.3, 0, 1, 0)
+        TextButton.BackgroundColor3 = u44
+        TextButton.BackgroundTransparency = 0.5
+        TextButton.BorderSizePixel = 0
+        TextButton.TextColor3 = u54
+        TextButton.TextScaled = true
+        TextButton.FontFace = u1.FontFace
+        TextButton.AutoButtonColor = true
+        local UIPadding = Instance.new("UIPadding")
+        UIPadding.PaddingTop = UDim.new(0, 9)
+        UIPadding.PaddingBottom = UDim.new(0, 9)
+        UIPadding.Parent = TextButton
+        TextButton.Parent = u5
+        return TextButton
+    end
+
+    local v1 = make_button("CopyUsernameButton", "Copy Username", 0)
+    local v2 = make_button("CopyUserIdButton", "Copy User ID", 1)
+    local v3 = make_button("StopSpectateButton", "Stop", 2)
+    v3.BackgroundColor3 = u49
+    u62 = Instance.new("TextBox")
+    local v4 = u62
+    v4.Name = "CopyBox"
+    v4.AnchorPoint = Vector2.new(0.5, 0)
+    v4.Position = UDim2.new(0.5, 0, 0.1, 101)
+    v4.Size = UDim2.new(0.3, 0, 0, 36)
+    v4.BackgroundColor3 = u44
+    v4.BackgroundTransparency = 0.5
+    v4.BorderSizePixel = 0
+    v4.TextColor3 = u54
+    v4.TextScaled = true
+    v4.FontFace = u1.FontFace
+    v4.TextEditable = false
+    v4.ClearTextOnFocus = false
+    v4.Text = ""
+    v4.Visible = false
+    v4.Parent = a1
+    local UIPadding = Instance.new("UIPadding")
+    UIPadding.PaddingTop = UDim.new(0, 8)
+    UIPadding.PaddingBottom = UDim.new(0, 8)
+    UIPadding.PaddingLeft = UDim.new(0, 8)
+    UIPadding.PaddingRight = UDim.new(0, 8)
+    UIPadding.Parent = v4
+    u63 = Instance.new("TextLabel")
+    local v5 = u63
+    v5.Name = "CopyHint"
+    v5.AnchorPoint = Vector2.new(0.5, 0)
+    v5.Position = UDim2.new(0.5, 0, 0.1, 141)
+    v5.Size = UDim2.new(0.3, 0, 0, 20)
+    v5.BackgroundTransparency = 1
+    v5.TextColor3 = u54
+    v5.TextScaled = true
+    v5.FontFace = u1.FontFace
+    v5.Text = "Press Ctrl+C to copy"
+    v5.Visible = false
+    v5.Parent = a1
+    v4.FocusLost:Connect(hide_copy_box)
+    v1.Activated:Connect(function() -- Line: 285 -- upvalues: u59 (upval), u62 (upval), u63 (upval)
+        local Value = u59 and u59.Value
+        if Value then
+            local Name = Value.Name
+            if u62 then
+                if not u63 then
+                    return
+                end
+                u62.Text = Name
+                u62.Visible = true
+                u63.Visible = true
+                u62:CaptureFocus()
+                task.defer(function() -- Line: 97 -- upvalues: u62 (upval), Name (val)
+                    if u62 and u62.Visible then
+                        u62.CursorPosition = #Name + 1
+                        u62.SelectionStart = 1
+                    end
+                end)
+            end
+        end
+    end)
+    v2.Activated:Connect(function() -- Line: 292 -- upvalues: u59 (upval), u62 (upval), u63 (upval)
+        local Value = u59 and u59.Value
+        if Value then
+            local u6 = tostring(Value.UserId)
+            if u62 then
+                if not u63 then
+                    return
+                end
+                u62.Text = u6
+                u62.Visible = true
+                u63.Visible = true
+                u62:CaptureFocus()
+                task.defer(function() -- Line: 97 -- upvalues: u62 (upval), u6 (val)
+                    if u62 and u62.Visible then
+                        u62.CursorPosition = #u6 + 1
+                        u62.SelectionStart = 1
+                    end
+                end)
+            end
+        end
+    end)
+    v3.Activated:Connect(stop_spectating)
+end
+
+local function ensure_gui() -- Line: 303
+    -- upvalues: u58 (ref), LocalPlayer (val), u59 (ref), u60 (ref), build_actions (val), on_target_changed (val)
+    -- upvalues: cycle (val), Players (val), u56 (ref), follow (val)
+    if u58 then
+        return true
+    end
+    local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+    local ModeratorGui = PlayerGui:FindFirstChild("ModeratorGui") or PlayerGui:WaitForChild("ModeratorGui", 10)
+    if not ModeratorGui then
+        return false
+    end
+    local SpectateFrame = ModeratorGui:WaitForChild("SpectateFrame")
+    local CurrentlySpectating = SpectateFrame:WaitForChild("CurrentlySpectating")
+    u58 = SpectateFrame
+    u59 = CurrentlySpectating
+    u60 = SpectateFrame:WaitForChild("SpectateTextLabel")
+    local CycleLeft = SpectateFrame:WaitForChild("CycleLeft")
+    local CycleRight = SpectateFrame:WaitForChild("CycleRight")
+    build_actions(ModeratorGui)
+    CurrentlySpectating.Changed:Connect(on_target_changed)
+    CycleLeft.Activated:Connect(function() -- Line: 324 -- upvalues: cycle (upval)
+        cycle(-1)
+    end)
+    CycleRight.Activated:Connect(function() -- Line: 325 -- upvalues: cycle (upval)
+        cycle(1)
+    end)
+    Players.PlayerRemoving:Connect(function(a1) -- Line: 328 -- upvalues: u56 (upval), u59 (upval), cycle (upval) -- types: a1: userdata
+        if u56 and u59 and u59.Value == a1 then
+            task.defer(cycle, 1)
+        end
+    end)
+    LocalPlayer.CharacterAdded:Connect(function() -- Line: 336 -- upvalues: u56 (upval), u59 (upval), follow (upval)
+        if u56 then
+            task.delay(1, function() -- Line: 338 -- upvalues: u56 (upval), u59 (upval), follow (upval)
+                if u56 and u59 then
+                    follow(u59.Value)
+                end
+            end)
+        end
+    end)
+    return true
+end
+
+local function start_spectating() -- Line: 349
+    -- upvalues: ensure_gui (val), NotificationsUI (val), candidates (val), u58 (ref), u61 (ref), u59 (ref), u56 (ref)
+    -- upvalues: u57 (ref)
+    if not ensure_gui() then
+        NotificationsUI.show_notification(nil, "Moderator spectate is not available, try rejoining")
+        return
+    end
+    local v1 = candidates()
+    if #v1 == 0 then
+        NotificationsUI.show_notification(nil, "No one else to spectate")
+        return
+    end
+    local v2 = u58
+    local v3 = u61
+    local v4 = u59
+    u56 = true
+    v2.Visible = true
+    v3.Visible = true
+    u57 = 1
+    v4.Value = v1[1]
+end
+
+local function toggle() -- Line: 374
+    -- upvalues: LocalPlayer (val), Net (val), candidates (val), NotificationsUI (val), u56 (ref), u64 (ref), u59 (ref)
+    -- upvalues: u58 (ref), u61 (ref), u62 (ref), u63 (ref), CurrentCamera (val), ensure_gui (val), u57 (ref)
+    local v1, v2
+    if LocalPlayer:GetAttribute("IsAdmin") == true then
+        local AdminGui = LocalPlayer.PlayerGui:FindFirstChild("AdminGui")
+        local SpectateFrame = AdminGui and AdminGui:FindFirstChild("SpectateFrame")
+        if SpectateFrame and SpectateFrame.Visible then
+            Net.send("command", "unspectate")
+            return
+        end
+        v2 = candidates()
+        if #v2 == 0 then
+            NotificationsUI.show_notification(nil, "No one else to spectate")
+            return
+        end
+        Net.send("command", (("spectate/%*"):format(v2[1].UserId)))
+        return
+    end
+    if not u56 then
+        if not ensure_gui() then
+            NotificationsUI.show_notification(nil, "Moderator spectate is not available, try rejoining")
+            return
+        end
+        v1 = candidates()
+        if #v1 == 0 then
+            NotificationsUI.show_notification(nil, "No one else to spectate")
+            return
+        end
+        local v3 = u58
+        v2 = u61
+        local v4 = u59
+        u56 = true
+        v3.Visible = true
+        v2.Visible = true
+        u57 = 1
+        v4.Value = v1[1]
+        return
+    end
+    if not u56 then
+        return
+    end
+    u56 = false
+    if u64 then
+        u64:Disconnect()
+        u64 = nil
+    end
+    if u59 then
+        u59.Value = nil
+    end
+    if u58 then
+        u58.Visible = false
+    end
+    if u61 then
+        u61.Visible = false
+    end
+    if u62 then
+        u62.Visible = false
+    end
+    if u63 then
+        u63.Visible = false
+    end
+    local Character = LocalPlayer.Character
+    v1 = Character and Character:FindFirstChildOfClass("Humanoid")
+    if not v1 then
+        return
+    end
+    CurrentCamera.CameraSubject = v1
+end
+
+local function build_sidebar_button() -- Line: 401 -- upvalues: u55 (ref), UI (val), u39 (val), toggle (val)
+    if u55 then
+        return
+    end
+    local CodesButton = UI.get("CodesButton")
+    local Parent = CodesButton and CodesButton.Parent
+    if not Parent then
+        warn("[ModeratorClient] CodesButton not found, no moderator button")
+        return
+    end
+    local v1 = Parent:Clone()
+    v1.Name = "ModeratorHolder"
+    v1.LayoutOrder = Parent.LayoutOrder + 1
+    v1.Visible = true
+    local ImageButton = v1:FindFirstChildWhichIsA("ImageButton")
+    ImageButton.Name = "ModeratorButton"
+    ImageButton.Image = "rbxassetid://120494637269691"
+    ImageButton.ImageColor3 = u39
+    ImageButton:SetAttribute("being_listened_to", nil)
+    v1.Parent = Parent.Parent
+    u55 = ImageButton
+    UI.on_click(ImageButton, toggle)
+end
+
+local function refresh_eligibility() -- Line: 429 -- upvalues: LocalPlayer (val), build_sidebar_button (val)
+    if LocalPlayer:GetAttribute("IsModerator") == true or LocalPlayer:GetAttribute("IsAdmin") == true then
+        build_sidebar_button()
+    end
+end
+
+function v1.initiate() end
+
+function v1.loaded() -- Line: 441 -- upvalues: Util (val), LocalPlayer (val), refresh_eligibility (val)
+    Util.watch_attribute(LocalPlayer, "IsModerator", refresh_eligibility)
+    Util.watch_attribute(LocalPlayer, "IsAdmin", refresh_eligibility)
+end
+
+return v1

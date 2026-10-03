@@ -1,0 +1,84 @@
+-- Path : ReplicatedStorage.Modules.Game.Jobs.JobData
+-- Script path: ReplicatedStorage.Modules.Game.Jobs.JobData
+-- Decompile time: 0.46 ms
+
+return {
+    names = {
+        janitor = "Janitor",
+        shelf_stocker = "Shelf Stocker",
+        steakhouse_cook = "Steakhouse Cook",
+        atm_hacker = "Swiper",
+    },
+    job_info = {
+        janitor = {
+            min_job_pay = 9,
+            max_job_pay = 18,
+            mopping_time = 5,
+            spill_types = {
+                SmallPuddle = {money_multiplier = 1, mop_length = 5, respawn_time = 30},
+                LargePuddle = {
+                    money_multiplier = 2,
+                    janitor_skill = "JanitorUnlockLarge",
+                    mop_length = 10,
+                    respawn_time = 45,
+                },
+                NastyPuddle = {
+                    money_multiplier = 3,
+                    janitor_skill = "JanitorUnlockNasty",
+                    mop_length = 15,
+                    respawn_time = 60,
+                },
+                OilPuddle = {
+                    money_multiplier = 4,
+                    janitor_skill = "JanitorUnlockOil",
+                    mop_length = 20,
+                    respawn_time = 90,
+                },
+                ToxicPuddle = {
+                    money_multiplier = 8,
+                    janitor_skill = "JanitorUnlockToxic",
+                    mop_length = 30,
+                    respawn_time = 120,
+                },
+            },
+        },
+        shelf_stocker = {
+            stock_shelf_length = 10,
+            min_job_pay = 15,
+            max_job_pay = 30,
+            box_types = {
+                NormalBox = {money_multiplier = 1},
+                SunflowerSeedsBox = {
+                    money_multiplier = 3,
+                    stock_key = "SunflowerSeedsBox",
+                    max_stock = 100,
+                    refresh_seconds = 3600,
+                },
+                ElectronicsBox = {
+                    money_multiplier = 5,
+                    stock_key = "ElectronicsCrate",
+                    max_stock = 50,
+                    refresh_seconds = 3600,
+                },
+                GoldenBox = {
+                    money_multiplier = 25,
+                    stock_key = "GoldenBox",
+                    max_stock = 5,
+                    refresh_seconds = 21600,
+                    sync_time = 1753120800,
+                    disable_restock_purchase = true,
+                },
+            },
+        },
+        steakhouse_cook = {
+            cook_steak_length_max = 15,
+            cook_steak_length_min = 10,
+            cook_steak_perfect_min = 0.6,
+            cook_steak_perfect_max = 0.7,
+            min_reward_time = 8,
+            min_job_pay = 15,
+            max_job_pay = 30,
+        },
+        atm_hacker = {min_pay = 30, max_pay = 60},
+    },
+}

@@ -1,0 +1,5 @@
+-- Path : ReplicatedStorage.Modules.Game.DataTypes.ItemDataTypes
+-- Script path: ReplicatedStorage.Modules.Game.DataTypes.ItemDataTypes
+-- Decompile time: 0.05 ms
+
+return {}

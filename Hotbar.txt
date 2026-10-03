@@ -1,0 +1,427 @@
+-- Path : ReplicatedStorage.Modules.Game.Inventory.Hotbar
+-- Script path: ReplicatedStorage.Modules.Game.Inventory.Hotbar
+-- Decompile time: 12.09 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Input = require(game.ReplicatedStorage.Modules.Core.Input)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+require(game.ReplicatedStorage.Modules.Core.UIFX)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local Keybinds = require(game.ReplicatedStorage.Modules.Game.Keybinds)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local Data = require(game.ReplicatedStorage.Modules.Core.Data)
+local CharacterCreator = require(game.ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator)
+local ClothingStore = require(ReplicatedStorage.Modules.Game.CharacterCreator.ClothingStore)
+local RarityIndicator = require(game.ReplicatedStorage.Modules.Game.Inventory.RarityIndicator)
+local ItemUtils = require(game.ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+game:GetService("ContextActionService")
+local MultiPlayerAnimation = require(ReplicatedStorage.Modules.Game.MultiAnimations.MultiPlayerAnimation)
+local Crate = require(ReplicatedStorage.Modules.Game.CrateSystem.Crate)
+local GunsmithBeaconClient = require(ReplicatedStorage.Modules.Game.GunsmithSystem.GunsmithBeaconClient)
+local ItemCustomizationUI = require(ReplicatedStorage.Modules.Game.ItemCustomization.ItemCustomizationUI)
+local u127 = {}
+local StarterGui = game:GetService("StarterGui")
+local LocalPlayer = game.Players.LocalPlayer
+
+function get_max_items() -- Line: 29
+    return 4
+end
+
+u127.enabled = State.new(true)
+u127.can_select_items = State.new(function() -- Line: 35
+    -- upvalues: CharacterCreator (val), MultiPlayerAnimation (val), Crate (val), ClothingStore (val)
+    -- upvalues: GunsmithBeaconClient (val), ItemCustomizationUI (val)
+    local v1 = CharacterCreator.is_in_creator.get()
+    local v2 = MultiPlayerAnimation.block_input.get()
+    local v3 = Crate.spinning.get()
+    local v4 = ClothingStore.is_customizing_clothes.get()
+    local v5 = GunsmithBeaconClient.is_gunsmithing.get()
+    local v6 = ItemCustomizationUI.enabled.get()
+    return not v1 and not v2 and not v3 and not v4 and not v5 and not v6
+end)
+local u143 = {}
+
+function u127.get_hotbar_item_by_guid(a1) -- Line: 69 -- upvalues: UI (val) -- types: a1: string
+    local Value
+    for i, j in UI.get("HotbarHolder").List:GetChildren() do
+        if j:IsA("GuiButton") and j.Visible and j:FindFirstChild("Tool") then
+            Value = j.Tool.Value
+            if Value and Value:GetAttribute("ItemGUID") == a1 then
+                return j
+            end
+        end
+    end
+end
+
+function u127.fire_hooks(a1) -- Line: 80 -- upvalues: u127 (val), u143 (val) -- types: a1: string
+    local v1 = u127.get_hotbar_item_by_guid(a1)
+    if v1 then
+        for i, j in u143 do
+            task.spawn(j, v1)
+        end
+    end
+end
+
+function u127.hook_hotbar_items(a1) -- Line: 89 -- upvalues: UI (val), u143 (val) -- types: a1: function
+    for i, j in UI.get("HotbarHolder").List:GetChildren() do
+        if j:IsA("GuiButton") and j.Visible and j:FindFirstChild("Tool") then
+            task.spawn(a1, j)
+        end
+    end
+    table.insert(u143, a1)
+    return {
+        unhook = function() -- Line: 97 -- upvalues: u143 (upval), a1 (val)
+            local v1 = table.find(u143, a1)
+            if v1 then
+                table.remove(u143, v1)
+            end
+        end,
+    }
+end
+
+function setup_hotbar() -- Line: 106
+    -- upvalues: UI (val), Char (val), u127 (val), RarityIndicator (val), Keybinds (val), ItemUtils (val), Data (val)
+    -- upvalues: u143 (val), Net (val), Util (val), LocalPlayer (val), Input (val)
+    local HotbarItemTemplate = UI.get("HotbarItemTemplate")
+    HotbarItemTemplate.Visible = false
+    local u5 = nil
+
+    local function toggle_equip_item(a1) -- Line: 111
+        -- upvalues: Char (upval), u127 (upval), u5 (ref)
+        if not Char.get_hum():GetAttribute("IsDead") and not Char:get_hum():GetAttribute("Stunned") then
+            if not u127.can_select_items.get() or not u127.enabled.get() then
+                return
+            end
+            if Char.held_tool.get() == a1 then
+                Char.current_hum.get():UnequipTools()
+                return
+            end
+            Char.current_hum.get():EquipTool(a1)
+            u5 = a1
+            return
+        end
+    end
+
+    local Melee = require(game.ReplicatedStorage.Modules.Game.ItemTypes.Melee)
+    local Gun = require(game.ReplicatedStorage.Modules.Game.ItemTypes.Gun)
+    local Utility = require(game.ReplicatedStorage.Modules.Game.ItemTypes.Utility)
+
+    local function create_hotbar_item(a1) -- Line: 129
+        -- upvalues: UI (upval), RarityIndicator (upval), Keybinds (upval), toggle_equip_item (val), ItemUtils (upval)
+        -- upvalues: Data (upval), Melee (val), Gun (val), Utility (val), u143 (upval)
+        local u7 = UI.get("HotbarItemTemplate"):Clone()
+        u7.Visible = true
+        u7.Name = "HotbarItem"
+        u7.Parent = UI.get("HotbarHolder").List
+        u7.ToolFrame.DurabilityFrame.Visible = false
+        RarityIndicator.apply_rarity_color(a1.Name, u7.ToolFrame)
+        local Item = u7.ToolFrame.Item
+        local Attribute = a1:GetAttribute("ImageId") or a1.TextureId
+        Item.Image = Attribute
+        local v1 = Keybinds.current_input_mode.get()
+        u7.ToolFrame.Number.Visible = v1 == "keyboard"
+        u7.Activated:Connect(function() -- Line: 139 -- upvalues: toggle_equip_item (upval), a1 (val)
+            toggle_equip_item(a1)
+        end)
+        local ObjectValue = Instance.new("ObjectValue")
+        ObjectValue.Name = "Tool"
+        ObjectValue.Value = a1
+        ObjectValue.Parent = u7
+        if a1:GetAttribute("Durability") then
+            u7.ToolFrame.DurabilityFrame.Visible = true
+            task.spawn(function() -- Line: 148
+                -- upvalues: a1 (val), u7 (val), ItemUtils (upval), Data (upval), Melee (upval), Gun (upval)
+                -- upvalues: Utility (upval)
+                local Attribute = a1:GetAttribute("Durability")
+
+                local function update_durability_bar(a1) -- Line: 151 -- upvalues: Attribute (val), u7 (upval)
+                    local v1 = math.min(1, a1 / Attribute)
+                    u7.ToolFrame.DurabilityFrame.Durability.Size = UDim2.fromScale(1, v1)
+                    if v1 <= 0.25 then
+                        u7.ToolFrame.DurabilityFrame.Durability.BackgroundColor3 = Color3.fromRGB(225, 0, 0)
+                        return
+                    end
+                    if v1 <= 0.5 then
+                        u7.ToolFrame.DurabilityFrame.Durability.BackgroundColor3 = Color3.fromRGB(225, 225, 0)
+                        return
+                    end
+                    u7.ToolFrame.DurabilityFrame.Durability.BackgroundColor3 = Color3.fromRGB(0, 225, 0)
+                end
+
+                local v1 = ItemUtils.get_item_info(Data, a1:GetAttribute("ItemGUID"))
+                if v1 then
+                    update_durability_bar(v1.durability or Attribute)
+                end
+                local v2 = nil
+                if a1:HasTag("Melee") then
+                    v2 = Melee.class.get(a1)
+                elseif a1:HasTag("Gun") then
+                    v2 = Gun.class.get(a1)
+                elseif a1:HasTag("Utility") then
+                    v2 = Utility.class.get(a1)
+                end
+                if v2 then
+                    local v3 = v2.states.durability.hook(update_durability_bar)
+                    u7.Destroying:Connect(v3.unhook)
+                    v2.instance.Destroying:Connect(v3.unhook)
+                end
+            end)
+        end
+        for i, j in u143 do
+            task.spawn(j, u7)
+        end
+        return u7
+    end
+
+    local function get_hotbar_item(a1, a2) -- Line: 193
+        -- upvalues: UI (upval), create_hotbar_item (val)
+        local v1 = nil
+        for i, j in UI.get("HotbarHolder").List:GetChildren() do
+            if j:IsA("GuiButton") and j.Visible and j:FindFirstChild("Tool") and j.Tool.Value == a1 then
+                v1 = j
+                break
+            end
+        end
+        if v1 == nil and a2 then
+            v1 = create_hotbar_item(a1)
+        end
+        return v1
+    end
+
+    local function get_all_items() -- Line: 218 -- upvalues: UI (upval)
+        local v1 = {}
+        for i, j in UI.get("HotbarHolder").List:GetChildren() do
+            if j:IsA("GuiButton") and j.Visible then
+                table.insert(v1, j)
+            end
+        end
+        return v1
+    end
+
+    local function update_hotbar_numbers() -- Line: 228 -- upvalues: get_all_items (val), Net (upval), UI (upval)
+        local v1 = get_all_items()
+        local v2 = #v1
+        if get_max_items() < v2 then
+            local Value
+            for i, j in v1 do
+                Value = j.Tool.Value
+                if Value ~= nil and Value:GetAttribute("Locked") then
+                    continue
+                end
+                Net.send("toggle_equip_item", Value)
+                j:Destroy()
+                break
+            end
+        end
+        v2 = 1
+        for k, n in UI.get("HotbarHolder").List:GetChildren() do
+            if n:IsA("GuiButton") and n.Visible then
+                n.LayoutOrder = v2
+                n.ToolFrame.Number.Text = tostring(v2)
+                v2 = v2 + 1
+            end
+        end
+    end
+
+    Keybinds.current_input_mode.hook(function(a1) -- Line: 252 -- upvalues: UI (upval)
+        for i, j in UI.get("HotbarHolder").List:GetChildren() do
+            if j:IsA("GuiButton") and j.Visible then
+                j.ToolFrame.Number.Visible = a1 == "keyboard"
+            end
+        end
+    end)
+    Keybinds.hook_action_icon("cycle_hotbar_left", function(a1) -- Line: 260 -- upvalues: Keybinds (upval), UI (upval) -- types: a1: string?
+        if a1 and Keybinds.current_input_mode.get() == "gamepad" then
+            UI.get("HotbarButtonLeft").Image = a1
+            local HotbarButtonLeft = UI.get("HotbarButtonLeft")
+            HotbarButtonLeft.Visible = true
+            return
+        end
+        local HotbarButtonLeft_2 = UI.get("HotbarButtonLeft")
+        HotbarButtonLeft_2.Visible = false
+    end)
+    Keybinds.hook_action_icon("cycle_hotbar_right", function(a1) -- Line: 271 -- upvalues: Keybinds (upval), UI (upval) -- types: a1: string?
+        if a1 and Keybinds.current_input_mode.get() == "gamepad" then
+            UI.get("HotbarButtonRight").Image = a1
+            local HotbarButtonRight = UI.get("HotbarButtonRight")
+            HotbarButtonRight.Visible = true
+            return
+        end
+        local HotbarButtonRight_2 = UI.get("HotbarButtonRight")
+        HotbarButtonRight_2.Visible = false
+    end)
+    local u50 = {}
+    local v1 = LocalPlayer
+    Util.hook_children(v1, function(a1) -- Line: 285
+        -- upvalues: u50 (ref), UI (upval), Util (upval), Char (upval), LocalPlayer (upval), get_hotbar_item (val)
+        -- upvalues: update_hotbar_numbers (val), u5 (ref), Keybinds (upval), get_all_items (val)
+        -- upvalues: toggle_equip_item (val)
+        if a1.Name == "Backpack" then
+            for i, j in u50 do
+                if typeof(j) == "function" then
+                    j()
+                elseif typeof(j) == "RBXScriptConnection" then
+                    j:Disconnect()
+                end
+            end
+            for k, n in UI.get("HotbarHolder").List:GetChildren() do
+                if n:IsA("GuiButton") and n.Visible then
+                    n:Destroy()
+                end
+            end
+            u50 = {}
+            table.insert(u50, (Util.watch_attribute(Char.get_hum(), "IsDead", function(a1) -- Line: 301 -- upvalues: Char (upval)
+                if a1 then
+                    Char.current_hum.get():UnequipTools()
+                end
+            end)))
+            table.insert(u50, (Util.watch_attribute(Char.get_hum(), "Stunned", function(a1) -- Line: 307 -- upvalues: Char (upval)
+                if a1 then
+                    Char.current_hum.get():UnequipTools()
+                end
+            end)))
+            table.insert(u50, (Util.hook_children(LocalPlayer.Backpack, function(a1) -- Line: 313 -- upvalues: get_hotbar_item (upval), update_hotbar_numbers (upval), Util (upval)
+                if a1:IsA("Tool") then
+                    local u8 = get_hotbar_item(a1, true)
+                    update_hotbar_numbers()
+                    Util.watch_attribute(a1, "Disabled", function(a1) -- Line: 318 -- upvalues: u8 (val)
+                        u8.LockedFrame.Visible = a1
+                    end)
+                end
+            end)))
+            table.insert(u50, (LocalPlayer.Backpack.ChildRemoved:Connect(function(a1) -- Line: 336 -- upvalues: Char (upval), u5 (upval), get_hotbar_item (upval), update_hotbar_numbers (upval)
+                if a1:IsA("Tool") and Char.held_tool.get() ~= a1 and a1 ~= u5 then
+                    local v1 = get_hotbar_item(a1, false)
+                    if v1 then
+                        v1:Destroy()
+                        update_hotbar_numbers()
+                    end
+                end
+            end)))
+            table.insert(u50, (Char.held_tool.hook(function(a1, a2) -- Line: 349
+                -- upvalues: u5 (upval), get_hotbar_item (upval), update_hotbar_numbers (upval), Util (upval)
+                -- upvalues: LocalPlayer (upval)
+                local v1
+                u5 = nil
+                if a1 then
+                    v1 = get_hotbar_item(a1, true)
+                    update_hotbar_numbers()
+                    if v1 then
+                        Util.tween(v1.ToolFrame, TweenInfo.new(0.1), {Position = UDim2.fromScale(0.5, 0.3)})
+                        local ClickSound = v1.ClickSound
+                        ClickSound.PlaybackSpeed = 1.05 * Util.rand(0.95, 1.05)
+                        ClickSound:Play()
+                    end
+                end
+                if a2 then
+                    v1 = get_hotbar_item(a2, false)
+                    if v1 then
+                        if not a2:IsDescendantOf(LocalPlayer.Backpack) then
+                            v1:Destroy()
+                            return
+                        end
+                        Util.tween(v1.ToolFrame, TweenInfo.new(0.1), {Position = UDim2.fromScale(0.5, 0.5)})
+                        local ClickSound_2 = v1.ClickSound
+                        ClickSound_2.PlaybackSpeed = 0.95 * Util.rand(0.95, 1.05)
+                        ClickSound_2:Play()
+                    end
+                end
+            end)).unhook)
+            table.insert(u50, (Keybinds.hook_action("cycle_hotbar_left", function(a1) -- Line: 381
+                -- upvalues: get_all_items (upval), get_hotbar_item (upval), Char (upval), toggle_equip_item (upval)
+                if a1 then
+                    local v1 = get_all_items()
+                    table.sort(v1, function(a1, a2) -- Line: 384
+                        return a1.LayoutOrder < a2.LayoutOrder
+                    end)
+                    local v2 = get_hotbar_item(Char.held_tool.get())
+                    if v2 == nil then
+                        local v3
+                        for j = #v1, 1, -1 do
+                            v3 = v1[j]
+                            if not v3.Tool.Value:GetAttribute("Disabled") then
+                                toggle_equip_item(v3.Tool.Value)
+                                return
+                            end
+                        end
+                        return
+                    end
+                    local v4 = v2
+                    for i = v2.LayoutOrder - 1, 1, -1 do
+                        if v1[i] and not v1[i].Tool.Value:GetAttribute("Disabled") then
+                            v4 = v1[i]
+                            break
+                        end
+                    end
+                    toggle_equip_item(v4.Tool.Value)
+                end
+            end)).unhook)
+            table.insert(u50, (Keybinds.hook_action("cycle_hotbar_right", function(a1) -- Line: 412
+                -- upvalues: get_all_items (upval), get_hotbar_item (upval), Char (upval), toggle_equip_item (upval)
+                if a1 then
+                    local v1
+                    local v2 = get_all_items()
+                    table.sort(v2, function(a1, a2) -- Line: 415
+                        return a1.LayoutOrder < a2.LayoutOrder
+                    end)
+                    local v3 = get_hotbar_item(Char.held_tool.get())
+                    if v3 ~= nil then
+                        v1 = v3
+                        local v4 = v3.LayoutOrder + 1
+                        local v5 = #v2
+                        for i = v4, v5 do
+                            if v2[i] and not v2[i].Tool.Value:GetAttribute("Disabled") then
+                                v1 = v2[i]
+                                break
+                            end
+                        end
+                        toggle_equip_item(v1.Tool.Value)
+                    else
+                        v1 = nil
+                        for i2, v in ipairs(v2) do
+                            if not v.Tool.Value:GetAttribute("Disabled") then
+                                v1 = v
+                                break
+                            end
+                        end
+                        if v1 then
+                            toggle_equip_item(v1.Tool.Value)
+                            return
+                        end
+                    end
+                end
+            end)).unhook)
+        end
+    end)
+    Input.hook("number_keys", function(a1, a2, a3, a4) -- Line: 455 -- upvalues: UI (upval), toggle_equip_item (val) -- types: a1: number
+        local Value
+        if a4 then
+            return
+        end
+        for i, j in UI.get("HotbarHolder").List:GetChildren() do
+            if j:IsA("GuiButton") and j.Visible and j.LayoutOrder == a1 then
+                Value = j.Tool.Value
+                if Value then
+                    toggle_equip_item(Value)
+                end
+                return
+            end
+        end
+    end)
+end
+
+function u127.initiate() end
+
+function u127.loaded() -- Line: 474 -- upvalues: StarterGui (val), UI (val), u127 (val)
+    StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
+    local Hotbar = UI.get("Hotbar")
+    Hotbar.Enabled = true
+    setup_hotbar()
+    u127.enabled.hook(function(a1) -- Line: 484 -- upvalues: UI (upval)
+        UI.get("HotbarHolder").List.Visible = a1
+    end)
+end
+
+return u127

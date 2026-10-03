@@ -1,0 +1,21 @@
+-- Path : ReplicatedStorage.Modules.Game.Job
+-- Script path: ReplicatedStorage.Modules.Game.Job
+-- Decompile time: 0.43 ms
+
+local NotificationsUI = require(game.ReplicatedStorage.Modules.Game.UI.NotificationsUI)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local v1 = {}
+local u16 = nil
+
+function v1.initiate() -- Line: 9 -- upvalues: Net (val), u16 (ref), NotificationsUI (val)
+    Net.hook("start_job_first", function() -- Line: 10 -- upvalues: u16 (upval), NotificationsUI (upval)
+        if not u16 or 15 <= tick() - u16 then
+            u16 = tick()
+            NotificationsUI.show_notification("", "Start your job first")
+        end
+    end)
+end
+
+function v1.loaded() end
+
+return v1

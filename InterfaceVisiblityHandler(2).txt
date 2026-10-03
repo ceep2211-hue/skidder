@@ -1,0 +1,103 @@
+-- Path : ReplicatedStorage.Modules.Game.UI.InterfaceVisiblityHandler
+-- Script path: ReplicatedStorage.Modules.Game.UI.InterfaceVisiblityHandler
+-- Decompile time: 3.33 ms
+
+local DeathScreen = require(game.ReplicatedStorage.Modules.Game.DeathScreen)
+require(game.ReplicatedStorage.Modules.Core.Input)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+game:GetService("ReplicatedFirst")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+game:GetService("StarterGui")
+game:GetService("CollectionService")
+require(game.ReplicatedStorage.Modules.Core.UI)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local CharacterCreator = require(game.ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator)
+local TransitionUI = require(ReplicatedStorage.Modules.Game.UI.TransitionUI)
+local StoreUI = require(ReplicatedStorage.Modules.Game.Store.StoreUI)
+local Crate = require(ReplicatedStorage.Modules.Game.CrateSystem.Crate)
+local Hotbar = require(ReplicatedStorage.Modules.Game.Inventory.Hotbar)
+local MultiPlayerAnimation = require(ReplicatedStorage.Modules.Game.MultiAnimations.MultiPlayerAnimation)
+local ItemCustomizationUI = require(ReplicatedStorage.Modules.Game.ItemCustomization.ItemCustomizationUI)
+local SecurityCamera = require(ReplicatedStorage.Modules.Game.Home.SecurityCamera)
+local SplashScreen = require(game.ReplicatedStorage.Modules.Game.SplashScreen)
+local UI = require(ReplicatedStorage.Modules.Core.UI)
+local u117 = {}
+local u118 = {}
+u117.core_ui_disabled = State.new(function() -- Line: 32
+    -- upvalues: CharacterCreator (val), SplashScreen (val), Char (val), TransitionUI (val), Crate (val)
+    -- upvalues: MultiPlayerAnimation (val), DeathScreen (val), ItemCustomizationUI (val), SecurityCamera (val)
+    local v1 = CharacterCreator.is_in_creator.get()
+    local v2 = SplashScreen.in_loading_screen.get()
+    local v3 = Char.current_char.get()
+    local v4 = TransitionUI.enabled.get()
+    local v5 = Crate.spinning.get()
+    local v6 = MultiPlayerAnimation.block_input.get()
+    local v7 = DeathScreen.enabled.get()
+    local v8 = ItemCustomizationUI.enabled.get()
+    local v9 = SecurityCamera.current_camera.get() ~= nil
+    if not v1 and not v2 and v3 and not v4 and not v5 and not v6 and not v7 and not v8 and not v9 then
+        return false
+    end
+    return true
+end)
+u117.hotbar_disabled = State.new(function() -- Line: 56 -- upvalues: u117 (val), StoreUI (val), ItemCustomizationUI (val), SecurityCamera (val)
+    local v1 = u117.core_ui_disabled.get()
+    local v2 = StoreUI.enabled.get()
+    local v3 = ItemCustomizationUI.enabled.get()
+    local v4 = SecurityCamera.current_camera.get() ~= nil
+    if not v1 and not v2 and not v3 and not v4 then
+        return false
+    end
+    return true
+end)
+u117.top_right_hud_shown = State.new(function() -- Line: 70 -- upvalues: CharacterCreator (val), ItemCustomizationUI (val)
+    local v1 = CharacterCreator.is_in_creator.get()
+    local v2 = CharacterCreator.is_a_world_creator.get()
+    return ItemCustomizationUI.enabled.get() or v1 and v2
+end)
+u117.top_right_hud_inverted = State.new(function() -- Line: 78 -- upvalues: CharacterCreator (val)
+    local v1 = CharacterCreator.is_in_creator.get()
+    local v2 = CharacterCreator.is_a_world_creator.get()
+    return v1 and v2
+end)
+
+function u117.initiate() end
+
+function u117.loaded() -- Line: 89 -- upvalues: UI (val), u118 (val), State (val), u117 (val), Hotbar (val)
+    UI.emotes(false)
+    table.insert(u118, (UI.get("Sidebar")))
+    State.new(function() -- Line: 95 -- upvalues: u117 (upval), u118 (upval), UI (upval)
+        local v1 = u117.core_ui_disabled.get()
+        local v2 = u117.top_right_hud_shown.get()
+        for i, j in u118 do
+            j.Enabled = not v1
+        end
+        if not v2 then
+            local TopRightHud_2 = UI.get("TopRightHud")
+            TopRightHud_2.Enabled = not v1
+        else
+            local TopRightHud = UI.get("TopRightHud")
+            TopRightHud.Enabled = true
+        end
+        UI.chat(not v1)
+    end)
+    u117.top_right_hud_inverted.hook(function(a1) -- Line: 109 -- upvalues: UI (upval)
+        if a1 then
+            UI.get("TopRightHud").Holder.Position = UDim2.new(0, 10, 0, 50)
+            UI.get("TopRightHud").Holder.AnchorPoint = Vector2.new(0, 0)
+            UI.get("TopRightHud").Holder.UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+            return
+        end
+        UI.get("TopRightHud").Holder.Position = UDim2.fromScale(1, 0)
+        UI.get("TopRightHud").Holder.AnchorPoint = Vector2.new(1, 0)
+        UI.get("TopRightHud").Holder.UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+    end)
+    u117.core_ui_disabled.hook(function(a1, a2) end)
+    u117.hotbar_disabled.hook(function(a1, a2) -- Line: 126 -- upvalues: Hotbar (upval)
+        Hotbar.enabled.set(not a1)
+    end)
+    UI.topbar_transparency(1)
+    UI.playerlist(false)
+end
+
+return u117

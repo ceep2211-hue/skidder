@@ -1,0 +1,434 @@
+-- Path : ReplicatedStorage.Modules.Core.Char.HumDesc
+-- Script path: ReplicatedStorage.Modules.Core.Char.HumDesc
+-- Decompile time: 11.81 ms
+
+require(game.ReplicatedStorage.Modules.Core.PropertyEncoding)
+local v1 = {}
+local u8 = {
+    "BodyTypeScale",
+    "ClimbAnimation",
+    "DepthScale",
+    "Face",
+    "FallAnimation",
+    "GraphicTShirt",
+    "Head",
+    "HeadColor",
+    "HeadScale",
+    "HeightScale",
+    "IdleAnimation",
+    "JumpAnimation",
+    "LeftArm",
+    "LeftArmColor",
+    "LeftLeg",
+    "LeftLegColor",
+    "MoodAnimation",
+    "Pants",
+    "ProportionScale",
+    "RightArm",
+    "RightArmColor",
+    "RightLeg",
+    "RightLegColor",
+    "RunAnimation",
+    "Shirt",
+    "SwimAnimation",
+    "Torso",
+    "TorsoColor",
+    "WidthScale",
+}
+local u38 = {
+    AssetId = "number",
+    IsLayered = "boolean",
+    Puffiness = "number",
+    Order = "number",
+    Position = "Vector3",
+    Scale = "Vector3",
+    Rotation = "Vector3",
+}
+
+local function safe_to_store(a1) -- Line: 17
+    local v1 = true
+    if typeof(a1) ~= "number" then
+        v1 = true
+        if typeof(a1) ~= "string" then
+            v1 = typeof(a1) == "boolean"
+        end
+    end
+    return v1
+end
+
+local function find_accessory(a1, a2) -- Line: 107
+    for i, j in a2 do
+        if j.AssetId == a1 then
+            return j
+        end
+    end
+end
+
+local function used_already(a1, a2) -- Line: 168
+    for i, j in a1 do
+        if j.AssetId == a2 then
+            return true
+        end
+    end
+end
+
+function v1.serialise_humanoid_description(a1) -- Line: 21 -- upvalues: u8 (val), u38 (val) -- types: a1: userdata
+    local v1, v2, v3, v4, v5
+    local v6 = {}
+    local v7 = nil
+    local v8 = nil
+    local v9 = a1
+    for i, j in u8, v7, v8 do
+        v4 = v9[j]
+        if typeof(v4) ~= "Color3" then
+            v4 = v9[j]
+            if typeof(v4) ~= "Vector3" then
+                v4 = v9[j]
+                v3 = true
+                if typeof(v4) ~= "number" then
+                    v3 = true
+                    if typeof(v4) ~= "string" then
+                        v3 = typeof(v4) == "boolean"
+                    end
+                end
+                if v3 then
+                    v6[j] = v9[j]
+                end
+            else
+                v6[j] = (encoding.encode.vector3(v9[j]))
+            end
+        else
+            v6[j] = (encoding.encode.color3(v9[j]))
+        end
+    end
+    local Accessories = v9:GetAccessories(true)
+    v8 = nil
+    local v10 = nil
+    for k, n in Accessories, v8, v10 do
+        if typeof(n.AccessoryType) == "EnumItem" then
+            n.AccessoryType = n.AccessoryType.Name
+            v5 = nil
+            v1 = nil
+            for m, i5 in n, v5, v1 do
+                if m ~= "AccessoryType" then
+                    if u38[m] == nil then
+                        n[m] = nil
+                    elseif u38[m] ~= "Vector3" or typeof(i5) ~= "Vector3" then
+                        v2 = true
+                        if typeof(i5) ~= "number" then
+                            v2 = true
+                            if typeof(i5) ~= "string" then
+                                v2 = typeof(i5) == "boolean"
+                            end
+                        end
+                        if not v2 then
+                            n[m] = nil
+                        end
+                    else
+                        n[m] = (encoding.encode.vector3(i5))
+                    end
+                end
+            end
+        end
+    end
+    return {accessories = Accessories, properties = v6}
+end
+
+function v1.deserialise_humanoid_description(a1) -- Line: 65 -- upvalues: u38 (val)
+    local AccessoryType_2, v1
+    if typeof(a1) == "Instance" and a1:IsA("HumanoidDescription") then
+        return a1
+    end
+    local HumanoidDescription = Instance.new("HumanoidDescription")
+    for i, j in a1.properties do
+        if typeof(HumanoidDescription[i]) ~= "Color3" then
+            if typeof(HumanoidDescription[i]) ~= "Vector3" then
+                HumanoidDescription[i] = j
+            else
+                HumanoidDescription[i] = (encoding.decode.vector3(j))
+            end
+        elseif typeof(j) == "table" then
+            HumanoidDescription[i] = (Color3.new(j[1], j[2], j[3]))
+        elseif type(j) == "string" then
+            HumanoidDescription[i] = (encoding.decode.color3(j))
+        end
+    end
+    local v2 = {}
+    local v3 = nil
+    local v4 = nil
+    for k, n in a1.accessories, v3, v4 do
+        v1 = {}
+        AccessoryType_2 = if typeof(n.AccessoryType) ~= "EnumItem" then Enum.AccessoryType[n.AccessoryType] else n.AccessoryType
+        v1.AccessoryType = AccessoryType_2
+        v2[k] = v1
+        for m, i5 in n do
+            if u38[m] ~= nil then
+                if u38[m] ~= "Vector3" then
+                    v2[k][m] = i5
+                else
+                    v2[k][m] = (encoding.decode.vector3(i5))
+                end
+            end
+        end
+    end
+    HumanoidDescription:SetAccessories(v2, true)
+    return HumanoidDescription
+end
+
+function v1.serialise_humanoid_description_differences(a1, a2) -- Line: 115
+    -- upvalues: u8 (val), u38 (val)
+    local Name, v1, v2, v3, v4, v5
+    local v6 = {}
+    local v7 = nil
+    local v8 = nil
+    local v9, v10 = a1, a2
+    for i, j in u8, v7, v8 do
+        if v9[j] ~= v10[j] then
+            v5 = v9[j]
+            if typeof(v5) ~= "Color3" then
+                v5 = v9[j]
+                if typeof(v5) ~= "Vector3" then
+                    v5 = v9[j]
+                    v4 = true
+                    if typeof(v5) ~= "number" then
+                        v4 = true
+                        if typeof(v5) ~= "string" then
+                            v4 = typeof(v5) == "boolean"
+                        end
+                    end
+                    if v4 then
+                        v6[j] = v9[j]
+                    end
+                else
+                    v6[j] = (encoding.encode.vector3(v9[j]))
+                end
+            else
+                v6[j] = (encoding.encode.color3(v9[j]))
+            end
+        end
+    end
+    local Accessories = v9:GetAccessories(true)
+    local Accessories_2 = v10:GetAccessories(true)
+    v8 = {}
+    local v11 = {}
+    v4 = nil
+    v5 = nil
+    for k, n in Accessories, v4, v5 do
+        v2 = Accessories_2
+        for m, i5 in v2 do
+            if i5.AssetId == n.AssetId then
+                if i5 == nil then
+                    Name = if typeof(n.AccessoryType) ~= "EnumItem" then n.AccessoryType else n.AccessoryType.Name
+                    n.AccessoryType = Name
+                    v1 = nil
+                    v2 = nil
+                    for i6, i7 in n, v1, v2 do
+                        if i6 ~= "AccessoryType" then
+                            if u38[i6] == nil then
+                                n[i6] = nil
+                            elseif u38[i6] ~= "Vector3" or typeof(i7) ~= "Vector3" then
+                                v3 = true
+                                if typeof(i7) ~= "number" then
+                                    v3 = true
+                                    if typeof(i7) ~= "string" then
+                                        v3 = typeof(i7) == "boolean"
+                                    end
+                                end
+                                if not v3 then
+                                    n[i6] = nil
+                                end
+                            else
+                                n[i6] = (encoding.encode.vector3(i7))
+                            end
+                        end
+                    end
+                    table.insert(v8, n)
+                end
+                break
+            end
+        end
+        if true then
+            Name = if typeof(n.AccessoryType) ~= "EnumItem" then n.AccessoryType else n.AccessoryType.Name
+            n.AccessoryType = Name
+            v1 = nil
+            v2 = nil
+            for i8, i9 in n, v1, v2 do
+                if i8 ~= "AccessoryType" then
+                    if u38[i8] == nil then
+                        n[i8] = nil
+                    elseif u38[i8] ~= "Vector3" or typeof(i9) ~= "Vector3" then
+                        v3 = true
+                        if typeof(i9) ~= "number" then
+                            v3 = true
+                            if typeof(i9) ~= "string" then
+                                v3 = typeof(i9) == "boolean"
+                            end
+                        end
+                        if not v3 then
+                            n[i8] = nil
+                        end
+                    else
+                        n[i8] = (encoding.encode.vector3(i9))
+                    end
+                end
+            end
+            table.insert(v8, n)
+        end
+    end
+    v4 = nil
+    v5 = nil
+    for i10, i11 in Accessories_2, v4, v5 do
+        for i12, i13 in Accessories do
+            if i13.AssetId == i11.AssetId then
+                if i13 == nil then
+                    table.insert(v11, {AssetId = i11.AssetId})
+                end
+                break
+            end
+        end
+        if true then
+            table.insert(v11, {AssetId = i11.AssetId})
+        end
+    end
+    return {acc1 = v8, acc2 = v11, prop = v6}
+end
+
+function v1.deserialise_humanoid_description_differences(a1, a2) -- Line: 176
+    -- upvalues: u38 (val)
+    local AccessoryType_2, AccessoryType_4, v1
+    if a2 == nil then
+        return
+    end
+    local v2 = a2:Clone()
+    for i, j in a1.prop do
+        if typeof(v2[i]) ~= "Color3" then
+            if typeof(v2[i]) ~= "Vector3" then
+                v2[i] = j
+            else
+                v2[i] = (encoding.decode.vector3(j))
+            end
+        elseif typeof(j) == "table" then
+            v2[i] = (Color3.new(j[1], j[2], j[3]))
+        elseif type(j) == "string" then
+            v2[i] = (encoding.decode.color3(j))
+        end
+    end
+    local v3 = {}
+    local v4 = a1
+    for k, n in a2:GetAccessories(true) do
+        for m, i5 in v4.acc2 do
+            if i5.AssetId == n.AssetId then
+                v1 = i5
+                if not v1 then
+                    for i6, i7 in v3 do
+                        if i7.AssetId == n.AssetId then
+                            v1 = true
+                            if not v1 then
+                                v1 = {}
+                                AccessoryType_4 = if typeof(n.AccessoryType) ~= "EnumItem" then Enum.AccessoryType[n.AccessoryType] else n.AccessoryType
+                                v1.AccessoryType = AccessoryType_4
+                                for i8, i9 in n do
+                                    if u38[i8] ~= nil then
+                                        v1[i8] = i9
+                                    end
+                                end
+                                table.insert(v3, v1)
+                            end
+                            -- [[ incomplete: control flow could not be represented ]]
+                        end
+                    end
+                    v1 = nil
+                    if not v1 then
+                        v1 = {}
+                        AccessoryType_4 = if typeof(n.AccessoryType) ~= "EnumItem" then Enum.AccessoryType[n.AccessoryType] else n.AccessoryType
+                        v1.AccessoryType = AccessoryType_4
+                        for i10, i11 in n do
+                            if u38[i10] ~= nil then
+                                v1[i10] = i11
+                            end
+                        end
+                        table.insert(v3, v1)
+                    end
+                end
+                break
+            end
+        end
+        v1 = nil
+        if not v1 then
+            for i12, i13 in v3 do
+                if i13.AssetId == n.AssetId then
+                    v1 = true
+                    if not v1 then
+                        v1 = {}
+                        AccessoryType_4 = if typeof(n.AccessoryType) ~= "EnumItem" then Enum.AccessoryType[n.AccessoryType] else n.AccessoryType
+                        v1.AccessoryType = AccessoryType_4
+                        for i14, i15 in n do
+                            if u38[i14] ~= nil then
+                                v1[i14] = i15
+                            end
+                        end
+                        table.insert(v3, v1)
+                    end
+                    break
+                end
+            end
+            v1 = nil
+            if not v1 then
+                v1 = {}
+                AccessoryType_4 = if typeof(n.AccessoryType) ~= "EnumItem" then Enum.AccessoryType[n.AccessoryType] else n.AccessoryType
+                v1.AccessoryType = AccessoryType_4
+                for i16, i17 in n do
+                    if u38[i16] ~= nil then
+                        v1[i16] = i17
+                    end
+                end
+                table.insert(v3, v1)
+            end
+        end
+    end
+    local v5 = nil
+    local v6 = nil
+    for i18, i19 in v4.acc1, v5, v6 do
+        for i20, i21 in v3 do
+            if i21.AssetId == i19.AssetId then
+                v1 = true
+                if not v1 then
+                    v1 = {}
+                    AccessoryType_2 = if typeof(i19.AccessoryType) ~= "EnumItem" then Enum.AccessoryType[i19.AccessoryType] else i19.AccessoryType
+                    v1.AccessoryType = AccessoryType_2
+                    for i22, i23 in i19 do
+                        if u38[i22] ~= nil then
+                            if u38[i22] ~= "Vector3" then
+                                v1[i22] = i23
+                            else
+                                v1[i22] = (encoding.decode.vector3(i23))
+                            end
+                        end
+                    end
+                    table.insert(v3, v1)
+                end
+                break
+            end
+        end
+        v1 = nil
+        if not v1 then
+            v1 = {}
+            AccessoryType_2 = if typeof(i19.AccessoryType) ~= "EnumItem" then Enum.AccessoryType[i19.AccessoryType] else i19.AccessoryType
+            v1.AccessoryType = AccessoryType_2
+            for i24, i25 in i19 do
+                if u38[i24] ~= nil then
+                    if u38[i24] ~= "Vector3" then
+                        v1[i24] = i25
+                    else
+                        v1[i24] = (encoding.decode.vector3(i25))
+                    end
+                end
+            end
+            table.insert(v3, v1)
+        end
+    end
+    v2:SetAccessories(v3, true)
+    return v2
+end
+
+return v1

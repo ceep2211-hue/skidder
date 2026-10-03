@@ -1,0 +1,92 @@
+-- Path : ReplicatedStorage.Modules.Game.Character.Jumping
+-- Script path: ReplicatedStorage.Modules.Game.Character.Jumping
+-- Decompile time: 2.29 ms
+
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+game:GetService("ReplicatedStorage")
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local u26 = {}
+u26.sprint_can_jump_state = State.new(true)
+u26.vehicle_seat_can_jump_state = State.new(true)
+u26.car_can_jump_state = State.new(true)
+u26.bike_can_jump_state = State.new(true)
+u26.swimming = State.new(false)
+u26.headshot_block_can_jump_state = State.new(true)
+u26.can_jump = State.new(function() -- Line: 25 -- upvalues: Char (val), u26 (val)
+    local v1 = Char.sitting.get()
+    local v2 = u26.sprint_can_jump_state.get()
+    local v3 = u26.vehicle_seat_can_jump_state.get()
+    local v4 = u26.car_can_jump_state.get()
+    local v5 = u26.bike_can_jump_state.get()
+    if not u26.headshot_block_can_jump_state.get() then
+        return false
+    end
+    if not v2 and not v1 then
+        return false
+    end
+    if v3 and v4 and v5 then
+        return true
+    end
+    if v1 ~= nil and v1:IsDescendantOf(game.Workspace.Vehicles) then
+        return false
+    end
+    return true
+end)
+
+function u26.initiate() end
+
+function u26.loaded() -- Line: 50 -- upvalues: u26 (val), Util (val), Char (val)
+    local LocalPlayer = game.Players.LocalPlayer
+    u26.headshot_block_can_jump_state.set(LocalPlayer:GetAttribute("IsHeadshotBlocked") ~= true)
+    Util.watch_attribute(LocalPlayer, "IsHeadshotBlocked", function(a1) -- Line: 53 -- upvalues: u26 (upval)
+        u26.headshot_block_can_jump_state.set(a1 ~= true)
+    end)
+    u26.can_jump.hook(function(a1, a2) -- Line: 57 -- upvalues: Char (upval)
+        if a1 == a2 then
+            return
+        end
+        local v1 = Char.current_char.get()
+        if v1 then
+            local Humanoid = v1:FindFirstChildOfClass("Humanoid")
+            if Humanoid then
+                Humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, a1)
+                Humanoid.JumpPower = a1 and Humanoid:GetAttribute("DefaultJumpPower") or 0
+                Humanoid.JumpHeight = a1 and Humanoid:GetAttribute("DefaultJumpHeight") or 0
+            end
+        end
+    end)
+    Char.hook(function(a1) -- Line: 72 -- upvalues: u26 (upval), Util (upval)
+        u26.sprint_can_jump_state.set(true)
+        u26.vehicle_seat_can_jump_state.set(true)
+        u26.car_can_jump_state.set(true)
+        u26.bike_can_jump_state.set(true)
+        local Humanoid = a1:WaitForChild("Humanoid")
+        if not u26.can_jump.get() then
+            if Humanoid:GetAttribute("DefaultJumpPower") == nil then
+                Humanoid:SetAttribute("DefaultJumpPower", Humanoid.JumpPower)
+            end
+            if Humanoid:GetAttribute("DefaultJumpHeight") == nil then
+                Humanoid:SetAttribute("DefaultJumpHeight", Humanoid.JumpHeight)
+            end
+            Humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
+            Humanoid.JumpPower = 0
+            Humanoid.JumpHeight = 0
+        end
+        Humanoid.StateChanged:Connect(function(a1, a2) -- Line: 100 -- upvalues: u26 (upval)
+            u26.swimming.set(a2 == Enum.HumanoidStateType.Swimming)
+        end)
+        Util.watch_property(Humanoid, "JumpPower", function(a1) -- Line: 104 -- upvalues: Humanoid (val)
+            if a1 > 0 then
+                Humanoid:SetAttribute("DefaultJumpPower", a1)
+            end
+        end)
+        Util.watch_property(Humanoid, "JumpHeight", function(a1) -- Line: 110 -- upvalues: Humanoid (val)
+            if a1 > 0 then
+                Humanoid:SetAttribute("DefaultJumpHeight", a1)
+            end
+        end)
+    end)
+end
+
+return u26

@@ -1,0 +1,399 @@
+-- Path : ReplicatedFirst.ArchivedJobs.janitor_archived
+-- Script path: ReplicatedFirst.ArchivedJobs.janitor_archived
+-- Decompile time: 2.91 ms
+
+return {
+    {
+        level = 3,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 5},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+    {
+        level = 5,
+        name = "JanitorUnlockLarge",
+        display_name = "Unlock large spills",
+        display_reward = {{image = "rbxassetid://135184226521959", text = "Unlock large spills!"}},
+    },
+    {
+        level = 10,
+        name = "JanitorMop_Bronze",
+        display_name = "Bronze Mop",
+        reward_info = {pay_percentage_increase = 10},
+        display_reward = {
+            {image = "rbxassetid://99720118896162", text = "An incredibly cool Bronze Mop!"},
+            {text = "Unlocks the Bronze Mop which can be purchased from Jack's Hardware Store"},
+            {text = "Increases pay by {pay_percentage_increase}%"},
+        },
+    },
+    {
+        level = 12,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 5},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+    {
+        level = 17,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 5},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+    {
+        level = 19,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 5},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+    {
+        level = 20,
+        name = "JanitorUnlockNasty",
+        display_name = "Unlock nasty spills",
+        display_reward = {{image = "rbxassetid://135184226521959", text = "Unlock nasty spills!"}},
+    },
+    {
+        level = 22,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 5},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+    {
+        level = 25,
+        name = "JanitorMop_Silver",
+        display_name = "Silver Mop",
+        reward_info = {pay_percentage_increase = 45},
+        display_reward = {
+            {image = "rbxassetid://86315306279237", text = "An incredibly cool Silver Mop!"},
+            {text = "Unlocks the Silver Mop which can be purchased from Jack's Hardware Store"},
+            {text = "Increases pay by {pay_percentage_increase}%"},
+        },
+    },
+    {
+        level = 28,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 5},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+    {
+        level = 30,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 5},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+    {
+        level = 32,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 5},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+    {
+        level = 34,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 5},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+    {
+        level = 35,
+        name = "JanitorUnlockOil",
+        display_name = "Unlock oil spills",
+        display_reward = {{image = "rbxassetid://135184226521959", text = "Unlock oil spills!"}},
+    },
+    {
+        level = 36,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 5},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+    {
+        level = 37,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 5},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+    {
+        level = 39,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 5},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+    {
+        level = 40,
+        name = "JanitorMop_Gold",
+        display_name = "Golden Mop",
+        reward_info = {pay_percentage_increase = 70},
+        display_reward = {
+            {image = "rbxassetid://92224797678509", text = "An incredibly cool Golden Mop!"},
+            {text = "Unlocks the Golden Mop which can be purchased from Jack's Hardware Store"},
+            {text = "Increases pay by {pay_percentage_increase}%"},
+        },
+    },
+    {
+        level = 43,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 5},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+    {
+        level = 46,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 5},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+    {
+        level = 50,
+        name = "JanitorUnlockToxic",
+        display_name = "Unlock toxic spills",
+        display_reward = {{image = "rbxassetid://135184226521959", text = "Unlock toxic spills!"}},
+    },
+    {
+        level = 51,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 5},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+    {
+        level = 53,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 5},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+    {
+        level = 55,
+        name = "JanitorMop_Diamond",
+        display_name = "Diamond Mop",
+        reward_info = {pay_percentage_increase = 100},
+        display_reward = {
+            {image = "rbxassetid://137216074741424", text = "An incredibly cool Diamond Mop!"},
+            {text = "Unlocks the Diamond Mop which can be purchased from Jack's Hardware Store"},
+            {text = "Increases pay by {pay_percentage_increase}%"},
+        },
+    },
+    {
+        level = 58,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 5},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+    {
+        level = 60,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 5},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+    {
+        level = 63,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 5},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+    {
+        level = 66,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 5},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+    {
+        level = 70,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 5},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+    {
+        level = 73,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 5},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+    {
+        level = 76,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 5},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+    {
+        level = 78,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 5},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+    {
+        level = 85,
+        name = "JanitorSpeedRise{level}",
+        display_name = "Improved Mop Speed {speed_percentage_increase}%",
+        reward_info = {speed_percentage_increase = 3},
+        display_reward = {
+            {
+                image = "rbxassetid://135184226521959",
+                text = "+{speed_percentage_increase}% Speed Boost!",
+            },
+            {text = "Get a {speed_percentage_increase}% speed boost per puddle"},
+        },
+    },
+}

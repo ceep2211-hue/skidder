@@ -1,0 +1,408 @@
+-- Path : ReplicatedStorage.Modules.Game.Home.Home
+-- Script path: ReplicatedStorage.Modules.Game.Home.Home
+-- Decompile time: 11.14 ms
+
+local Tween = require(game.ReplicatedStorage.Modules.Core.Tween)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local Spring = require(game.ReplicatedStorage.Modules.Core.Spring)
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local BuyPromptUI = require(ReplicatedStorage.Modules.Game.UI.BuyPromptUI)
+local SecurityCamera = require(ReplicatedStorage.Modules.Game.Home.SecurityCamera)
+local InfoPromptUI = require(ReplicatedStorage.Modules.Game.UI.InfoPromptUI)
+local JobUtil = require(game.ReplicatedStorage.Modules.Game.Jobs.JobUtil)
+local Data = require(game.ReplicatedStorage.Modules.Core.Data)
+local StoreUI = require(game.ReplicatedStorage.Modules.Game.Store.StoreUI)
+local Char = require(ReplicatedStorage.Modules.Core.Char)
+local LocalPlayer = game.Players.LocalPlayer
+local Audio = require(ReplicatedStorage.Modules.Core.Audio)
+game:GetService("MarketplaceService")
+require(game.ReplicatedStorage.Modules.Game.Store.StoreData)
+local u114 = {}
+u114.MAX_HOMES_PER_PLAYER = game.ReplicatedStorage.Modules.Game.Home:GetAttribute("MaxHomesPerPlayer")
+u114.class = StatefulObject.new_class(function() -- Line: 26 -- upvalues: State (val)
+    return {
+        owner = State.new(nil),
+        rent_price = State.new(0),
+        name = State.new(""),
+        image_id = State.new(""),
+        shutters_active = State.new(false),
+    }
+end, script.Name)
+u114.lockable_doors = StatefulObject.new_class(function() -- Line: 41 -- upvalues: State (val)
+    return {closed_cf = State.new(CFrame.new()), locked = State.new(false)}
+end, "LockableDoor")
+
+local function find_first_ancestor_with_tag(a1, a2) -- Line: 50 -- types: a1: userdata, a2: string
+    local Parent = a1
+    while Parent do
+        if Parent == workspace then
+            break
+        end
+        if Parent:HasTag(a2) then
+            return Parent
+        end
+        Parent = Parent.Parent
+    end
+    return nil
+end
+
+u114.garage_door = StatefulObject.new_class(function() -- Line: 62 -- upvalues: State (val)
+    return {open = State.new(false), locked = State.new(false)}
+end, "GarageDoor")
+
+function u114.initiate() end
+
+function u114.loaded() -- Line: 75
+    -- upvalues: Data (val), Net (val), Audio (val), JobUtil (val), Char (val), u114 (val), Util (val)
+    -- upvalues: SecurityCamera (val), StoreUI (val), BuyPromptUI (val), LocalPlayer (val), InfoPromptUI (val)
+    -- upvalues: Tween (val), find_first_ancestor_with_tag (val), Spring (val), State (val)
+    local u0 = nil
+    Data.hook("mansion_bought", function(a1) -- Line: 78 -- upvalues: u0 (ref), Net (upval), Audio (upval)
+        if u0 and a1 then
+            if Net.get("rent_home", u0) then
+                Audio.play(111773238101465, 0.8)
+            end
+            u0 = nil
+        end
+    end)
+    local u6 = nil
+    local u7 = nil
+
+    local function clear_direct_arrow() -- Line: 97 -- upvalues: u6 (ref), u7 (ref)
+        if u6 then
+            u6:Destroy()
+            u6 = nil
+        end
+        if u7 then
+            u7:Destroy()
+            u7 = nil
+        end
+    end
+
+    Net.hook("direct_to_mansion", function(a1) -- Line: 108 -- upvalues: u7 (ref), u6 (ref), JobUtil (upval), Char (upval)
+        if u7 then
+            u7:Destroy()
+            u7 = nil
+        end
+        u7 = Instance.new("Part")
+        u7.Parent = game.Workspace
+        u7.CanCollide = false
+        u7.Anchored = true
+        u7.CFrame = a1
+        u7.Transparency = 1
+        if u6 then
+            u6:Destroy()
+            u6 = nil
+        end
+        u6 = JobUtil.create_arrow(Char.get_hrp(), u7)
+    end)
+    u114.class.hook(function(a1) -- Line: 133
+        -- upvalues: Util (upval), Net (upval), SecurityCamera (upval), u6 (ref), u7 (ref), Data (upval), u0 (ref)
+        -- upvalues: StoreUI (upval), BuyPromptUI (upval), Audio (upval), LocalPlayer (upval), u114 (upval)
+        -- upvalues: InfoPromptUI (upval), Char (upval), Tween (upval)
+        local instance = a1.instance
+        local v1 = Util.wait_for_descendant(instance, "PromptZone")
+        local u11 = Util.wait_for_descendant(v1, "TouchPart")
+        local u16 = Util.wait_for_descendant(instance, "OwnerLabel")
+        local u17 = {}
+        Util.hook_children(instance:WaitForChild("Exterior"), function(a1_2) -- Line: 142 -- upvalues: Net (upval), instance (val), a1 (val), SecurityCamera (upval), u17 (val)
+            if a1_2.Name == "Security" then
+                local SecurityControl = a1_2.SecurityControl
+                local ProximityPrompt = Instance.new("ProximityPrompt")
+                ProximityPrompt.Parent = (SecurityControl:WaitForChild("ShuttersButton")):FindFirstChild("InteractAttachment", true)
+                ProximityPrompt.Triggered:Connect(function(a1_2) -- Line: 149 -- upvalues: Net (upval), instance (upval), a1 (upval)
+                    Net.send("set_shutters", instance, not a1.states.shutters_active.get())
+                    Net.send("set_mass_lock", not a1.states.shutters_active.get())
+                end)
+                local ProximityPrompt_2 = Instance.new("ProximityPrompt")
+                ProximityPrompt_2.Parent = (SecurityControl:WaitForChild("CameraScreen")):FindFirstChild("InteractAttachment", true)
+                ProximityPrompt_2.Triggered:Connect(function() -- Line: 157 -- upvalues: SecurityCamera (upval)
+                    SecurityCamera.start_cctv()
+                end)
+                table.insert(u17, ProximityPrompt)
+                table.insert(u17, ProximityPrompt_2)
+            end
+        end)
+        local u26 = false
+
+        local function get_house_icon() -- Line: 168 -- upvalues: a1 (val)
+            return {
+                image_id = a1.states.image_id.get(),
+                color = Color3.fromRGB(255, 255, 255),
+            }
+        end
+
+        local function request_rent() -- Line: 175
+            -- upvalues: u26 (ref), u6 (upval), u7 (upval), a1 (val), Data (upval), u0 (upval), StoreUI (upval)
+            -- upvalues: BuyPromptUI (upval), Net (upval), instance (val), Audio (upval)
+            local v1
+            u26 = true
+            if u6 then
+                u6:Destroy()
+                u6 = nil
+            end
+            if u7 then
+                u7:Destroy()
+                u7 = nil
+            end
+            local Attribute = a1.instance:GetAttribute("PurchaseSku")
+            if Attribute and not Data.mansion_bought then
+                u0 = a1.instance
+                v1 = StoreUI.get_store_info_for_purchase_sku(Attribute)
+                StoreUI.external_prompt_product_purchase(v1.product_id, "HomeUI")
+                return
+            end
+            v1 = a1.states.rent_price.get()
+            BuyPromptUI.purchase_request({
+                image_id = a1.states.image_id.get(),
+                color = Color3.fromRGB(255, 255, 255),
+            }, a1.states.name.get(), ("Rent Cost: $%*"):format(v1), "Confirm", "Rent", function(a1) -- Line: 198 -- upvalues: u26 (upval), Net (upval), instance (upval), Audio (upval)
+                if a1 then
+                    u26 = false
+                    if Net.get("rent_home", instance) then
+                        Audio.play(111773238101465, 0.8)
+                    end
+                end
+            end)
+        end
+
+        local function request_stop_renting() -- Line: 213
+            -- upvalues: u26 (ref), a1 (val), BuyPromptUI (upval), Net (upval), instance (val)
+            u26 = true
+            a1.states.rent_price.get()
+            BuyPromptUI.purchase_request({
+                image_id = a1.states.image_id.get(),
+                color = Color3.fromRGB(255, 255, 255),
+            }, a1.states.name.get(), "Stop renting?", "Confirm", "Yes", function(a1) -- Line: 224 -- upvalues: u26 (upval), Net (upval), instance (upval)
+                if a1 then
+                    u26 = false
+                    local v1 = Net.get("stop_renting_home", instance)
+                    print(v1)
+                end
+            end)
+        end
+
+        local function on_enter() -- Line: 235
+            -- upvalues: a1 (val), LocalPlayer (upval), u114 (upval), InfoPromptUI (upval), request_rent (val)
+            -- upvalues: request_stop_renting (val)
+            if a1.states.owner.get() ~= nil then
+                if a1.states.owner.get() == game.Players.LocalPlayer then
+                    request_stop_renting()
+                    return
+                end
+                InfoPromptUI.prompt_info("Home", "This home is owned by " .. a1.states.owner.get().Name)
+                return
+            end
+            local Attribute = LocalPlayer:GetAttribute("owned_homes")
+            if u114.MAX_HOMES_PER_PLAYER <= Attribute then
+                InfoPromptUI.prompt_info("Home", (("You can only have %* home"):format(u114.MAX_HOMES_PER_PLAYER)))
+                return
+            end
+            request_rent()
+        end
+
+        local function on_exit() -- Line: 249 -- upvalues: u26 (ref), BuyPromptUI (upval)
+            if u26 then
+                BuyPromptUI.enabled.set(false)
+            end
+        end
+
+        return function() -- Line: 255
+            -- upvalues: u11 (val), Char (upval), on_enter (val), u26 (ref), BuyPromptUI (upval), a1 (val), u16 (val)
+            -- upvalues: u17 (val), LocalPlayer (upval), u6 (upval), u7 (upval), Tween (upval)
+            u11.Touched:Connect(function(a1) -- Line: 256 -- upvalues: Char (upval), on_enter (upval)
+                local v1 = Char.current_hrp.get()
+                if v1 and a1 == v1 then
+                    on_enter()
+                end
+            end)
+            u11.TouchEnded:Connect(function(a1) -- Line: 263 -- upvalues: Char (upval), u26 (upval), BuyPromptUI (upval)
+                local v1 = Char.current_hrp.get()
+                if v1 and a1 == v1 and u26 then
+                    BuyPromptUI.enabled.set(false)
+                end
+            end)
+            a1.states.owner.hook(function(a1) -- Line: 270 -- upvalues: u16 (upval), u17 (upval), LocalPlayer (upval), u6 (upval), u7 (upval)
+                local v1
+                if not a1 then
+                    u16.Text = "For Rent"
+                else
+                    u16.Text = "Owned by " .. a1.Name
+                end
+                local v2 = nil
+                local v3 = nil
+                local v4 = a1
+                for i, j in u17, v2, v3 do
+                    v1 = v4 == LocalPlayer
+                    j.Enabled = v1
+                end
+                if v4 == LocalPlayer then
+                    if u6 then
+                        u6:Destroy()
+                        u6 = nil
+                    end
+                    if u7 then
+                        u7:Destroy()
+                        u7 = nil
+                    end
+                end
+            end)
+            a1.states.shutters_active.hook(function(a1_2, a2) -- Line: 284 -- upvalues: a1 (upval), Tween (upval)
+                local Attribute, Attribute_2, X, Z_2, play, v1, v2, v3, v4
+                local v5 = {}
+                local Security = a1.instance.Exterior:FindFirstChild("Security")
+                if Security then
+                    for i, j in a1.instance.Exterior.Security:GetChildren() do
+                        if j.Name == "WindowShutter" then
+                            table.insert(v5, j)
+                        end
+                    end
+                    if not a1_2 then
+                        Security.SecurityControl:FindFirstChild("BarrierCloseSound", true):Play()
+                    else
+                        Security.SecurityControl:FindFirstChild("BarrierOpenSound", true):Play()
+                    end
+                    v4 = if not a1_2 then "UNLOCKED" else "LOCKED"
+                    Security.SecurityControl.StatusScreen.SurfaceGui.TextLabel.Text = v4
+                end
+                local v6 = nil
+                v4 = nil
+                for k, n in v5, v6, v4 do
+                    Attribute = n:GetAttribute("OriginalXSize")
+                    if not Attribute then
+                        Attribute = n.Size.X
+                        n:SetAttribute("OriginalXSize", Attribute)
+                    end
+                    Attribute_2 = n:GetAttribute("OriginalY")
+                    if not Attribute_2 then
+                        Attribute_2 = n.Position.Y
+                        n:SetAttribute("OriginalY", Attribute_2)
+                    end
+                    v1 = Vector3.new(if not a1_2 then 0 else Attribute, n.Size.Y, n.Size.Z)
+                    X = n.Position.X
+                    Z_2 = n.Position.Z
+                    v2 = Vector3.new(X, if not a1_2 then Attribute_2 + Attribute / 2 else Attribute_2, Z_2)
+                    if a1_2 ~= a2 then
+                        play = Tween.play
+                        v3 = TweenInfo.new(6, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+                        play(n, v3, {Size = v1, Position = v2})
+                    else
+                        n.Size = v1
+                        n.Position = v2
+                    end
+                end
+            end)
+        end
+    end)
+    u114.lockable_doors.hook(function(a1) -- Line: 340
+        -- upvalues: Util (upval), Net (upval), find_first_ancestor_with_tag (upval), u114 (upval), Tween (upval)
+        local v1 = Util.wait_for_descendant(a1.instance, "DoorBase")
+        local ProximityPrompt = Instance.new("ProximityPrompt")
+        ProximityPrompt.RequiresLineOfSight = false
+        ProximityPrompt.MaxActivationDistance = 7
+        ProximityPrompt.Parent = v1
+        local u15 = script.LockSound:Clone()
+        u15.Parent = v1
+        ProximityPrompt.Triggered:Connect(function() -- Line: 362 -- upvalues: Net (upval), a1 (val)
+            Net.send("set_lock_door", a1.instance, not a1.states.locked.get())
+        end)
+        return function() -- Line: 366
+            -- upvalues: find_first_ancestor_with_tag (upval), a1 (val), u114 (upval), ProximityPrompt (val)
+            -- upvalues: Util (upval), Tween (upval), u15 (val)
+            local v1 = find_first_ancestor_with_tag(a1.instance, "Home")
+            if not v1 then
+                return warn("COULD NOT FIND HOME")
+            end
+            ;(u114.class.get(v1)).states.owner.hook(function(a1) -- Line: 374 -- upvalues: ProximityPrompt (upval)
+                if a1 == game.Players.LocalPlayer then
+                    ProximityPrompt.Enabled = true
+                    return
+                end
+                ProximityPrompt.Enabled = false
+            end)
+            local u23 = Util.wait_for_descendant(a1.instance, "HingeConstraint")
+            local LowerAngle = u23.LowerAngle
+            local UpperAngle = u23.UpperAngle
+            a1.states.locked.hook(function(a1, a2) -- Line: 385
+                -- upvalues: ProximityPrompt (upval), Tween (upval), u23 (val), LowerAngle (val), UpperAngle (val)
+                ProximityPrompt.ActionText = if not a1 then "Lock" else "Unlock"
+                if a1 then
+                    Tween.play(u23, TweenInfo.new(0.5), {LowerAngle = 0, UpperAngle = 0})
+                    return
+                end
+                Tween.play(u23, TweenInfo.new(0.5), {LowerAngle = LowerAngle, UpperAngle = UpperAngle})
+            end)
+            a1.states.locked.hook(function(a1, a2) -- Line: 403 -- upvalues: u15 (upval), Util (upval)
+                if a1 ~= a2 and u15 then
+                    if not a1 then
+                        u15.PlaybackSpeed = Util.rand(1.1, 1.15)
+                    else
+                        u15.PlaybackSpeed = Util.rand(0.95, 1.05)
+                    end
+                    u15:Play()
+                end
+            end)
+        end
+    end)
+    u114.garage_door.hook(function(a1) -- Line: 421
+        -- upvalues: Spring (upval), Net (upval), State (upval), find_first_ancestor_with_tag (upval), u114 (upval)
+        -- upvalues: Util (upval)
+        local u6 = Spring.new(0.6, 0.8, 0)
+        local Door = a1.get("Door")
+        local Pivot = Door:GetPivot()
+        a1.original_door_cf = Pivot
+        local u26 = Pivot * CFrame.Angles(0, 0, -1.5707963267948966) * CFrame.new(0, Door.Size.Y / 2, 0)
+        local ProximityPrompt = Instance.new("ProximityPrompt")
+        ProximityPrompt.RequiresLineOfSight = false
+        ProximityPrompt.MaxActivationDistance = 7
+        ProximityPrompt.Parent = Door
+        ProximityPrompt.Triggered:Connect(function() -- Line: 433 -- upvalues: Net (upval), a1 (val)
+            Net.send("set_lock_garage", a1.instance, not a1.states.locked.get())
+        end)
+        local u41 = script.LockSound:Clone()
+        u41.Parent = Door
+        ;(State.new(function() -- Line: 440 -- upvalues: a1 (val)
+            local v1 = a1.states.open.get()
+            local v2 = a1.states.locked.get()
+            return v1 and not v2
+        end)).hook(function(a1) -- Line: 444 -- upvalues: u6 (val)
+            u6.r = if not a1 then 0 else 1
+        end)
+        return function() -- Line: 448
+            -- upvalues: find_first_ancestor_with_tag (upval), a1 (val), u114 (upval), ProximityPrompt (val), u6 (val)
+            -- upvalues: Door (val), Pivot (val), u26 (val), u41 (val), Util (upval)
+            local v1 = find_first_ancestor_with_tag(a1.instance, "Home")
+            if not v1 then
+                return warn("COULD NOT FIND HOME")
+            end
+            ;(u114.class.get(v1)).states.owner.hook(function(a1) -- Line: 454 -- upvalues: ProximityPrompt (upval)
+                if a1 == game.Players.LocalPlayer then
+                    ProximityPrompt.Enabled = true
+                    return
+                end
+                ProximityPrompt.Enabled = false
+            end)
+            u6.hook(function(a1) -- Line: 462 -- upvalues: Door (upval), Pivot (upval), u26 (upval)
+                Door:PivotTo((Pivot:Lerp(u26, a1)))
+            end)
+            a1.states.locked.hook(function(a1, a2) -- Line: 466 -- upvalues: ProximityPrompt (upval)
+                ProximityPrompt.ActionText = if not a1 then "Lock" else "Unlock"
+            end)
+            a1.states.locked.hook(function(a1, a2) -- Line: 470 -- upvalues: u41 (upval), Util (upval)
+                if a1 ~= a2 and u41 then
+                    if not a1 then
+                        u41.PlaybackSpeed = Util.rand(1.1, 1.15)
+                    else
+                        u41.PlaybackSpeed = Util.rand(0.95, 1.05)
+                    end
+                    u41:Play()
+                end
+            end)
+        end
+    end)
+end
+
+return u114

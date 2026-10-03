@@ -1,0 +1,152 @@
+-- Path : ReplicatedStorage.Modules.Game.Insurance.InsuranceShared
+-- Script path: ReplicatedStorage.Modules.Game.Insurance.InsuranceShared
+-- Decompile time: 2.55 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ItemUtils = require(ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+local u11 = {}
+local v1 = {[7209519875] = 3612523074, [6765805766] = 3612475069}
+u11.INSURE_ITEM_PRODUCT_ID = v1[game.GameId] or 0
+u11.CONFIG_KEY = "ItemInsurance"
+u11.DEFAULT_ENABLED = false
+u11.STUDIO_OVERRIDE_ATTRIBUTE = "ItemInsurance"
+u11.PURCHASE_LOCATION = "ItemsUI"
+u11.states = {
+    Pending = "Pending",
+    Active = "Active",
+    Consumed = "Consumed",
+    Cancelled = "Cancelled",
+    Credit = "Credit",
+}
+u11.EXCLUDED_ITEM_TYPES = {car = true, bike = true, cosmetic = true}
+u11.REQUIRED_LOCATION = "hand"
+
+function u11.is_item_eligible(a1, a2) -- Line: 124 -- upvalues: ItemUtils (val), u11 (val) -- types: a2: string?
+    if type(a1) ~= "table" then
+        return false, "No item"
+    end
+    local guid = a1.guid
+    if type(guid) == "string" and guid ~= "" then
+        if type(a1.name) ~= "string" then
+            return false, "This item cannot be identified"
+        end
+        local v1 = a2 or ItemUtils.get_item_type(a1.name)
+        if not v1 then
+            return false, "Unknown item type"
+        end
+        if u11.EXCLUDED_ITEM_TYPES[v1] then
+            return false, "Vehicles cannot be protected"
+        end
+        if a1.location ~= u11.REQUIRED_LOCATION then
+            return false, "Only items in your inventory can be protected"
+        end
+        if not ItemUtils.can_be_dropped(a1.name) then
+            return false, "This item is never dropped on death"
+        end
+        if a1.destroyed then
+            return false, "This item is destroyed"
+        end
+        return true, ""
+    end
+    return false, "This item has no stable identifier"
+end
+
+u11.DATA_KEY = "insured_items"
+u11.LEGACY_DATA_KEY = "insured_item"
+u11.MAX_PROTECTED_ITEMS = 5
+
+function u11.get_records(a1) -- Line: 177 -- upvalues: u11 (val)
+    if type(a1) ~= "table" then
+        return {}
+    end
+    local v1 = a1[u11.DATA_KEY]
+    if type(v1) ~= "table" then
+        return {}
+    end
+    return v1
+end
+
+function u11.is_record_occupying_slot(a1) -- Line: 189 -- upvalues: u11 (val) -- types: a1: table?
+    if not a1 then
+        return false
+    end
+    local v1 = true
+    if a1.state ~= u11.states.Pending then
+        v1 = true
+        if a1.state ~= u11.states.Active then
+            v1 = a1.state == u11.states.Credit
+        end
+    end
+    return v1
+end
+
+function u11.is_record_active(a1) -- Line: 198 -- upvalues: u11 (val) -- types: a1: table?
+    local v1 = false
+    if a1 ~= nil then
+        v1 = a1.state == u11.states.Active
+    end
+    return v1
+end
+
+function u11.count_occupying(a1) -- Line: 202 -- upvalues: u11 (val) -- types: a1: table
+    local v1 = 0
+    for i, j in a1 do
+        if u11.is_record_occupying_slot(j) then
+            v1 = v1 + 1
+        end
+    end
+    return v1
+end
+
+function u11.is_at_capacity(a1) -- Line: 212 -- upvalues: u11 (val) -- types: a1: table
+    if u11.MAX_PROTECTED_ITEMS <= 0 then
+        return false
+    end
+    return u11.MAX_PROTECTED_ITEMS <= (u11.count_occupying(a1))
+end
+
+function u11.find_by_state(a1, a2) -- Line: 220 -- types: a1: table, a2: string
+    for i, j in a1 do
+        if j.state == a2 then
+            return j, i
+        end
+    end
+    return nil, nil
+end
+
+function u11.find_active_for_item(a1, a2) -- Line: 230 -- upvalues: u11 (val) -- types: a1: table, a2: string
+    for i, j in a1 do
+        if j.state == u11.states.Active and j.item_id == a2 then
+            return j, i
+        end
+    end
+    return nil, nil
+end
+
+function u11.find_claim_for_item(a1, a2) -- Line: 240 -- upvalues: u11 (val) -- types: a1: table, a2: string
+    for i, j in a1 do
+        if j.item_id == a2 then
+            if j.state ~= u11.states.Active and j.state ~= u11.states.Pending then
+                continue
+            end
+            return j
+        end
+    end
+    return nil
+end
+
+function u11.get_protected_guids(a1) -- Line: 252 -- upvalues: u11 (val) -- types: a1: table
+    local v1 = {}
+    for i, j in a1 do
+        if j.state == u11.states.Active and type(j.item_id) == "string" then
+            v1[j.item_id] = true
+        end
+    end
+    return v1
+end
+
+function u11.initiate() end
+
+function u11.loaded() end
+
+return u11

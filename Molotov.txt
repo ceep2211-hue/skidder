@@ -1,0 +1,127 @@
+-- Path : ReplicatedStorage.Modules.Game.ItemTypes.Throwable.ThrowableTypes.Molotov
+-- Script path: ReplicatedStorage.Modules.Game.ItemTypes.Throwable.ThrowableTypes.Molotov
+-- Decompile time: 4.31 ms
+
+require(game.ReplicatedStorage.Modules.Core.Net)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Tween = require(game.ReplicatedStorage.Modules.Core.Tween)
+local Audio = require(game.ReplicatedStorage.Modules.Core.Audio)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+require(ReplicatedStorage.Modules.Core.Net)
+local Blood = require(game.ReplicatedStorage.Modules.Game.Effects.Blood)
+local Sparks = require(game.ReplicatedStorage.Modules.Game.Effects.Sparks)
+return {
+    init = function(a1) -- Line: 12 -- upvalues: Util (val), Blood (val), Sparks (val), Tween (val), Audio (val)
+        local PrimaryPart = a1.PrimaryPart
+        PrimaryPart.CFrame = PrimaryPart.CFrame * CFrame.Angles(0, 0, 1.3962634015954636)
+        a1.PrimaryPart.AssemblyAngularVelocity = Vector3.new(Util.rand(-5, 5), Util.rand(-5, 5), (Util.rand(-5, 5)))
+        local Sound = Instance.new("Sound")
+        Sound.Name = "BreakSound"
+        Sound.SoundId = "rbxassetid://84620838649314"
+        Sound.PlaybackSpeed = Util.rand(0.9, 1.1)
+        Sound.Parent = a1.Handle
+        local Sound_2 = Instance.new("Sound")
+        Sound_2.Name = "FireLoopSound"
+        Sound_2.SoundId = "rbxassetid://75638102319594"
+        Sound_2.PlaybackSpeed = Util.rand(1.4, 1.7)
+        Sound_2.RollOffMaxDistance = 170
+        Sound_2.RollOffMinDistance = 10
+        Sound_2.Volume = 0.4
+        Sound_2.Looped = true
+        Sound_2.Parent = a1.Handle
+        local v1 = Instance.new("Attachment", a1.PrimaryPart)
+        local u61 = script.SplashParticles:Clone()
+        u61.Parent = v1
+        local u66 = script.SplashSideParticles:Clone()
+        u66.Parent = v1
+        local u71 = script.DropParticles:Clone()
+        u71.Parent = v1
+        script.ShardParticles:Clone().Parent = v1
+        local u81 = a1:GetAttribute("AreaDamageLength") or 6
+        task.delay(u81 * 2, function() -- Line: 52 -- upvalues: a1 (val), u81 (val)
+            if a1 and a1.Parent then
+                game.Debris:AddItem(a1, u81 * 2)
+            end
+        end)
+        return function(a1_2, a2) -- Line: 59
+            -- upvalues: a1 (val), Sound (val), Sound_2 (val), Util (upval), u66 (val), u71 (val), u61 (val), u81 (val)
+            -- upvalues: Blood (upval), Sparks (upval), Tween (upval), Audio (upval)
+            local AssemblyLinearVelocity = a1.Handle.AssemblyLinearVelocity
+            a1.PrimaryPart.Anchored = true
+            local v1, v2 = a1_2, a2
+            for i, j in a1:GetChildren() do
+                if j:IsA("BasePart") then
+                    j.Transparency = 1
+                end
+                if j:IsA("ParticleEmitter") then
+                    j.Enabled = false
+                end
+                if j:IsA("Sound") then
+                    j:Stop()
+                end
+            end
+            a1.PrimaryPart.Transparency = 1
+            a1.Rag.Attachment.SmallFire.Enabled = false
+            Sound:Play()
+            Sound_2:Play()
+            local v3 = RaycastParams.new()
+            v3.FilterType = Enum.RaycastFilterType.Include
+            v3.FilterDescendantsInstances = {v1}
+            local Position = v2 and v2.Position or a1.PrimaryPart.Position
+            local v4 = AssemblyLinearVelocity.Unit * 100
+            local v5 = workspace:Spherecast(Position - v4 / 2, 1, v4, v3)
+            if v5 then
+                local v6, v7
+                a1.PrimaryPart.CFrame = (CFrame.new(v5.Position)) * CFrame.lookAt(Vector3.new(0, 0, 0), v5.Normal) * CFrame.Angles(1.5707963267948966, 0, 0) + Vector3.new(0, 0.10000000149011612, 0)
+                local Attribute = a1:GetAttribute("AreaDamageRadius")
+                for k = 1, (Util.rand(2, 4, true)) do
+                    v6 = math.random(Attribute - 4, Attribute)
+                    u66.Size = NumberSequence.new({
+                        NumberSequenceKeypoint.new(0, v6 * 0.5),
+                        NumberSequenceKeypoint.new(0.05, v6 * 0.95),
+                        (NumberSequenceKeypoint.new(1, v6)),
+                    })
+                    v7 = Util.rand(-0.5, 0.5)
+                    u66.Squash = NumberSequence.new({
+                        NumberSequenceKeypoint.new(0, v7 * 0.5),
+                        NumberSequenceKeypoint.new(0.05, v7 * 0.95),
+                        (NumberSequenceKeypoint.new(1, v7)),
+                    })
+                    u66:Emit(1)
+                end
+                for n = 1, 6 do
+                    v6 = Util.rand(0.2, 0.5)
+                    v7 = script.GlassShard:Clone()
+                    v7.Size = Vector3.new(v6, v6, v6)
+                    v7.CFrame = a1.PrimaryPart.CFrame
+                    v7.AssemblyLinearVelocity = AssemblyLinearVelocity * 0.3 * Util.rand(0.2, 1.5)
+                    v7.Parent = a1
+                end
+                local u194 = script.MolotovFire:Clone()
+                u194.Size = Vector3.new(Attribute * 2, 1, Attribute * 2)
+                u194.CFrame = CFrame.new(v5.Position + v5.Normal * 0.01)
+                u194.CanCollide = false
+                u194.Parent = game.Workspace
+                local u221 = a1.PrimaryPart.FireLoopSound:Clone()
+                u221.Parent = u194
+                u221:Play()
+                u71:Emit(10)
+                u61:Emit(10)
+                game.Debris:AddItem(u194, u81)
+                local v8 = v1:FindFirstAncestorWhichIsA("Model")
+                if v8 and v8:FindFirstChild("Humanoid") then
+                    Blood.apply_blood(v1.Position, a1.PrimaryPart.CFrame.LookVector)
+                end
+                if v1:IsDescendantOf(game.Workspace.Vehicles) then
+                    Sparks.car_hit(Position, a1.PrimaryPart.CFrame.LookVector)
+                end
+                task.delay(u81 - 1.5, function() -- Line: 144 -- upvalues: Tween (upval), u194 (val), Audio (upval), u221 (val)
+                    Tween.play(u194.Fire, TweenInfo.new(1), {Rate = 0}).Completed:Wait()
+                    Audio.ease(u221, 0, 1)
+                end)
+            end
+            game.Debris:AddItem(a1, u81)
+            return true
+        end
+    end,
+}

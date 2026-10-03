@@ -1,0 +1,471 @@
+-- Path : ReplicatedStorage.Modules.Game.Inventory.ItemUtils
+-- Script path: ReplicatedStorage.Modules.Game.Inventory.ItemUtils
+-- Decompile time: 9.25 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local u5 = {}
+require(ReplicatedStorage.Modules.Game.DataTypes.ItemDataTypes)
+require(ReplicatedStorage.Modules.Core.Util)
+local RunService = game:GetService("RunService")
+local u22 = {hand = "hand", safe = "safe", large_storage = "large_storage"}
+u5.RELOAD_BACKPACK_ITEM_TYPES = {"gun", "melee", "throwable", "rod"}
+
+function u5.get_inventory_count(a1) -- Line: 20 -- upvalues: u22 (val)
+    local v1 = {}
+    local v2 = nil
+    local v3 = nil
+    for i, j in u22, v2, v3 do
+        v1[j] = 0
+    end
+    if a1.items then
+        local location, v4, v5
+        v2 = nil
+        v3 = nil
+        for k, n in a1.items, v2, v3 do
+            v4 = nil
+            v5 = nil
+            for m, i5 in n, v4, v5 do
+                for i6, i7 in i5 do
+                    location = i7.location
+                    v1[location] = v1[location] + 1
+                end
+            end
+        end
+    end
+    return v1
+end
+
+function u5.get_item_count(a1, a2, a3) -- Line: 38 -- types: a2: string, a3: string
+    local items = a1.items
+    local v1 = 0
+    if items[a2] ~= nil and items[a2][a3] ~= nil then
+        for i, j in items[a2][a3] do
+            if j.location == "hand" then
+                v1 = v1 + j.amount
+            end
+        end
+        return v1
+    end
+    return v1
+end
+
+function u5.get_equipped_items(a1, a2) -- Line: 57 -- upvalues: u22 (val) -- types: a2: table
+    local v1, v2, v3
+    local items = a1.items
+    local v4 = {}
+    local v5 = nil
+    local v6 = nil
+    for i, j in a2, v5, v6 do
+        if items[j] then
+            v3 = items[j]
+            v1 = nil
+            v2 = nil
+            for k, n in v3, v1, v2 do
+                for m, i5 in n do
+                    if i5.is_equipped then
+                        if i5.location ~= u22.safe then
+                            table.insert(v4, i5)
+                        else
+                            i5.is_equipped = false
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return v4
+end
+
+local u31 = {}
+
+function u5.get_item_type(a1) -- Line: 86 -- upvalues: u31 (val), ReplicatedStorage (val) -- types: a1: string
+    if a1 == "Fists" then
+        return "melee"
+    end
+    if u31[a1] then
+        return u31[a1]
+    end
+    for i, j in ReplicatedStorage:WaitForChild("Items"):GetChildren() do
+        if j:FindFirstChild(a1) then
+            u31[a1] = j.Name
+            return u31[a1]
+        end
+    end
+end
+
+function u5.get_upgrade_instance(a1, a2) -- Line: 99 -- upvalues: u5 (val) -- types: a1: string, a2: string
+    local v1 = u5.get_item_instance(a1)
+    if v1 then
+        return (v1.Upgrades:FindFirstChild(a2, true))
+    end
+    warn("!!! Item nonexistent !!!", "ItemCustomization")
+    return nil
+end
+
+function u5.get_upgrade_configuration_info_for_item(a1, a2) -- Line: 111
+    -- upvalues: u5 (val)
+    local v1 = u5.get_upgrade_instance(a1, a2)
+    if v1 then
+        return require(v1.Configuration)
+    end
+end
+
+function u5.get_upgrade_type(a1, a2) -- Line: 118 -- upvalues: u5 (val) -- types: a1: string, a2: string
+    local v1 = u5.get_upgrade_instance(a1, a2)
+    if v1 then
+        return v1.Parent.Name
+    end
+end
+
+function u5.get_upgrade_price(a1, a2) -- Line: 126 -- upvalues: u5 (val) -- types: a1: string, a2: string
+    local v1 = u5.get_upgrade_instance(a1, a2)
+    if v1 then
+        return (v1:GetAttribute("Price"))
+    end
+end
+
+function u5.can_be_dropped(a1) -- Line: 134 -- upvalues: u5 (val) -- types: a1: string
+    if not u5.get_item_instance(a1) then
+        warn("Attempted to drop an item that no longer exists: " .. a1)
+        return
+    end
+    local v1 = u5.get_item_type(a1)
+    if v1 == nil then
+        return false
+    end
+    local v2 = false
+    if v1 ~= "car" then
+        v2 = false
+        if v1 ~= "bike" then
+            v2 = v1 ~= "cosmetic"
+        end
+    end
+    return v2
+end
+
+function u5.display_in_items_ui(a1) -- Line: 157 -- upvalues: u5 (val) -- types: a1: string
+    return u5.get_item_type(a1) ~= "cosmetic"
+end
+
+function u5.has_durability(a1) -- Line: 162 -- upvalues: u5 (val) -- types: a1: string
+    local v1 = u5.get_item_type(a1)
+    local v2 = u5.get_item_instance(a1)
+    if not v2 then
+        return false
+    end
+    if v1 ~= "car" and v1 ~= "bike" and v1 ~= "gun" and v1 ~= "melee" then
+        if v2 and v2:HasTag("Utility") then
+            return true
+        end
+        return false
+    end
+    return true
+end
+
+function u5.has_freshness(a1) -- Line: 174 -- upvalues: u5 (val) -- types: a1: string
+    local v1 = u5.get_item_type(a1)
+    if not u5.get_item_instance(a1) then
+        return false
+    end
+    if v1 == "fish" then
+        return true
+    end
+    return false
+end
+
+function u5.shows_in_items_ui(a1) -- Line: 186 -- upvalues: u5 (val) -- types: a1: string?
+    if a1 == nil then
+        return false
+    end
+    return u5.get_item_type(a1) ~= "cosmetic"
+end
+
+function u5.shows_in_pawn_shop(a1) -- Line: 192 -- upvalues: u5 (val) -- types: a1: string?
+    if a1 == nil then
+        return false
+    end
+    if u5.get_item_type(a1) == "fish" then
+        return
+    end
+    return true
+end
+
+local u43 = {}
+
+function u5.get_item_instance(a1) -- Line: 202
+    -- upvalues: u43 (val), RunService (val), ReplicatedStorage (val)
+    local v1
+    if a1 == "Fists" then
+        return nil
+    end
+    if u43[a1] then
+        return u43[a1]
+    end
+    if not RunService:IsServer() then
+        for i, j in ReplicatedStorage:WaitForChild("Items"):GetChildren() do
+            v1 = j:FindFirstChild(a1)
+            if v1 then
+                u43[a1] = v1
+                return v1
+            end
+        end
+        return
+    end
+    for k, n in game.ServerStorage:WaitForChild("Items"):GetChildren() do
+        v1 = n:FindFirstChild(a1)
+        if v1 then
+            u43[a1] = v1
+            return v1
+        end
+    end
+    warn(a1, " does not exist in ServerStorage -> Items", debug.traceback())
+end
+
+function u5.get_item_ammo_type(a1) -- Line: 230 -- upvalues: u5 (val) -- types: a1: string
+    local v1 = u5.get_item_instance(a1)
+    if v1 and v1:GetAttribute("AmmoType") then
+        return v1:GetAttribute("AmmoType")
+    end
+    warn("No item ammo type for: ", a1)
+    return 0
+end
+
+function u5.get_item_rarity_price(a1) -- Line: 239 -- upvalues: u5 (val) -- types: a1: string
+    local v1 = u5.get_item_instance(a1)
+    if v1 and v1:GetAttribute("RarityPrice") then
+        return v1:GetAttribute("RarityPrice")
+    end
+    warn("No item rarity price for: ", a1)
+    return 0
+end
+
+function u5.iterate_through_items(a1, a2) -- Line: 248
+    local v1, v2
+    local v3 = nil
+    local v4 = nil
+    for i, j in a1.items, v3, v4 do
+        v1 = nil
+        v2 = nil
+        for k, n in j, v1, v2 do
+            for m, i5 in n do
+                a2(i5, i, k)
+            end
+        end
+    end
+end
+
+function u5.iterate_through_items_inverse(a1, a2) -- Line: 260
+    local v1, v2
+    local v3 = nil
+    local v4 = nil
+    for i, j in a1.items, v3, v4 do
+        v1 = nil
+        v2 = nil
+        for k, n in j, v1, v2 do
+            for m = #n, 1, -1 do
+                a2(n[m], i, k, function() -- Line: 265 -- upvalues: n (val), m (val)
+                    table.remove(n, m)
+                end)
+            end
+        end
+    end
+end
+
+function u5.iterate_through_items_of_name(a1, a2, a3) -- Line: 274
+    local items = a1.items
+    local v1 = nil
+    local v2 = nil
+    local v3, v4 = a2, a3
+    for i, j in items, v1, v2 do
+        if j[v3] then
+            for k, n in j[v3] do
+                v4(n, i, v3)
+            end
+        end
+    end
+end
+
+function u5.iterate_through_items_of_type(a1, a2, a3) -- Line: 285
+    if a1.items[a2] then
+        local v1 = a1.items[a2]
+        local v2 = nil
+        local v3 = nil
+        for i, j in v1, v2, v3 do
+            for k, n in j do
+                v4(n, v5, i)
+            end
+        end
+    end
+end
+
+function u5.iterate_through_items_of_type_inverse(a1, a2, a3) -- Line: 296
+    if a1.items[a2] then
+        local v1 = a1.items[a2]
+        local v2 = nil
+        local v3 = nil
+        local v4, v5 = a2, a3
+        for i, j in v1, v2, v3 do
+            for k = #j, 1, -1 do
+                v5(j[k], v4, i)
+            end
+        end
+    end
+end
+
+local u52 = {}
+
+function u5.get_item_icon(a1) -- Line: 310 -- upvalues: u52 (val), ReplicatedStorage (val) -- types: a1: string
+    local Attribute, v1
+    if u52[a1] then
+        return u52[a1]
+    end
+    local v2 = {image_id = "", color = Color3.fromRGB(255, 255, 255)}
+    local v3 = false
+    local v4 = a1
+    for i, j in (ReplicatedStorage:WaitForChild("Items")):GetChildren() do
+        v1 = j:FindFirstChild(v4)
+        if v1 then
+            v2.image_id = v1:GetAttribute("ImageId") or "rbxassetid://93909275221626"
+            Attribute = v1:GetAttribute("ImageColor") or Color3.fromRGB(255, 255, 255)
+            v2.color = Attribute
+            u52[v4] = v2
+            v3 = true
+        end
+    end
+    if not v3 then
+        warn(v4, " does not exist in ReplicatedStorage -> Items")
+    end
+    return v2
+end
+
+function u5.get_ammo_model_for_ammo_type(a1) -- Line: 340 -- upvalues: ReplicatedStorage (val) -- types: a1: string
+    for i, j in ReplicatedStorage:WaitForChild("Items").ammo:GetChildren() do
+        if j:GetAttribute("AmmoType") == a1 then
+            return j
+        end
+    end
+    return nil
+end
+
+function u5.get_available_ammo(a1, a2) -- Line: 350 -- types: a2: userdata
+    local v1 = a1.items.gun[a2.Name]
+    if not v1 then
+        return
+    end
+    local v2 = nil
+    for i, j in v1 do
+        if j.guid == a2:GetAttribute("ItemGUID") then
+            v2 = j
+        end
+    end
+    if not v2 then
+        v2 = v1[1]
+    end
+    if not v2 then
+        return
+    end
+    return v2.ammo_amount, v2
+end
+
+function u5.get_item_info(a1, a2) -- Line: 373 -- types: a2: string
+    local v1, v2
+    local v3 = nil
+    local v4 = nil
+    for i, j in a1.items, v3, v4 do
+        v2 = nil
+        v1 = nil
+        for k, n in j, v2, v1 do
+            for m, i5 in n do
+                if i5.guid == a2 then
+                    return i5, i
+                end
+            end
+        end
+    end
+    return nil
+end
+
+function u5.find_first_item_info_by_name(a1, a2) -- Line: 387 -- types: a2: string
+    local v1, v2
+    local v3 = nil
+    local v4 = nil
+    for i, j in a1.items, v3, v4 do
+        v2 = nil
+        v1 = nil
+        for k, n in j, v2, v1 do
+            for m, i5 in n do
+                if i5.name == a2 then
+                    return i5, i
+                end
+            end
+        end
+    end
+    return nil
+end
+
+function u5.remove_item_info(a1, a2) -- Line: 401 -- types: a2: string
+    local v1, v2
+    local v3 = nil
+    local v4 = nil
+    for i, j in a1.items, v3, v4 do
+        v2 = nil
+        v1 = nil
+        for k, n in j, v2, v1 do
+            for m, i5 in n do
+                if i5.guid == a2 then
+                    table.remove(n, m)
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
+function u5.create_item_table_from_item_list(a1) -- Line: 417 -- upvalues: u5 (val) -- types: a1: table
+    local v1
+    local v2 = {}
+    for i, j in a1 do
+        if j.item_name == "Money" then
+            table.insert(v2, {name = "Money", item_type = "money", amount = j.amount})
+        elseif string.find(j.item_name, "Crate") then
+            v1 = string.split(j.item_name, ":")
+            table.insert(v2, {name = v1[2], item_type = v1[1], amount = j.amount})
+        elseif j.item_name ~= "xp" then
+            v1 = u5.get_item_instance(j.item_name)
+            if not v1 then
+                return warn("Item instance: " .. j.item_name .. " does not exist")
+            end
+            if v1.Parent.Name ~= "ammo" then
+                table.insert(v2, {
+                    name = j.item_name,
+                    item_type = v1.Parent.Name,
+                    amount = j.amount,
+                })
+            else
+                table.insert(v2, {
+                    item_type = "ammo",
+                    name = j.item_name,
+                    ammo_type = v1:GetAttribute("AmmoType"),
+                    amount = j.amount,
+                })
+            end
+        else
+            print("XP is not yet supported, requires skill name value")
+        end
+    end
+    return v2
+end
+
+function u5.calculate_fish_freshness(a1, a2) -- Line: 462 -- upvalues: u5 (val), RunService (val)
+    local v1 = u5.get_item_instance(a1)
+    return (math.clamp(math.map(
+        (RunService:IsServer() and os.time() or math.round((workspace:GetServerTimeNow()))) - a2,
+        v1:GetAttribute("MinFresh") or 300,
+        v1:GetAttribute("MaxFresh") or 900,
+        1,
+        0
+    ), 0, 1))
+end
+
+return u5

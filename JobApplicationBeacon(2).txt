@@ -1,0 +1,104 @@
+-- Path : ReplicatedStorage.Modules.Game.Jobs.JobApplicationBeacon
+-- Script path: ReplicatedStorage.Modules.Game.Jobs.JobApplicationBeacon
+-- Decompile time: 2.77 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StoreUI = require(ReplicatedStorage.Modules.Game.Store.StoreUI)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local UIFX = require(game.ReplicatedStorage.Modules.Core.UIFX)
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local JobData = require(game.ReplicatedStorage.Modules.Game.Jobs.JobData)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local BeaconUtil = require(game.ReplicatedStorage.Modules.Game.Inventory.BeaconUtil)
+local LocalPlayer = game.Players.LocalPlayer
+local u79 = {}
+u79.lock_job_application = State.new(false)
+u79.class = StatefulObject.new_class(function() -- Line: 19 -- upvalues: State (val)
+    return {
+        JobIndex = State.new(""),
+        Colour = State.new(Color3.fromRGB(0, 0, 0)),
+        LeaveJobRadius = State.new(150),
+    }
+end, script.Name)
+
+function u79.initiate() end
+
+function u79.loaded() -- Line: 33
+    -- upvalues: State (val), UI (val), u79 (val), BeaconUtil (val), Char (val), Util (val), UIFX (val)
+    -- upvalues: LocalPlayer (val), JobData (val), Net (val), StoreUI (val)
+    local u3 = State.new(nil)
+    local JobApplicationFrame = UI.get("JobApplicationFrame")
+    u79.class.hook(function(a1) -- Line: 38 -- upvalues: BeaconUtil (upval), u79 (upval), JobApplicationFrame (val), u3 (val)
+        a1.get("TouchPart")
+        local u7 = BeaconUtil.init_beacon(a1.instance)
+        u7.on_enter:Connect(function() -- Line: 45 -- upvalues: u79 (upval), JobApplicationFrame (upval), u3 (upval), a1 (val)
+            if u79.lock_job_application.get() then
+                return
+            end
+            if not JobApplicationFrame.Visible then
+                u3.set(a1.instance)
+            end
+        end)
+        return function() -- Line: 53 -- upvalues: u7 (val)
+            u7.on_stream()
+        end
+    end)
+    Char.current_hum.hook(function(a1) -- Line: 59 -- upvalues: Util (upval), u3 (val)
+        if not a1 then
+            return
+        end
+        Util.watch_attribute(a1, "IsDead", function(a1) -- Line: 62 -- upvalues: u3 (upval)
+            if a1 then
+                u3.set(nil)
+            end
+        end)
+    end)
+    u3.hook(function(a1) -- Line: 69
+        -- upvalues: UIFX (upval), JobApplicationFrame (val), u79 (upval), LocalPlayer (upval), UI (upval)
+        -- upvalues: JobData (upval)
+        if a1 == nil then
+            UIFX.scale_close(JobApplicationFrame)
+            return
+        end
+        local v1 = u79.class.get(a1).states.JobIndex.get()
+        UIFX.scale_open(JobApplicationFrame)
+        if LocalPlayer:GetAttribute("Job") == v1 then
+            local ApplyJob = UI.get("ApplyJob")
+            ApplyJob.Visible = false
+            local LeaveJob = UI.get("LeaveJob")
+            LeaveJob.Visible = true
+            local JobApplicationLabel = UI.get("JobApplicationLabel")
+            JobApplicationLabel.Text = ("Leave %* job?"):format(JobData.names[v1])
+            return
+        end
+        local ApplyJob_2 = UI.get("ApplyJob")
+        ApplyJob_2.Visible = true
+        local LeaveJob_2 = UI.get("LeaveJob")
+        LeaveJob_2.Visible = false
+        local JobApplicationLabel_2 = UI.get("JobApplicationLabel")
+        JobApplicationLabel_2.Text = ("Apply to %* job?"):format(JobData.names[v1])
+    end)
+    UI.on_click("ApplyJob", function() -- Line: 89 -- upvalues: u3 (val), Net (upval)
+        if not u3.get() then
+            return
+        end
+        Net.send("apply_for_job", u3.get())
+        u3.set(nil)
+    end)
+    UI.on_click("ApplyJobPassiveMode", function() -- Line: 97 -- upvalues: StoreUI (upval)
+        local passive_mode_regular_var = StoreUI.get_store_info_for_purchase_sku("passive_mode_regular_var")
+        StoreUI.external_prompt_product_purchase(passive_mode_regular_var.product_id, "JobBoard")
+    end)
+    UI.on_click("LeaveJob", function() -- Line: 103 -- upvalues: Net (upval), u3 (val)
+        Net.send("leave_job")
+        u3.set(nil)
+    end)
+    UI.on_click("CancelJob", function() -- Line: 108 -- upvalues: u3 (val)
+        u3.set(nil)
+    end)
+end
+
+return u79

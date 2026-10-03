@@ -1,0 +1,52 @@
+-- Path : ReplicatedStorage.Modules.Game.ItemTypes.Throwable.ThrowableTypes.Jerry Can
+-- Script path: ReplicatedStorage.Modules.Game.ItemTypes.Throwable.ThrowableTypes.Jerry Can
+-- Decompile time: 1.26 ms
+
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local Blood = require(game.ReplicatedStorage.Modules.Game.Effects.Blood)
+local Sparks = require(game.ReplicatedStorage.Modules.Game.Effects.Sparks)
+local v1 = {}
+
+function can_go_through(a1) -- Line: 6
+    if a1:HasTag("Glass") and a1:GetAttribute("Shattered") then
+        return true
+    end
+end
+
+function v1.init(a1) -- Line: 12 -- upvalues: Util (val), Blood (val), Sparks (val)
+    local PrimaryPart = a1.PrimaryPart
+    PrimaryPart.CFrame = PrimaryPart.CFrame * CFrame.Angles(0, 0, 1.3962634015954636)
+    a1.PrimaryPart.AssemblyAngularVelocity = Vector3.new(Util.rand(-5, 5), Util.rand(-5, 5), (Util.rand(-5, 5)))
+    local v1 = Instance.new("Attachment", a1.PrimaryPart)
+    local u35 = script.SplashParticles:Clone()
+    u35.Parent = v1
+    local u40 = script.DropParticles:Clone()
+    u40.Parent = v1
+    local u41 = 0.4
+    game.Debris:AddItem(a1, 60)
+    return function(a1_2, a2) -- Line: 29
+        -- upvalues: a1 (val), Util (upval), u41 (ref), u40 (val), u35 (val), Blood (upval), Sparks (upval)
+        if can_go_through(a1_2) then
+            return
+        end
+        local AssemblyLinearVelocity = a1.Handle.AssemblyLinearVelocity
+        local v1 = script.BounceSound:Clone()
+        v1.PlaybackSpeed = Util.rand(0.8, 1.2)
+        v1.Parent = a1.Handle
+        v1.Volume = u41
+        v1:Play()
+        u40:Emit(10)
+        u35:Emit(10)
+        u41 = u41 - 0.1
+        local Position = a2 and a2.Position or a1.PrimaryPart.Position
+        local v2 = a1_2:FindFirstAncestorWhichIsA("Model")
+        if v2 and v2:FindFirstChild("Humanoid") then
+            Blood.apply_blood(a1_2.Position, a1.PrimaryPart.CFrame.LookVector)
+        end
+        if a1_2:IsDescendantOf(game.Workspace.Vehicles) then
+            Sparks.car_hit(Position, a1.PrimaryPart.CFrame.LookVector)
+        end
+    end
+end
+
+return v1

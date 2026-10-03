@@ -1,0 +1,68 @@
+-- Path : ReplicatedStorage.Modules.Game.HitDetection
+-- Script path: ReplicatedStorage.Modules.Game.HitDetection
+-- Decompile time: 2.47 ms
+
+local v1 = {}
+local RunService = game:GetService("RunService")
+require(game.ReplicatedStorage.Modules.Core.Util)
+
+function v1.FastTouched(a1, a2, a3, a4, a5) -- Line: 11
+    -- upvalues: RunService (val)
+    local u5 = a3 or 0
+    local u7 = RaycastParams.new()
+    u7.IgnoreWater = true
+    local u12 = a4 or {}
+    u7.FilterDescendantsInstances = u12
+    u7.FilterType = Enum.RaycastFilterType.Exclude
+    if a5 then
+        u7.CollisionGroup = a5
+    end
+    local Position = a1.Position
+    local u30 = RunService.Heartbeat:Connect(function(a1_2) -- Line: 36 -- upvalues: a1 (val), u5 (ref), Position (ref), u7 (val), u12 (ref), a2 (val)
+        local v1
+        if not a1:IsDescendantOf(workspace) then
+            return
+        end
+        local Unit = a1.AssemblyLinearVelocity.Unit
+        local Magnitude = a1.AssemblyLinearVelocity.Magnitude
+        if not (u5 > 0) then
+            while true do
+                v1 = workspace:Raycast(Position, a1.Position - Position, u7)
+                if v1 then
+                    table.insert(u12, v1.Instance)
+                    u7.FilterDescendantsInstances = u12
+                    a2(v1)
+                    if not a1:IsDescendantOf(workspace) then
+                        return
+                    end
+                end
+                if v1 == nil then
+                    Position = a1.Position
+                    return
+                end
+            end
+        else
+            while true do
+                v1 = workspace:Spherecast(Position, u5, a1.Position - Position, u7)
+                if v1 then
+                    table.insert(u12, v1.Instance)
+                    u7.FilterDescendantsInstances = u12
+                    a2(v1)
+                    if not a1:IsDescendantOf(workspace) then
+                        return
+                    end
+                end
+                if v1 == nil then
+                    Position = a1.Position
+                    return
+                end
+            end
+        end
+    end)
+    a1.Destroying:Connect(function() -- Line: 73 -- upvalues: u30 (val)
+        u30:Disconnect()
+    end)
+    return u30
+end
+
+return v1

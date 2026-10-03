@@ -1,0 +1,704 @@
+-- Path : ReplicatedStorage.Modules.Game.ItemCustomization.ItemCustomizationUI
+-- Script path: ReplicatedStorage.Modules.Game.ItemCustomization.ItemCustomizationUI
+-- Decompile time: 21.76 ms
+
+require(game.ReplicatedStorage.Modules.Core.Audio)
+require(game.ReplicatedStorage.Modules.Core.Net)
+require(game.ReplicatedStorage.Modules.Core.Data)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+local FlagManager = require(game.ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local UIFX = require(game.ReplicatedStorage.Modules.Core.UIFX)
+local ItemUtils = require(game.ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+require(game.ReplicatedStorage.Modules.Core.Spring)
+local Data = require(game.ReplicatedStorage.Modules.Core.Data)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local ValidCosmeticTypes = require(game.ReplicatedStorage.Modules.Game.ItemCustomization.ValidCosmeticTypes)
+local NotificationsUI = require(game.ReplicatedStorage.Modules.Game.UI.NotificationsUI)
+local CrateUI = require(ReplicatedStorage.Modules.Game.CrateSystem.CrateUI)
+local Crate = require(ReplicatedStorage.Modules.Game.CrateSystem.Crate)
+local Audio = require(ReplicatedStorage.Modules.Core.Audio)
+local CustomizationCategories = require(script.CustomizationCategories)
+local BuyPromptUI = require(game.ReplicatedStorage.Modules.Game.UI.BuyPromptUI)
+local UpdateUpgrades = require(game.ReplicatedStorage.Modules.Game.ItemCustomization.UpdateUpgrades)
+local CrateSettings = ReplicatedStorage.Modules.Game.CrateSystem.Crate.CrateSettings
+local LocalPlayer = Players.LocalPlayer
+local u169 = {}
+u169.enabled = State.new(false)
+u169.visible = State.new(false)
+u169.item_guid = State.new(nil)
+u169.item_inst = State.new(nil)
+u169.current_page = State.new(nil)
+u169.crate_reference = State.new(nil)
+u169.camera_and_controls_locked = State.new(false)
+u169.FLAG_STACK_DUPLICATES = true
+u169.customise_title = State.new("Garage")
+local u195 = {
+    "rbxassetid://131280273281217",
+    "rbxassetid://73004508380650",
+    "rbxassetid://94039248831747",
+    "rbxassetid://132134596230686",
+    "rbxassetid://70394553744971",
+    "rbxassetid://76415629356649",
+}
+
+function get_cosmetic_items(a1, a2) -- Line: 59
+    -- upvalues: Data (val), ItemUtils (val), ValidCosmeticTypes (val)
+    local v1
+    local v2 = {}
+    local v3 = Data.items.cosmetic or {}
+    local v4 = nil
+    local v5 = nil
+    for i, j in v3, v4, v5 do
+        v1 = ItemUtils.get_item_instance(i)
+        if (v1 and v1:GetAttribute("cosmetic_type")) == v6 and ValidCosmeticTypes.can_apply_cosmetic(v7, i) then
+            for k, n in j do
+                table.insert(v2, n)
+            end
+        end
+    end
+    return v2
+end
+
+function update_max_inventory_space_ui() -- Line: 78 -- upvalues: Net (val), ItemUtils (val), Data (val), UI (val)
+    local get_max_inventory_space = Net.get("get_max_inventory_space")
+    local v1 = ItemUtils.get_inventory_count(Data)
+    local v2 = v1.large_storage / get_max_inventory_space.large_storage
+    local InventoryGettingFull = UI.get("InventoryGettingFull")
+    InventoryGettingFull.Text = ("Your cosmetic inventory is getting full: %*/%*"):format(v1.large_storage, get_max_inventory_space.large_storage)
+    local InventoryGettingFull_2 = UI.get("InventoryGettingFull")
+    InventoryGettingFull_2.Visible = v2 > 0.9
+end
+
+function equip_sound(a1) -- Line: 90 -- upvalues: u169 (val), ItemUtils (val), Data (val), Audio (val)
+    local v1 = u169.item_guid.get()
+    if v1 == nil then
+        return
+    end
+    local v2 = ItemUtils.get_item_info(Data, v1)
+    if v2 == nil then
+        return
+    end
+    local v3 = ItemUtils.get_item_type(v2.name)
+    if a1 == "bodycolor" then
+        Audio.play(115657047800306)
+        return
+    end
+    if v3 == "car" then
+        Audio.play(127270621484125)
+        return
+    end
+    if v3 == "gun" then
+        Audio.play(131437897075678, 0.8)
+    end
+end
+
+local u207 = State.new(nil)
+
+function update_items(a1) -- Line: 108
+    -- upvalues: UI (val), u169 (val), ItemUtils (val), Data (val), Util (val), Audio (val), u195 (val), u207 (val)
+    -- upvalues: Net (val), NotificationsUI (val)
+    local ItemCosmeticTemplate2 = UI.get("ItemCosmeticTemplate2")
+    local v1 = u169.item_guid.get()
+    local u13 = ItemUtils.get_item_info(Data, v1)
+    local purchase_in_order = a1.purchase_in_order
+    if u13.upgrades then end
+    if u13.cosmetics then end
+    local u24 = ItemUtils.get_item_instance(u13.name)
+    for i, j in UI.get("CosmeticCategoryScrollingFrame"):GetChildren() do
+        if j:IsA("GuiButton") and j.Visible then
+            j:Destroy()
+        end
+    end
+
+    local function owns_upgrade(a1, a2) -- Line: 126 -- upvalues: u13 (val)
+        return u13.upgrades and u13.upgrades[a2.Name] and u13.upgrades[a2.Name][a1.Name] ~= nil
+    end
+
+    local function is_equipped_upgrade(a1, a2) -- Line: 132 -- upvalues: u13 (val)
+        return u13.upgrades and u13.upgrades[a2.Name] and u13.upgrades[a2.Name][a1.Name] == true
+    end
+
+    local function owns_previous_upgrades(a1, a2) -- Line: 138 -- upvalues: u24 (val), u13 (val) -- types: a2: string
+        local upgrades
+        local v1 = u24:FindFirstChild("Upgrades"):FindFirstChild(a2)
+        local v2 = true
+        for i, j in v1:GetChildren() do
+            if (j:GetAttribute("ImageLevel")) < a1:GetAttribute("ImageLevel") then
+                upgrades = u13.upgrades and u13.upgrades[v1.Name] and u13.upgrades[v1.Name][j.Name] ~= nil
+                if not upgrades then
+                    v2 = false
+                end
+            end
+        end
+        return v2
+    end
+
+    local function update_upgrades() -- Line: 158
+        -- upvalues: a1 (val), u24 (val), Util (upval), Audio (upval), u13 (val), ItemCosmeticTemplate2 (val)
+        -- upvalues: UI (upval), u195 (upval), purchase_in_order (val), owns_previous_upgrades (val), u207 (upval)
+        -- upvalues: Net (upval), NotificationsUI (upval)
+        local Attribute_2, ItemImage, update_locked_status, v1, v2
+        local upgrade_type = a1.upgrade_type
+        local Upgrades = u24:FindFirstChild("Upgrades")
+        if Upgrades == nil then
+            return
+        end
+        local v3 = Upgrades:FindFirstChild(upgrade_type)
+        if not v3 then
+            return
+        end
+        local u14 = Util.db(function(a1) -- Line: 167 -- upvalues: Audio (upval)
+            local Configuration = require(a1.Configuration)
+            Audio.play(Configuration.SoundId, 0.5)
+            task.wait(0.2)
+        end)
+        for i, j in v3:GetChildren() do
+            local upgrades = u13.upgrades
+            if upgrades then
+                upgrades = u13.upgrades[v3.Name]
+                if upgrades then
+                    upgrades = u13.upgrades[v3.Name][j.Name] ~= nil
+                end
+            end
+            local upgrades_2 = u13.upgrades
+            if upgrades_2 then
+                upgrades_2 = u13.upgrades[v3.Name]
+                if upgrades_2 then
+                    upgrades_2 = u13.upgrades[v3.Name][j.Name] == true
+                end
+            end
+            local u61 = ItemCosmeticTemplate2:Clone()
+            u61.Name = "CosmeticItem"
+            u61.Visible = true
+            u61.Parent = UI.get("CosmeticCategoryScrollingFrame")
+            if j:GetAttribute("ImageLevel") then
+                v2 = u195[(j:GetAttribute("ImageLevel"))]
+                j:SetAttribute("ImageId", v2)
+            end
+            if not j:GetAttribute("ImageId") then
+                u61.Frame.ItemImage.Visible = false
+                u61.ItemName.Visible = true
+                u61.ItemName.Text = j.Name
+            else
+                u61.Frame.ItemImage.Image = j:GetAttribute("ImageId")
+                ItemImage = u61.Frame.ItemImage
+                Attribute_2 = j:GetAttribute("ImageColor") or Color3.fromRGB(255, 255, 255)
+                ItemImage.ImageColor3 = Attribute_2
+            end
+            if j:GetAttribute("LayoutOrder") then
+                u61.LayoutOrder = j:GetAttribute("LayoutOrder")
+            end
+            u61.Frame.PriceFrame.PriceLabel.Text = ("$%*"):format((j:GetAttribute("Price")))
+            u61.ItemEquipped.Visible = upgrades and upgrades_2
+            u61.Frame.PriceFrame.Visible = not upgrades
+            u61.Frame.LockedFrame2.Visible = false
+
+            function update_locked_status() -- Line: 206
+                -- upvalues: purchase_in_order (upval), owns_previous_upgrades (upval), j (val), upgrade_type (val)
+                -- upvalues: u61 (val), upgrades (val)
+                local v1 = true
+                if purchase_in_order then
+                    v1 = owns_previous_upgrades(j, upgrade_type)
+                end
+                u61.LockedFrame.Visible = not v1
+                local v2 = v1 and not upgrades
+                u61.Frame.PriceFrame.Visible = v2
+            end
+
+            u61.Destroying:Connect((u207.hook(function(a1) -- Line: 216
+                -- upvalues: j (val), purchase_in_order (upval), owns_previous_upgrades (upval), upgrade_type (val)
+                -- upvalues: u61 (val), upgrades (val)
+                if a1 ~= j then
+                    return
+                end
+                local v1 = true
+                if purchase_in_order then
+                    v1 = owns_previous_upgrades(j, upgrade_type)
+                end
+                u61.LockedFrame.Visible = not v1
+                local v2 = v1 and not upgrades
+                u61.Frame.PriceFrame.Visible = v2
+            end)).unhook)
+            v1 = true
+            if purchase_in_order then
+                v1 = owns_previous_upgrades(j, upgrade_type)
+            end
+            u61.LockedFrame.Visible = not v1
+            v2 = v1 and not upgrades
+            u61.Frame.PriceFrame.Visible = v2
+            UI.on_click(u61, function() -- Line: 228
+                -- upvalues: u61 (val), upgrades (val), u207 (upval), j (val), upgrade_type (val), u14 (val)
+                -- upvalues: Net (upval), u13 (upval), NotificationsUI (upval), upgrades_2 (val), Audio (upval)
+                if u61.LockedFrame.Visible then
+                    return
+                end
+                if not upgrades then
+                    if u207.get() == j then
+                        u207.set(nil)
+                        return
+                    end
+                    u207.set(j)
+                    if upgrade_type ~= "Horn" then
+                        return
+                    end
+                    u14(j)
+                    return
+                end
+                u207.set(nil)
+                local v1, v2 = Net.get("toggle_equip_upgrade", u13.guid, j.Name)
+                if v2 then
+                    NotificationsUI.show_notification("", v2, nil, true)
+                end
+                if v1 and not upgrades_2 then
+                    if u13.item_type == "car" then
+                        if upgrade_type ~= "Horn" then
+                            Audio.play(127270621484125)
+                            return
+                        end
+                        local Configuration = require(j.Configuration)
+                        Audio.play(Configuration.SoundId, 0.5)
+                        return
+                    end
+                    if u13.item_type == "gun" then
+                        Audio.play(131437897075678, 0.8)
+                    end
+                end
+            end)
+        end
+    end
+
+    local function update_cosmetics() -- Line: 275
+        -- upvalues: a1 (val), u13 (val), ItemUtils (upval), u169 (upval), UI (upval), ItemCosmeticTemplate2 (val)
+        -- upvalues: Data (upval), Net (upval), NotificationsUI (upval)
+        local Attribute_2, Attribute_3, ItemImage, guid, guid_2, v1
+        local cosmetic_type = a1.cosmetic_type
+        local u182 = get_cosmetic_items(cosmetic_type, u13.name)
+        local v2 = nil
+        local v3 = nil
+        for i, j in u182, v2, v3 do
+            v1 = ItemUtils.get_item_instance(j.name)
+            local Attribute = v1
+            if Attribute then
+                Attribute = v1:GetAttribute("cosmetic_type")
+            end
+            local u83 = nil
+            if u169.FLAG_STACK_DUPLICATES then
+                u83 = (UI.get("CosmeticCategoryScrollingFrame")):FindFirstChild(j.name)
+            end
+            local cosmetics = u13.cosmetics
+            if cosmetics then
+                cosmetics = u13.cosmetics[Attribute] == j.guid
+            end
+            if u83 == nil then
+                if u83 == nil then
+                    u83 = ItemCosmeticTemplate2:Clone()
+                    u83.Name = j.name
+                    u83.Visible = true
+                    u83.Parent = UI.get("CosmeticCategoryScrollingFrame")
+                    Attribute_2 = v1:GetAttribute("cosmetic_type")
+                    u83:SetAttribute("cosmetic_type", Attribute_2)
+                    u83.ItemEquipped.Visible = cosmetics
+                    if cosmetics then
+                        guid_2 = j.guid
+                        u83:SetAttribute("equipped_guid", guid_2)
+                    end
+                end
+                if not v1:GetAttribute("ImageId") then
+                    u83.Frame.ItemImage.Visible = false
+                    u83.ItemName.Visible = true
+                    u83.ItemName.Text = v1.Name
+                else
+                    u83.Frame.ItemImage.Image = v1:GetAttribute("ImageId")
+                    ItemImage = u83.Frame.ItemImage
+                    Attribute_3 = v1:GetAttribute("ImageColor") or Color3.fromRGB(255, 255, 255)
+                    ItemImage.ImageColor3 = Attribute_3
+                end
+                if v1:GetAttribute("layout_order") then
+                    u83.LayoutOrder = v1:GetAttribute("layout_order")
+                end
+                u83.Frame.PriceFrame.Visible = false
+                UI.on_click(u83, function() -- Line: 324
+                    -- upvalues: u83 (ref), u169 (upval), u182 (val), j (val), ItemUtils (upval), Data (upval)
+                    -- upvalues: Attribute (val), Net (upval), u13 (upval), NotificationsUI (upval), cosmetics (val)
+                    local v1, v2, v3
+                    local Attribute_2 = u83:GetAttribute("equipped_guid")
+                    if Attribute_2 == nil then
+                        if not u169.FLAG_STACK_DUPLICATES then
+                            Attribute_2 = j.guid
+                        else
+                            local equipped_guid, v4
+                            v2 = nil
+                            v3 = nil
+                            for i, j2 in u182, v2, v3 do
+                                equipped_guid = j2.equipped_guid
+                                if j2.name == j.name then
+                                    if equipped_guid ~= nil then
+                                        v4 = ItemUtils.get_item_info(Data, equipped_guid)
+                                        if v4 == nil or v4.cosmetics == nil or v4.cosmetics[Attribute] ~= j2.guid then
+                                            Attribute_2 = j2.guid
+                                        end
+                                    else
+                                        Attribute_2 = j2.guid
+                                    end
+                                end
+                            end
+                            if Attribute_2 == nil then
+                                Attribute_2 = j.guid
+                            end
+                        end
+                    end
+                    v1, v2, v3 = Net.get("toggle_equip_cosmetic", u13.guid, Attribute_2)
+                    if v2 then
+                        NotificationsUI.show_notification("", v2, nil, true)
+                    end
+                    if v1 and not cosmetics then
+                        equip_sound(v3)
+                    end
+                end)
+            else
+                u83.ItemCount.Visible = true
+                u83.ItemCount.Text = ("x%*"):format(((tonumber((string.sub(u83.ItemCount.Text, 2)))) or 0) + 1)
+                u83.ItemEquipped.Visible = u83.ItemEquipped.Visible or cosmetics
+                if cosmetics then
+                    guid = j.guid
+                    u83:SetAttribute("equipped_guid", guid)
+                end
+            end
+        end
+    end
+
+    if a1.is_upgrade then
+        update_upgrades()
+        return
+    end
+    update_cosmetics()
+end
+
+function setup_open_crates() -- Line: 377 -- upvalues: u169 (val), UI (val), CrateUI (val), Crate (val), Char (val)
+    local u0 = nil
+    u169.crate_reference.hook(function(a1, a2) -- Line: 381 -- upvalues: u0 (ref), UI (upval)
+        if u0 then
+            u0:Disconnect()
+            u0 = nil
+        end
+        local OpenCratesButton = UI.get("OpenCratesButton")
+        OpenCratesButton.Visible = not not a1
+    end)
+    CrateUI.enabled.hook(function(a1) -- Line: 394 -- upvalues: CrateUI (upval), UI (upval), u169 (upval), Crate (upval)
+        if not a1
+            and CrateUI.active_page.get() == UI.get("CaseOptionsHolder")
+            and not CrateUI.awaiting_server_response.get()
+            and u169.enabled.get() then
+            task.defer(function() -- Line: 398 -- upvalues: Crate (upval), u169 (upval)
+                if not Crate.spinning.get() then
+                    u169.visible.set(true)
+                end
+            end)
+        end
+    end)
+    Crate.spinning.hook(function(a1, a2) -- Line: 406 -- upvalues: u169 (upval), CrateUI (upval), UI (upval), Char (upval)
+        if not a1 and a2 and u169.enabled.get() and u169.crate_reference.get() then
+            CrateUI.enabled.set(true)
+            CrateUI.active_page.set(UI.get("CaseBuyHolder"))
+            if u169.camera_and_controls_locked.get() then
+                Char.disable_controls()
+                workspace.CurrentCamera.CameraType = Enum.CameraType.Scriptable
+            end
+        end
+    end)
+end
+
+function u169.loaded() -- Line: 427
+    -- upvalues: FlagManager (val), UI (val), UIFX (val), u207 (val), u169 (val), ItemUtils (val), Data (val)
+    -- upvalues: UpdateUpgrades (val), LocalPlayer (val), BuyPromptUI (val), Net (val), NotificationsUI (val)
+    -- upvalues: Audio (val), CrateSettings (val), CrateUI (val), Char (val), State (val), CustomizationCategories (val)
+    -- upvalues: ValidCosmeticTypes (val)
+    if not FlagManager.FLAG_VEHICLE_CUSTOMISATION_ENABLED then
+        return
+    end
+    local ItemCustomizationGuiHolder = UI.get("ItemCustomizationGuiHolder")
+    local CustomizationCategoryTemplate = UI.get("CustomizationCategoryTemplate")
+    CustomizationCategoryTemplate.Visible = false
+    local ItemCosmeticTemplate2 = UI.get("ItemCosmeticTemplate2")
+    ItemCosmeticTemplate2.Visible = false
+    UIFX.scale_close(ItemCustomizationGuiHolder)
+    local CustomizationBuyButton = UI.get("CustomizationBuyButton")
+    CustomizationBuyButton.Visible = false
+    local CustomizationItemNameLabel = UI.get("CustomizationItemNameLabel")
+    CustomizationItemNameLabel.Visible = false
+    u207.hook(function(a1) -- Line: 440
+        -- upvalues: u169 (upval), ItemUtils (upval), Data (upval), UpdateUpgrades (upval), LocalPlayer (upval)
+        -- upvalues: UI (upval)
+        if not u169.item_inst.get() then
+            return
+        end
+        local v1 = u169.item_guid.get()
+        local v2 = ItemUtils.get_item_info(Data, v1)
+        local name = v2.name
+        local v3 = u169.item_inst.get()
+        local v4 = ItemUtils.get_item_type(name)
+        if not v3:FindFirstChild("Upgrades") then
+            warn("This item doesn't have any upgrades !!!")
+        else
+            local v5, v6, v7
+            UpdateUpgrades[v4](LocalPlayer, v2, v3)
+            local upgrades = v2.upgrades or {}
+            v2.upgrades = upgrades
+            local Name = a1 and ItemUtils.get_upgrade_instance(name, a1.Name).Parent.Name
+            local v8 = nil
+            local v9 = nil
+            for i, j in v2.upgrades, v8, v9 do
+                if i ~= Name then
+                    v5 = nil
+                    v6 = nil
+                    for k, n in j, v5, v6 do
+                        if n then
+                            v7 = ItemUtils.get_upgrade_configuration_info_for_item(name, k)
+                            if not v7 or not UpdateUpgrades[v4] then
+                                warn((("Upgrade with the name %* doesn't have a Configuration module or an upgrade function or that item type doesn't exist"):format(k)))
+                            else
+                                UpdateUpgrades[v4](LocalPlayer, v2, v3, v7)
+                            end
+                        end
+                    end
+                end
+            end
+            if a1 then
+                local v10 = ItemUtils.get_upgrade_configuration_info_for_item(name, a1.Name)
+                if not v10 or not UpdateUpgrades[v4] then
+                    warn((("Upgrade with the name %* doesn't have a Configuration module or an upgrade function or that item type doesn't exist"):format(a1.Name)))
+                else
+                    UpdateUpgrades[v4](LocalPlayer, v2, v3, v10)
+                end
+            end
+        end
+        if not a1 then
+            local CustomizationBuyButton_3 = UI.get("CustomizationBuyButton")
+            CustomizationBuyButton_3.Visible = false
+            local CustomizationItemNameLabel_3 = UI.get("CustomizationItemNameLabel")
+            CustomizationItemNameLabel_3.Visible = false
+            return
+        end
+        local Configuration = require(a1.Configuration)
+        local Attribute = a1:GetAttribute("Price")
+        local CustomizationItemNameLabel = UI.get("CustomizationItemNameLabel")
+        local Name_3 = a1:FindFirstChild("Configuration") and Configuration.DisplayName and a1.Parent.Name .. " - " .. Configuration.DisplayName or a1.Name
+        CustomizationItemNameLabel.Text = Name_3
+        local CustomizationBuyButton = UI.get("CustomizationBuyButton")
+        CustomizationBuyButton.Visible = true
+        local CustomizationItemNameLabel_2 = UI.get("CustomizationItemNameLabel")
+        CustomizationItemNameLabel_2.Visible = true
+        local TextLabel = (UI.get("CustomizationBuyButton")).TextLabel
+        TextLabel.Text = ("$%*"):format((tostring(Attribute)))
+    end)
+    UI.on_click("CustomizationBuyButton", function() -- Line: 495
+        -- upvalues: u207 (upval), ItemUtils (upval), Data (upval), u169 (upval), BuyPromptUI (upval), UI (upval)
+        -- upvalues: Net (upval), NotificationsUI (upval), Audio (upval)
+        local u2 = u207.get()
+        local u10 = ItemUtils.get_item_info(Data, u169.item_guid.get())
+        if u2 then
+            BuyPromptUI.purchase_request({image_id = u2:GetAttribute("ImageId") or ""}, (UI.get("CustomizationItemNameLabel")).Text, ("Cost: $%*"):format((u2:GetAttribute("Price"))), nil, nil, function(a1) -- Line: 506
+                -- upvalues: u207 (upval), Net (upval), u10 (val), u2 (val), NotificationsUI (upval), u169 (upval)
+                -- upvalues: Audio (upval)
+                if a1 then
+                    u207.set(nil)
+                    local v1, v2 = Net.get("purchase_upgrade", u10.guid, u2.Name)
+                    if v2 then
+                        NotificationsUI.show_notification("", v2, nil, true)
+                    end
+                    if v1 and u169.item_guid.get() and u169.enabled.get() then
+                        if u2.Parent.Name == "Horn" then
+                            local Configuration = require(u2.Configuration)
+                            Audio.play(Configuration.SoundId, 0.5)
+                            return
+                        end
+                        Audio.play(127270621484125)
+                    end
+                end
+            end)
+        end
+    end)
+    UI.on_click("OpenCratesButton", function() -- Line: 529 -- upvalues: u169 (upval), UIFX (upval), UI (upval), CrateSettings (upval), CrateUI (upval)
+        local v1 = u169.crate_reference.get()
+        if not v1 then
+            return
+        end
+        u169.visible.set(false)
+        UIFX.scale_close(UI.get("ItemCustomizationGuiHolder"))
+        local v2 = v1:GetAttribute("CrateSettings") or "Weapons"
+        local v3 = require(CrateSettings[v2])
+        local CrateOptions = v1:FindFirstChild("CrateOptions")
+        CrateUI.open(v1:GetAttribute("DisplayName") or v3.display_name or "", v1:GetAttribute("NoAllCategory"), CrateOptions, false)
+    end)
+    u169.camera_and_controls_locked.hook(function(a1, a2) -- Line: 548 -- upvalues: Char (upval)
+        if a1 == a2 then
+            return
+        end
+        if a1 then
+            Char.disable_controls()
+            workspace.CurrentCamera.CameraType = Enum.CameraType.Scriptable
+            return
+        end
+        Char.enable_controls()
+        workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
+    end)
+    u169.enabled.hook(function(a1, a2) -- Line: 560 -- upvalues: u169 (upval), BuyPromptUI (upval), u207 (upval), CrateUI (upval)
+        if a1 then
+            u169.visible.set(true)
+            return
+        end
+        if a2 then
+            BuyPromptUI.enabled.set(false)
+            u169.visible.set(false)
+            u169.camera_and_controls_locked.set(false)
+            u207.set(nil)
+            CrateUI.close()
+        end
+    end)
+    State.new(function() -- Line: 572 -- upvalues: u169 (upval), UIFX (upval), ItemCustomizationGuiHolder (val)
+        local v1 = u169.enabled.get()
+        local v2 = u169.visible.get()
+        if v1 and v2 then
+            UIFX.scale_open(ItemCustomizationGuiHolder)
+            return
+        end
+        UIFX.scale_close(ItemCustomizationGuiHolder)
+    end)
+    game.ReplicatedStorage:WaitForChild("Items"):WaitForChild("cosmetic")
+
+    local function create_category(a1) -- Line: 586
+        -- upvalues: UI (upval), State (upval), u169 (upval), Data (upval), ItemUtils (upval), NotificationsUI (upval)
+        local v1 = UI.get("CustomizationCategoryTemplate"):Clone()
+        v1.Name = "CustomizationCategoryFrame"
+        local CustomizationCategoryButton = v1:FindFirstChild("CustomizationCategoryButton")
+        CustomizationCategoryButton.Name = "CustomizationCategory"
+        if typeof(a1.image) ~= "function" then
+            CustomizationCategoryButton.ImageLabel.Image = a1.image
+        else
+            State.new(function() -- Line: 595
+                -- upvalues: u169 (upval), Data (upval), ItemUtils (upval), CustomizationCategoryButton (val), a1 (val)
+                local v1 = u169.customise_title.get()
+                local v2 = u169.item_guid.get()
+                local v3 = nil
+                if Data.items then
+                    local v4 = ItemUtils.get_item_info(Data, v2)
+                    if v4 then
+                        v3 = ItemUtils.get_item_type(v4.name)
+                    end
+                end
+                CustomizationCategoryButton.ImageLabel.Image = a1.image(v1, v3)
+            end)
+        end
+        CustomizationCategoryButton.LockedFrame.Visible = not not a1.locked
+        CustomizationCategoryButton.LockedFrame.TextLabel.Text = a1.locked_text or "Coming soon"
+        local layout_order = a1.layout_order or v1.LayoutOrder
+        v1.LayoutOrder = layout_order
+        v1.Parent = UI.get("CustomizationCategoriesFrame")
+        UI.on_click(CustomizationCategoryButton, function() -- Line: 623 -- upvalues: CustomizationCategoryButton (val), NotificationsUI (upval), u169 (upval), a1 (val)
+            if CustomizationCategoryButton.LockedFrame.Visible then
+                NotificationsUI.show_notification(CustomizationCategoryButton.ImageLabel.Image, "This option is not currently available")
+                return
+            end
+            u169.current_page.set(a1)
+        end)
+        a1.frame = v1
+    end
+
+    local v1 = nil
+    local v2 = nil
+    for i, j in CustomizationCategories, v1, v2 do
+        for k, n in j do
+            if not n.hidden then
+                create_category(n)
+            end
+        end
+    end
+    Data.hook("items", function(a1) -- Line: 642 -- upvalues: u169 (upval)
+        local v1 = u169.current_page.get()
+        if u169.enabled.get() then
+            update_items(v1)
+        end
+        update_max_inventory_space_ui()
+    end)
+    u169.customise_title.hook(function(a1) -- Line: 651 -- upvalues: UI (upval)
+        UI.get("CustomizationGuiTitleLabel").Text = a1
+    end)
+    u169.item_guid.hook(function(a1) -- Line: 655
+        -- upvalues: ItemUtils (upval), Data (upval), CustomizationCategories (upval), ValidCosmeticTypes (upval)
+        -- upvalues: u169 (upval)
+        if not a1 then
+            return
+        end
+        local v1 = ItemUtils.get_item_info(Data, a1)
+        local v2 = ItemUtils.get_item_type(v1.name)
+        local v3 = nil
+        local v4 = (1 / 0)
+        local v5 = nil
+        local v6 = nil
+        for i, j in CustomizationCategories.cosmetics, v5, v6 do
+            if j.frame then
+                j.frame.Visible = table.find(ValidCosmeticTypes.item_types[v2], j.cosmetic_type)
+                if j.frame.Visible then
+                    if v3 == nil or (j.layout_order or 1) < v4 then
+                        v3 = j
+                        v4 = j.layout_order or 1
+                    end
+                end
+            end
+        end
+        local Upgrades = ItemUtils.get_item_instance(v1.name):FindFirstChild("Upgrades")
+        if not Upgrades then
+            for k, n in CustomizationCategories.upgrades do
+                n.frame.Visible = false
+            end
+        else
+            local v7 = nil
+            local v8 = nil
+            for m, i5 in CustomizationCategories.upgrades, v7, v8 do
+                i5.frame.Visible = Upgrades:FindFirstChild(i5.name)
+                if i5.frame.Visible then
+                    if v3 == nil or (i5.layout_order or 1) < v4 then
+                        v3 = i5
+                        v4 = i5.layout_order or 1
+                    end
+                end
+            end
+        end
+        u169.current_page.set(v3, true)
+    end)
+    u169.current_page.hook(function(a1) -- Line: 696 -- upvalues: u169 (upval), ItemUtils (upval), Data (upval), UI (upval), u207 (upval)
+        if a1 then
+            local name_2
+            update_items(a1)
+            if typeof(a1.name) ~= "function" then
+                name_2 = a1.name
+            else
+                local v1 = u169.item_guid.get()
+                local v2 = ItemUtils.get_item_type(ItemUtils.get_item_info(Data, v1).name)
+                name_2 = a1.name(u169.customise_title.get(), v2)
+            end
+            UI.get("CustomizationCategoryGuiTitleLabel").Text = name_2
+            local UnlockMoreTip = UI.get("UnlockMoreTip")
+            UnlockMoreTip.Visible = not a1.is_upgrade
+            UnlockMoreTip.Text = ("Open crates to unlock more %*s"):format(name_2)
+        end
+        u207.set(nil)
+    end)
+
+    function u169.open(a1) end
+
+    function u169.close() end
+
+    setup_open_crates()
+    UI.on_click("CustomizationDoneButton", function() -- Line: 727 -- upvalues: u169 (upval)
+        u169.enabled.set(false)
+    end)
+end
+
+return u169

@@ -1,0 +1,36 @@
+-- Path : ReplicatedStorage.Modules.Game.UI.HealthBar
+-- Script path: ReplicatedStorage.Modules.Game.UI.HealthBar
+-- Decompile time: 0.86 ms
+
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local StarterGui = game:GetService("StarterGui")
+return {
+    initiate = function() end,
+    loaded = function() -- Line: 10 -- upvalues: StarterGui (val), Char (val), UI (val)
+        StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Health, false)
+        Char.hook(function(a1) -- Line: 13 -- upvalues: UI (upval)
+            local Humanoid = a1:WaitForChild("Humanoid")
+            local HealthBar = UI.get("HealthBar")
+            HealthBar.Visible = false
+            Humanoid.HealthChanged:Connect(function(a1) -- Line: 16 -- upvalues: UI (upval), Humanoid (val)
+                local HealthBar = UI.get("HealthBar")
+                local HealthBarAmount = UI.get("HealthBarAmount")
+                HealthBarAmount.Text = math.round(a1)
+                if not (Humanoid.MaxHealth <= a1) then
+                    HealthBar.Visible = true
+                    if not (a1 <= Humanoid.MaxHealth * 0.25) then
+                        HealthBar.Fill.Low.Enabled = false
+                        HealthBar.Fill.Normal.Enabled = true
+                    else
+                        HealthBar.Fill.Low.Enabled = true
+                        HealthBar.Fill.Normal.Enabled = false
+                    end
+                else
+                    HealthBar.Visible = false
+                end
+                HealthBar.Fill.Size = UDim2.fromScale(math.clamp(a1 / Humanoid.MaxHealth, 0, 1), 1)
+            end)
+        end)
+    end,
+}

@@ -1,0 +1,44 @@
+-- Path : ReplicatedStorage.Modules.Game.UI.InfoPromptUI
+-- Script path: ReplicatedStorage.Modules.Game.UI.InfoPromptUI
+-- Decompile time: 0.92 ms
+
+require(game.ReplicatedStorage.Modules.Core.Net)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local UIFX = require(game.ReplicatedStorage.Modules.Core.UIFX)
+local SubMenuBackground = require(game.ReplicatedStorage.Modules.Game.UI.SubMenuBackground)
+local u36 = {}
+u36.enabled = State.new(false)
+
+function u36.prompt_info(a1, a2) -- Line: 11 -- upvalues: UI (val), u36 (val) -- types: a1: string, a2: string
+    UI.get("InfoPromptLabel").Text = a2
+    UI.get("InfoPromptHolder").TextLabel.Text = a1
+    u36.enabled.set(true)
+    u36.enabled.wait()
+end
+
+function u36.initiate() end
+
+function u36.loaded() -- Line: 26 -- upvalues: UI (val), u36 (val), SubMenuBackground (val), UIFX (val)
+    local InfoPromptCloseButton = UI.get("InfoPromptCloseButton")
+    local InfoPromptHolder = UI.get("InfoPromptHolder")
+    InfoPromptHolder.Visible = false
+    u36.enabled.hook(function(a1) -- Line: 31
+        -- upvalues: SubMenuBackground (upval), u36 (upval), UI (upval), UIFX (upval), InfoPromptHolder (val)
+        if not SubMenuBackground.can_open() then
+            return
+        end
+        if a1 then
+            SubMenuBackground.open(u36.enabled, UI.get("InfoPrompt"))
+            UIFX.scale_open(InfoPromptHolder)
+            return
+        end
+        SubMenuBackground.close()
+        UIFX.scale_close(InfoPromptHolder)
+    end)
+    UI.on_click(InfoPromptCloseButton, function() -- Line: 43 -- upvalues: u36 (upval)
+        u36.enabled.set(false)
+    end)
+end
+
+return u36

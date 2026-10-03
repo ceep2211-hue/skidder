@@ -1,0 +1,20 @@
+-- Path : ReplicatedStorage.Modules.Game.Home.HouseFlagPoleClient
+-- Script path: ReplicatedStorage.Modules.Game.Home.HouseFlagPoleClient
+-- Decompile time: 0.44 ms
+
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local u14 = {tag = "HouseFlagPole"}
+u14.class = StatefulObject.new_class(function() -- Line: 6 -- upvalues: State (val)
+    return {owner = State.new(nil), is_mansion_pole = State.new(false)}
+end, u14.tag)
+
+function u14.initiate() end
+
+function u14.loaded() -- Line: 22 -- upvalues: u14 (val)
+    u14.class.hook(function(a1) -- Line: 24
+        return function() end
+    end)
+end
+
+return u14

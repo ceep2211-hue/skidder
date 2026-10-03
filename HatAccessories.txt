@@ -1,0 +1,42 @@
+-- Path : ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator.Items.HatAccessories
+-- Script path: ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator.Items.HatAccessories
+-- Decompile time: 1.31 ms
+
+game:GetService("ReplicatedStorage")
+local hat_accessories = require(script.Parent.Parent.CharacterCreatorTypes).all_item_types.hat_accessories
+local ReplicatedCharacterCreatorItems = game.ReplicatedStorage:WaitForChild("ReplicatedCharacterCreatorItems")
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local u40 = {}
+Util.hook_children(ReplicatedCharacterCreatorItems:WaitForChild("HatAccessories"), function(a1) -- Line: 14 -- upvalues: u40 (val), hat_accessories (val)
+    table.insert(u40, {
+        item_name = a1.Name,
+        item_type = hat_accessories,
+        image_id = a1:GetAttribute("ImageId"),
+        price = a1:GetAttribute("Price"),
+        display_name = a1:GetAttribute("DisplayName"),
+        layout_order = a1:GetAttribute("LayoutOrder"),
+        accessory_info = {is_non_accessory = false},
+    })
+end)
+return {
+    focus_part_name = "Head",
+    page_offset = Vector3.new(0.30000001192092896, 0, 5),
+    equipped_max = 3,
+    page_name = hat_accessories,
+    hat_accessories = u40,
+    items_for_page = u40,
+    run_equipped_sound_effect = function(a1, a2) end,
+    get_equipped_status = function(a1, a2) -- Line: 34 -- upvalues: Char (val) -- types: a2: userdata
+        for i, j in Char.get():GetChildren() do
+            if j:IsA("Accessory") and j.Name == a1.item_name then
+                return true
+            end
+        end
+        return false
+    end,
+    send_equipped_to_server = function(a1, a2) -- Line: 43 -- upvalues: Net (val) -- types: a1: boolean
+        Net.get("change_accessory", script.Name, a2.item_name, a1)
+    end,
+}

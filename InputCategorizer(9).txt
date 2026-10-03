@@ -1,0 +1,72 @@
+-- Path : Workspace.Vehicles.Rezvani.Scripts.Client.InputCategorizer
+-- Script path: Workspace.Vehicles.Rezvani.Scripts.Client.InputCategorizer
+-- Decompile time: 1.18 ms
+
+local UserInputService = game:GetService("UserInputService")
+local BindableEvent = Instance.new("BindableEvent")
+local u8 = {KeyboardAndMouse = "KeyboardAndMouse", Gamepad = "Gamepad", Touch = "Touch", Unknown = "Unknown"}
+local u9 = {
+    _initialized = false,
+    InputCategory = u8,
+    lastInputCategoryChanged = BindableEvent.Event,
+    _lastInputCategory = u8.Unknown,
+}
+
+function u9.getLastInputCategory() -- Line: 28 -- upvalues: u9 (val)
+    return u9._lastInputCategory
+end
+
+function u9._setLastInputCategory(a1) -- Line: 33 -- upvalues: u9 (val), BindableEvent (val) -- types: a1: string
+    if u9._lastInputCategory ~= a1 then
+        u9._lastInputCategory = a1
+        BindableEvent:Fire(a1)
+    end
+end
+
+function u9._getCategoryOfInputType(a1) -- Line: 41 -- upvalues: u8 (val)
+    if string.find(a1.Name, "Gamepad") then
+        return u8.Gamepad
+    end
+    if a1 ~= Enum.UserInputType.Keyboard and not string.find(a1.Name, "Mouse") then
+        if a1 == Enum.UserInputType.Touch then
+            return u8.Touch
+        end
+        return u8.Unknown
+    end
+    return u8.KeyboardAndMouse
+end
+
+function u9._onInputTypeChanged(a1) -- Line: 53 -- upvalues: u9 (val), u8 (val)
+    local v1 = u9._getCategoryOfInputType(a1)
+    if v1 ~= u8.Unknown then
+        u9._setLastInputCategory(v1)
+    end
+end
+
+function u9._getDefaultInputCategory() -- Line: 61 -- upvalues: UserInputService (val), u9 (val), u8 (val)
+    local v1 = u9._getCategoryOfInputType((UserInputService:GetLastInputType()))
+    if v1 ~= u8.Unknown then
+        return v1
+    end
+    if UserInputService.KeyboardEnabled and UserInputService.MouseEnabled then
+        return u8.KeyboardAndMouse
+    end
+    if UserInputService.TouchEnabled then
+        return u8.Touch
+    end
+    if UserInputService.GamepadEnabled then
+        return u8.Gamepad
+    end
+    warn("No input devices detected!")
+    return u8.Unknown
+end
+
+function u9._initialize() -- Line: 81 -- upvalues: u9 (val), UserInputService (val)
+    assert(not u9._initialized, "InputCategorizer already initialized!")
+    UserInputService.LastInputTypeChanged:Connect(u9._onInputTypeChanged)
+    u9._setLastInputCategory((u9._getDefaultInputCategory()))
+    u9._initialized = true
+end
+
+u9._initialize()
+return u9
