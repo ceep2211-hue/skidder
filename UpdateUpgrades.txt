@@ -1,0 +1,99 @@
+-- Path : ReplicatedStorage.Modules.Game.ItemCustomization.UpdateUpgrades
+-- Script path: ReplicatedStorage.Modules.Game.ItemCustomization.UpdateUpgrades
+-- Decompile time: 2.66 ms
+
+local ItemUtils = require(game.ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+return {
+    car = function(a1, a2, a3, a4) -- Line: 5
+        -- upvalues: ItemUtils (val), Util (val)
+        local v1
+        local v2 = ItemUtils.get_item_instance(a2.name)
+        if not a4 then
+            a3.Motors:SetAttribute("braking", (v2.Motors:GetAttribute("braking")))
+            a3.Suspension:SetAttribute("suspensionMultiplier", (v2.Suspension:GetAttribute("suspensionMultiplier")) or 1)
+            a3.DriverSeat.HornSound.SoundId = v2.DriverSeat.HornSound.SoundId
+            if (a3:FindFirstChild("Body")):FindFirstChild("Base") then
+                a3.Body.Base.Transparency = v2.Body.Base.Transparency
+            end
+            if a3:FindFirstChild("BodyUpgrade") then
+                a3.BodyUpgrade:Destroy()
+            end
+            return
+        end
+        if a4.FolderName then
+            v1 = a3:FindFirstChild(a4.FolderName)
+            if v1 then
+                if a4.AttributeValue then
+                    v1:SetAttribute(a4.AttributeName, a4.AttributeValue)
+                    return
+                end
+                if a4.AttributeMultiplier then
+                    local AttributeName_2 = a4.AttributeName
+                    local AttributeMultiplier = a4.AttributeMultiplier
+                    v1:SetAttribute(
+                        AttributeName_2,
+                        ((v2:FindFirstChild(a4.FolderName)):GetAttribute(AttributeName_2)) * AttributeMultiplier
+                    )
+                    return
+                end
+            end
+            return
+        end
+        if a4.SoundName then
+            v1 = a3:FindFirstChild(a4.SoundName, true)
+            if not v1 then
+                return
+            end
+            v1.SoundId = a4.SoundId
+            v1.Volume = a4.SoundVolume or 1
+            return
+        end
+        if a4.UpgradeType ~= "BodyUpgrade" then
+            return
+        end
+        a3.Body.Base.Transparency = 1
+        v1 = game.ReplicatedStorage.Upgrades.BodyUpgrades[a4.UpgradeName]:Clone()
+        v1.Name = "BodyUpgrade"
+        v1.Base.Anchored = false
+        for i, j in v1:GetChildren() do
+            if j:IsA("BasePart") and j ~= v1.Base then
+                Util.weld_preserve_offset(j, v1.Base)
+            end
+        end
+        v1:PivotTo((a3.Chassis:FindFirstChild("BodyUpgradeAttachment")).WorldCFrame)
+        Util.weld_preserve_offset(v1.Base, a3.Chassis)
+        v1.Parent = a3
+    end,
+    bike = function(a1, a2, a3, a4) -- Line: 69
+        -- upvalues: ItemUtils (val)
+        local v1
+        local v2 = ItemUtils.get_item_instance(a2.name)
+        if not a4 then
+            a3.DriverSeat.HornSound.SoundId = v2.DriverSeat.HornSound.SoundId
+            return
+        end
+        if a4.FolderName then
+            v1 = a3:FindFirstChild(a4.FolderName)
+            if v1 then
+                if a4.AttributeValue then
+                    v1:SetAttribute(a4.AttributeName, a4.AttributeValue)
+                elseif a4.AttributeMultiplier then
+                    local AttributeName_2 = a4.AttributeName
+                    local AttributeMultiplier = a4.AttributeMultiplier
+                    v1:SetAttribute(
+                        AttributeName_2,
+                        ((v2:FindFirstChild(a4.FolderName)):GetAttribute(AttributeName_2)) * AttributeMultiplier
+                    )
+                end
+            end
+        end
+        if a4.SoundName then
+            v1 = a3:FindFirstChild(a4.SoundName, true)
+            if v1 then
+                v1.SoundId = a4.SoundId
+                return
+            end
+        end
+    end,
+}

@@ -1,0 +1,329 @@
+-- Path : ReplicatedStorage.Modules.Game.ItemCustomization.UpdateCosmetics
+-- Script path: ReplicatedStorage.Modules.Game.ItemCustomization.UpdateCosmetics
+-- Decompile time: 9.46 ms
+
+game:GetService("ServerStorage")
+local ItemUtils = require(game.ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local u44 = if not (game:GetService("RunService")):IsClient() then require(game.ServerStorage.Modules.Core.StatefulObjects) else require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+local v1 = {}
+
+local function apply_wrap(a1, a2, a3) -- Line: 16 -- upvalues: ItemUtils (val)
+    local v1, v2, v3 = a2, a3, a1
+    for i, j in a1:GetDescendants() do
+        if j:IsA("BasePart") then
+            if j:GetAttribute("OriginalColor") then
+                j.Color = j:GetAttribute("OriginalColor")
+                j:SetAttribute("OriginalColor", nil)
+            end
+            if j:FindFirstChild("CosmeticTexture") then
+                j.CosmeticTexture:Destroy()
+            end
+            if j:GetAttribute("OriginalMaterial") then
+                j.Material = Enum.Material[j:GetAttribute("OriginalMaterial")]
+                j:SetAttribute("OriginalMaterial")
+            end
+        end
+        if j:IsA("MeshPart") and j:GetAttribute("OriginalTexture") then
+            j.TextureID = j:GetAttribute("OriginalTexture")
+            j:SetAttribute("OriginalTexture", nil)
+        end
+    end
+    local cosmetics = v1.cosmetics and v1.cosmetics.bodycolor and ItemUtils.get_item_info(v2, v1.cosmetics.bodycolor)
+    if not cosmetics then
+        return
+    end
+    local v4 = ItemUtils.get_item_instance(cosmetics.name)
+    if v4 and v4:FindFirstChild("textures") then
+        local Color, Name, TextureID, v5, v6
+        for k, n in v3:GetDescendants() do
+            if n:IsA("BasePart") and n:GetAttribute("Cosmetic") then
+                v5 = v4.textures:FindFirstChild((n:GetAttribute("Cosmetic")))
+                if v5 then
+                    if v5:IsA("Color3Value") then
+                        Color = n.Color
+                        n:SetAttribute("OriginalColor", Color)
+                        n.Color = v5.Value
+                        if v5:GetAttribute("Material") then
+                            Name = n.Material.Name
+                            n:SetAttribute("OriginalMaterial", Name)
+                            n.Material = Enum.Material[v5:GetAttribute("Material")]
+                        end
+                    elseif v5:IsA("SurfaceAppearance") or v5:IsA("Texture") then
+                        v6 = v5:Clone()
+                        v6.Parent = n
+                        v6.Name = "CosmeticTexture"
+                    end
+                    if n:IsA("MeshPart") then
+                        TextureID = n.TextureID
+                        n:SetAttribute("OriginalTexture", TextureID)
+                        n.TextureID = ""
+                    end
+                end
+            end
+        end
+        return
+    end
+    warn("UpdateCosmetics: unknown bodycolor cosmetic '" .. (tostring(cosmetics.name)) .. "', keeping stock look")
+end
+
+local function apply_attribute(a1, a2) -- Line: 85
+    if a2.AttributeValue then
+        a1:SetAttribute(a2.AttributeName, a2.AttributeValue)
+    end
+    if a2.AttributeMultiplier then
+        print(a2.AttributeName, a1:GetAttribute(a2.AttributeName))
+        a1:SetAttribute(a2.AttributeName, (a1:GetAttribute(a2.AttributeName)) * a2.AttributeMultiplier)
+    end
+end
+
+local function remove_attribute(a1, a2) -- Line: 95 -- upvalues: ItemUtils (val)
+    local v1 = ItemUtils.get_item_instance(a1.Name)
+    if a2.AttributeValue then
+        a1:SetAttribute(a2.AttributeName, (v1:GetAttribute(a2.AttributeName)))
+    end
+    if a2.AttributeMultiplier then
+        a1:SetAttribute(a2.AttributeName, (a1:GetAttribute(a2.AttributeName)) / a2.AttributeMultiplier)
+    end
+end
+
+local function apply_state(a1, a2) -- Line: 105 -- upvalues: u44 (ref)
+    if a2.StateName and a1:HasTag(a2.Tag) then
+        local v1 = u44.get_object(a2.Tag, a1)
+        if not v1 then
+            warn("There is no stateful object for: ", a1, a2)
+            return
+        end
+        if a2.StateValue then
+            v1.states[a2.StateName].set(a2.StateValue)
+        end
+        if a2.StateMultiplier then
+            v1.states[a2.StateName].update(function(a1) -- Line: 116 -- upvalues: a2 (val)
+                return a1 * a2.StateMultiplier
+            end)
+        end
+    end
+end
+
+local function remove_state(a1, a2) -- Line: 123 -- upvalues: ItemUtils (val), u44 (ref)
+    local v1 = ItemUtils.get_item_instance(a1.Name)
+    if a2.StateName and a1:HasTag(a2.Tag) then
+        local v2 = u44.get_object(a2.Tag, a1)
+        if a2.StateValue then
+            v2.states[a2.StateName].set(v1:GetAttribute("StateName"))
+        end
+        if a2.StateMultiplier then
+            v2.states[a2.StateName].update(function(a1) -- Line: 131 -- upvalues: a2 (val)
+                return a1 / a2.StateMultiplier
+            end)
+        end
+    end
+end
+
+local function apply_configuration(a1, a2, a3) -- Line: 138 -- upvalues: apply_attribute (val), apply_state (val)
+    local v1 = require(a2)
+    apply_attribute(a1, v1)
+    if v1.Attributes then
+        for i, j in v1.Attributes do
+            apply_attribute(a1, j)
+        end
+    end
+    apply_state(a1, v1)
+    if v1.States then
+        for k, n in v1.States do
+            apply_state(a1, n)
+        end
+    end
+    if v1.ApplyFunction then
+        v1.ApplyFunction(a1, a3)
+    end
+end
+
+local function remove_configuration(a1, a2, a3) -- Line: 159 -- upvalues: remove_attribute (val), remove_state (val)
+    local v1 = require(a2)
+    remove_attribute(a1, v1)
+    if v1.Attributes then
+        for i, j in v1.Attributes do
+            remove_attribute(a1, j)
+        end
+    end
+    remove_state(a1, v1)
+    if v1.States then
+        for k, n in v1.States do
+            remove_state(a1, n)
+        end
+    end
+    if v1.RemoveFunction then
+        v1.RemoveFunction(a1, a3)
+    end
+end
+
+local function apply_cosmetic_model(a1, a2, a3, a4, a5, a6, a7) -- Line: 180
+    -- upvalues: ItemUtils (val), remove_configuration (val), Util (val), apply_configuration (val)
+    local v1
+    local v2 = a5:FindFirstChild(a6 .. "Attachment")
+    local v3 = a4:FindFirstChild(a6 .. "Cosmetic")
+    local v4 = ItemUtils.get_item_instance(a2.name)
+    local v5 = nil
+    if a6 == "Mag" and a5.Parent then
+        v5 = a5.Parent:FindFirstChild("MagModel")
+        if v5 then
+            for i, j in v5:GetChildren() do
+                if j:IsA("BasePart") then
+                    j.Transparency = 0
+                end
+            end
+        end
+    end
+    if v3 then
+        local Configuration = v3:FindFirstChild("Configuration")
+        if Configuration then
+            remove_configuration(a1, Configuration, v3)
+        end
+        v3:Destroy()
+    end
+    if not a7 then
+        v1 = v4:FindFirstChild(a6 .. "Cosmetic")
+        if v1 then
+            v1 = v1:Clone()
+            v1.Parent = a4
+            for k, n in v1:GetChildren() do
+                if n:IsA("BasePart") and n ~= v1.Base then
+                    Util.weld_preserve_offset(n, v1.Base)
+                end
+            end
+            local Configuration_3 = v1:FindFirstChild("Configuration")
+            if Configuration_3 then
+                apply_configuration(a1, Configuration_3, v1)
+            end
+            v1:PivotTo(v2.WorldCFrame)
+            Util.weld_preserve_offset(v1.Base, a5)
+        end
+        return
+    end
+    if not v2 then
+        warn(a1.Name .. " DOES NOT HAVE THE ABILITY TO SUPPORT " .. a6 .. " IT REQUIRES A " .. a6 .. "Attachment INSTANCE")
+        return
+    end
+    v1 = ItemUtils.get_item_info(a3, a7)
+    if v1 and v2 then
+        local v6 = ItemUtils.get_item_instance(v1.name)
+        if v6 then
+            local v7 = v6:Clone()
+            v7.Name = a6 .. "Cosmetic"
+            v7.Base.Anchored = false
+            v7.Parent = a4
+            for m, i5 in v7:GetChildren() do
+                if i5:IsA("BasePart") and i5 ~= v7.Base then
+                    Util.weld_preserve_offset(i5, v7.Base)
+                end
+            end
+            v7:PivotTo(v2.WorldCFrame)
+            if a6 ~= "Mag" or not v5 then
+                Util.weld_preserve_offset(v7.Base, a5)
+            else
+                Util.weld_preserve_offset(v7.Base, v5:FindFirstChildWhichIsA("BasePart"))
+                for i6, i7 in v5:GetChildren() do
+                    if i7:IsA("BasePart") then
+                        i7.Transparency = 1
+                    end
+                end
+            end
+            local Configuration_2 = v6:FindFirstChild("Configuration")
+            if Configuration_2 then
+                apply_configuration(a1, Configuration_2, v7)
+                return
+            end
+        end
+    end
+end
+
+v1.apply_cosmetic_model = apply_cosmetic_model
+
+function v1.car(a1, a2, a3) -- Line: 280
+    -- upvalues: ItemUtils (val), Util (val), apply_wrap (val), apply_cosmetic_model (val)
+    local Rim, v1, v2
+    local v3 = ItemUtils.get_item_instance(a1.name)
+    if not a1.cosmetics then
+        a1.cosmetics = {}
+    end
+    local rims = a1.cosmetics.rims and ItemUtils.get_item_info(a3, a1.cosmetics.rims)
+    local v4 = {}
+    if not rims then
+        v4 = v3.Wheels:GetChildren()
+    else
+        local v5 = ItemUtils.get_item_instance(rims.name)
+        if v5 then
+            v4 = v5:GetChildren()
+        end
+    end
+    for i, j in v4 do
+        Rim = a2.Wheels[j.Name].Visuals.Rim
+        v1 = j.Rim:Clone()
+        v1.Size = Rim.Size
+        v1.Parent = Rim.Parent
+        v1:PivotTo((Rim:GetPivot()))
+        v2 = Util.weld(v1, v1.Parent.Parent)
+        v2.Name = j.Name .. "Weld"
+        v1.CanCollide = false
+        v1.CanTouch = false
+        v1.Anchored = Rim.Anchored
+        v1.CanQuery = Rim.CanQuery
+        v1.Massless = Rim.Massless
+        Rim:Destroy()
+    end
+    apply_wrap(a2, a1, a3)
+    apply_cosmetic_model(a2, a1, a3, a2, a2.Chassis, "Spoiler", a1.cosmetics.spoiler)
+    local Chassis_2 = a2:FindFirstChild("Chassis")
+    if Chassis_2 then
+        local GlowLight = Chassis_2:FindFirstChild("GlowLight")
+        if GlowLight then
+            GlowLight:Destroy()
+        end
+        local glow = a1.cosmetics.glow and ItemUtils.get_item_info(a3, a1.cosmetics.glow)
+        if glow then
+            local v6 = ItemUtils.get_item_instance(glow.name)
+            if v6 and v6:FindFirstChild("GlowLight") then
+                v6.GlowLight:Clone().Parent = Chassis_2
+                return
+            end
+            warn("UpdateCosmetics: unknown glow cosmetic '" .. (tostring(glow.name)) .. "', skipping")
+            return
+        end
+    end
+end
+
+function v1.bike(a1, a2, a3) -- Line: 377
+    -- upvalues: ItemUtils (val), apply_wrap (val)
+    ItemUtils.get_item_instance(a1.name)
+    if not a1.cosmetics then
+        a1.cosmetics = {}
+    end
+    apply_wrap(a2, a1, a3)
+end
+
+function v1.gun(a1, a2, a3) -- Line: 386
+    -- upvalues: apply_wrap (val), ItemUtils (val), apply_cosmetic_model (val)
+    apply_wrap(a2, a1, a3)
+    a2:SetAttribute("Zoom", (ItemUtils.get_item_instance(a1.name):GetAttribute("Zoom")))
+    local Handle = a2:WaitForChild("Handle")
+    local v1 = {Scope = a1.cosmetics and a1.cosmetics.scope or "none"}
+    v1.Barrel = a1.cosmetics and a1.cosmetics.barrel or "none"
+    v1.Underbarrel = a1.cosmetics and a1.cosmetics.underbarrel or "none"
+    v1.Grip = a1.cosmetics and a1.cosmetics.grip or "none"
+    v1.Mag = a1.cosmetics and a1.cosmetics.mag or "none"
+    local v2 = nil
+    local v3 = nil
+    for i, j in v1, v2, v3 do
+        if j == "none" then
+            j = nil
+        end
+        apply_cosmetic_model(a2, a1, a3, a2, Handle, i, j)
+    end
+end
+
+function v1.melee(a1, a2, a3) -- Line: 423 -- upvalues: apply_wrap (val) -- types: a1: table, a2: userdata, a3: table
+    apply_wrap(a2, a1, a3)
+end
+
+return v1

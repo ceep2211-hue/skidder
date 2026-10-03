@@ -1,0 +1,129 @@
+-- Path : ReplicatedStorage.Modules.Game.ItemCustomization.ValidCosmeticTypes
+-- Script path: ReplicatedStorage.Modules.Game.ItemCustomization.ValidCosmeticTypes
+-- Decompile time: 3.08 ms
+
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local ItemUtils = require(game.ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+local u15 = {}
+
+local function all_of(a1, a2) -- Line: 5 -- types: a1: table, a2: table?
+    local v1 = {}
+    local Items = game.ReplicatedStorage:WaitForChild("Items")
+    local v2 = nil
+    local v3 = nil
+    local v4 = a2
+    for i, j in a1, v2, v3 do
+        for k, n in Items:WaitForChild(j):GetChildren() do
+            if not v4 or not table.find(v4, n.Name) then
+                table.insert(v1, n.Name)
+            end
+        end
+    end
+    return v1
+end
+
+u15.item_types = {
+    car = {"bodycolor", "rims", "spoiler", "glow", "bodyupgrade"},
+    bike = {"bodycolor"},
+    gun = {"bodycolor", "scope", "mag", "underbarrel", "grip", "barrel"},
+    melee = {"bodycolor"},
+}
+u15.specific_cosmetics = {}
+
+function u15.can_apply_cosmetic(a1, a2) -- Line: 34
+    -- upvalues: ItemUtils (val), u15 (val)
+    local v1 = ItemUtils.get_item_type(a1)
+    local Attribute = ItemUtils.get_item_instance(a2):GetAttribute("cosmetic_type")
+    local v2 = table.find(u15.item_types[v1], Attribute)
+    local v3 = u15.specific_cosmetics[a2]
+    if v2 and (v3 == nil or table.find(u15.specific_cosmetics[a2], a1)) then
+        return true
+    end
+end
+
+function u15.loaded() -- Line: 54 -- upvalues: all_of (val), u15 (val), Util (val)
+    local u7 = all_of({"car", "gun", "melee", "bike"}, nil)
+    all_of({"car", "bike"}, nil)
+    all_of({"gun", "melee"}, nil)
+    local u29 = all_of({"car"}, {"ATV", "Forklift", "Golf Cart", "Mower", "Toilet Car"})
+    local u33 = all_of({"car"})
+    local u40 = all_of({"gun"}, {"RPG", "Firework Launcher"})
+    local u50 = all_of({"gun"}, {"Crossbow", "Double Barrel", "Firework Launcher", "RPG", "Sawnoff"})
+    local u66 = all_of({"gun"}, {
+        "Anaconda",
+        "Crossbow",
+        "Double Barrel",
+        "Firework Launcher",
+        "RPG",
+        "Remington",
+        "Sawnoff",
+        "Hunting Rifle",
+        "M24",
+        "RPG",
+        "M249",
+    })
+    local u67 = {}
+    u67.regular = all_of({"gun"}, {"RPG", "Firework Launcher"})
+    u67.large = all_of({"gun"}, {
+        "RPG",
+        "C9",
+        "Double Barrel",
+        "Firework Launcher",
+        "G3",
+        "Glock",
+        "P226",
+        "Sawnoff",
+        "Anaconda",
+        "Remington",
+    })
+    local u90 = {"Crossbow", "Draco", "MP5", "Uzi", "AK47", "M24", "M16", "M249"}
+    local u99 = {"Rezvani"}
+    u15.specific_cosmetics = {["10x Scope"] = u67.large}
+    Util.hook_children((game.ReplicatedStorage:WaitForChild("Items")):WaitForChild("cosmetic"), function(a1) -- Line: 96
+        -- upvalues: u15 (upval), u29 (val), u33 (val), u50 (val), u40 (val), u66 (val), u90 (val), u7 (val), u67 (val)
+        -- upvalues: u99 (val)
+        if a1:IsA("Model") then
+            local Attribute = a1:GetAttribute("cosmetic_type")
+            if u15.specific_cosmetics[a1.Name] then
+                return
+            end
+            if Attribute == "spoiler" then
+                u15.specific_cosmetics[a1.Name] = u29
+                return
+            end
+            if Attribute == "rims" then
+                u15.specific_cosmetics[a1.Name] = u33
+                return
+            end
+            if Attribute == "barrel" then
+                u15.specific_cosmetics[a1.Name] = u50
+                return
+            end
+            if Attribute == "underbarrel" then
+                u15.specific_cosmetics[a1.Name] = u40
+                return
+            end
+            if Attribute == "mag" then
+                u15.specific_cosmetics[a1.Name] = u66
+                return
+            end
+            if Attribute == "grip" then
+                u15.specific_cosmetics[a1.Name] = u90
+                return
+            end
+            if Attribute == "bodycolor" then
+                u15.specific_cosmetics[a1.Name] = u7
+                return
+            end
+            if Attribute == "scope" then
+                u15.specific_cosmetics[a1.Name] = u67.regular
+                return
+            end
+            if Attribute == "bodyupgrade" then
+                u15.specific_cosmetics[a1.Name] = u99
+            end
+        end
+    end)
+end
+
+return u15

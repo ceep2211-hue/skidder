@@ -1,0 +1,23 @@
+-- Path : ReplicatedStorage.Modules.Game.Skills.XPFormula
+-- Script path: ReplicatedStorage.Modules.Game.Skills.XPFormula
+-- Decompile time: 0.45 ms
+
+local u0 = {}
+
+function u0.level_to_xp(a1) -- Line: 4
+    return (math.round(0.125 * (a1 ^ 2 - a1 + 600 * ((2 ^ (a1 / 7) - 1.1040895136738123) / 0.10408951367381225))))
+end
+
+function u0.xp_to_level(a1) -- Line: 19 -- upvalues: u0 (val)
+    local v1 = 0
+    while u0.level_to_xp(v1) <= a1 do
+        v1 = v1 + 1
+    end
+    return v1 - 1
+end
+
+function u0.initiate() end
+
+function u0.loaded() end
+
+return u0

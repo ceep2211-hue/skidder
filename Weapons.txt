@@ -1,0 +1,16 @@
+-- Path : ReplicatedStorage.Modules.Game.CrateSystem.Crate.CrateSettings.Weapons
+-- Script path: ReplicatedStorage.Modules.Game.CrateSystem.Crate.CrateSettings.Weapons
+-- Decompile time: 0.19 ms
+
+require(script.Parent.CrateSettingsTypes)
+return {
+    cycle_amount = 30,
+    duration_multiplier = 1,
+    spin_type = "default",
+    add_item_height = false,
+    display_name = "Weapon Cases",
+    offset_rare_display_time = 3.3,
+    front_angle_offset = 0,
+    camera_orientation = CFrame.fromOrientation(0, 0, 0),
+    camera_position = CFrame.new(0, 0, 3),
+}

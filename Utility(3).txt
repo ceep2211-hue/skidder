@@ -1,0 +1,81 @@
+-- Path : ReplicatedStorage.Modules.Game.ItemTypes.Utility
+-- Script path: ReplicatedStorage.Modules.Game.ItemTypes.Utility
+-- Decompile time: 2.13 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+require(game.ReplicatedStorage.Modules.Core.Net)
+require(game.ReplicatedStorage.Modules.Core.Util)
+require(game.ReplicatedStorage.Modules.Game.Sprint)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+require(game.ReplicatedStorage.Modules.Game.ShoulderCamera)
+require(game.ReplicatedStorage.Modules.Game.Keybinds)
+require(ReplicatedStorage.Modules.Game.UI.Crosshair)
+local ToolUtil = require(ReplicatedStorage.Modules.Game.ToolUtil)
+require(ReplicatedStorage.Modules.Game.Sprint)
+require(ReplicatedStorage.Modules.Core.Timer)
+local Data = require(ReplicatedStorage.Modules.Core.Data)
+local CrouchSystem = require(ReplicatedStorage.Modules.Game.CrouchSystem)
+local ItemUtils = require(ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+require(ReplicatedStorage.Modules.Game.UI.NotificationsUI)
+game:GetService("RunService")
+local u109 = {}
+local LocalPlayer = game.Players.LocalPlayer
+u109.equipped_utility = State.new(nil)
+u109.class = StatefulObject.new_class(function() -- Line: 26 -- upvalues: State (val)
+    return {durability = State.new(0)}
+end, script.Name)
+
+function u109.initiate() end
+
+function u109.loaded() -- Line: 36
+    -- upvalues: u109 (val), ToolUtil (val), Char (val), CrouchSystem (val), ItemUtils (val), Data (val)
+    local ItemsUI = require(game.ReplicatedStorage.Modules.Game.Inventory.ItemsUI)
+    u109.class.hook(function(a1) -- Line: 39
+        -- upvalues: ToolUtil (upval), Char (upval), CrouchSystem (upval), u109 (upval), ItemUtils (upval), Data (upval)
+        -- upvalues: ItemsUI (val)
+        local instance = a1.instance
+        ToolUtil.override_ik_hold(a1)
+        local IdleAnimation = a1.instance:FindFirstChild("IdleAnimation", true)
+        local u17 = nil
+        if IdleAnimation then
+            u17 = Char.anim(IdleAnimation)
+        end
+        instance.Equipped:Connect(function() -- Line: 52 -- upvalues: Char (upval), instance (val), CrouchSystem (upval), u109 (upval)
+            if Char.get(true) ~= nil and instance:IsDescendantOf((Char.get(true))) then
+                if not Char.get_hum():GetAttribute("IsDead") and not Char.get_hum():GetAttribute("Stunned") then
+                    if instance:GetAttribute("CanCrouch") == false then
+                        CrouchSystem.crouching.set(false)
+                    end
+                    u109.equipped_utility.set(instance)
+                    return
+                end
+                return
+            end
+        end)
+
+        local function unhook() -- Line: 63 -- upvalues: u109 (upval), instance (val), u17 (ref)
+            if u109.equipped_utility.get() == instance then
+                u109.equipped_utility.set(nil)
+                if u17 then
+                    u17:Stop(0.3)
+                end
+            end
+        end
+
+        instance.Unequipped:Connect(unhook)
+        instance.Destroying:Connect(unhook)
+        return function() -- Line: 76
+            -- upvalues: a1 (val), u109 (upval), instance (val), ItemUtils (upval), Data (upval), ItemsUI (upval)
+            a1.states.durability.hook(function(a1) -- Line: 77 -- upvalues: u109 (upval), instance (upval), ItemUtils (upval), Data (upval), ItemsUI (upval)
+                if u109.equipped_utility.get() == instance and instance:GetAttribute("ItemGUID") then
+                    ItemUtils.get_item_info(Data, instance:GetAttribute("ItemGUID")).durability = a1
+                    ItemsUI.update_item_by_guid(instance:GetAttribute("ItemGUID"))
+                end
+            end)
+        end
+    end)
+end
+
+return u109

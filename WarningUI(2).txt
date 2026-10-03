@@ -1,0 +1,60 @@
+-- Path : ReplicatedStorage.Modules.Game.UI.WarningUI
+-- Script path: ReplicatedStorage.Modules.Game.UI.WarningUI
+-- Decompile time: 1.32 ms
+
+require(game.ReplicatedStorage.Modules.Core.UIFX)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+require(game.ReplicatedStorage.Modules.Core.Net)
+local Data = require(game.ReplicatedStorage.Modules.Core.Data)
+local Players = game:GetService("Players")
+local State = require(ReplicatedStorage.Modules.Core.State)
+local SubMenuBackground = require(ReplicatedStorage.Modules.Game.UI.SubMenuBackground)
+local UIFX = require(ReplicatedStorage.Modules.Core.UIFX)
+local u54 = {}
+u54.enabled = State.new(false)
+
+local function await_exit_splash_screen() -- Line: 14 -- upvalues: Players (val)
+    if not Players.LocalPlayer.Character then
+        Players.LocalPlayer.CharacterAdded:Wait()
+    end
+    if not Players.LocalPlayer:GetAttribute("InCharacterCreator") then
+        Players.LocalPlayer:GetAttributeChangedSignal("InCharacterCreator"):Wait()
+    end
+    Players.LocalPlayer:GetAttributeChangedSignal("InCharacterCreator"):Wait()
+    task.wait(5)
+end
+
+function u54.display_warning(a1) -- Line: 31 -- upvalues: UI (val), u54 (val) -- types: a1: string
+    UI.get("WarningUIHolder").TextLabel.Text = a1
+    u54.enabled.set(true)
+end
+
+function u54.initiate() end
+
+function u54.loaded() -- Line: 40
+    -- upvalues: u54 (val), SubMenuBackground (val), UI (val), UIFX (val), Data (val), await_exit_splash_screen (val)
+    u54.enabled.hook(function(a1, a2) -- Line: 41 -- upvalues: SubMenuBackground (upval), u54 (upval), UI (upval), UIFX (upval)
+        if a1 == a2 or not SubMenuBackground.can_open() then
+            return
+        end
+        if a1 then
+            SubMenuBackground.open(u54.enabled, UI.get("WarningUI"))
+            UIFX.scale_open(UI.get("WarningUIHolder"))
+            return
+        end
+        SubMenuBackground.close()
+        UIFX.scale_close(UI.get("WarningUIHolder"))
+    end)
+    UI.on_click("WarningCloseButton", function() -- Line: 54 -- upvalues: u54 (upval)
+        u54.enabled.set(false)
+    end)
+    Data.failed.hook(function(a1) -- Line: 58 -- upvalues: await_exit_splash_screen (upval), u54 (upval)
+        if a1 then
+            await_exit_splash_screen()
+            u54.display_warning("Roblox datastores are currently unstable. \n\nYour original data is safe and any progress in this session will not save. \n\nWe recommend you rejoin!")
+        end
+    end)
+end
+
+return u54

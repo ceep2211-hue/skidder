@@ -1,0 +1,8 @@
+-- Path : ReplicatedStorage.Modules.Game.UI.XPUI
+-- Script path: ReplicatedStorage.Modules.Game.UI.XPUI
+-- Decompile time: 0.11 ms
+
+return {
+    initiate = function() end,
+    loaded = function() end,
+}

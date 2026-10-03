@@ -1,0 +1,195 @@
+-- Path : ReplicatedStorage.Modules.Game.Trajectory
+-- Script path: ReplicatedStorage.Modules.Game.Trajectory
+-- Decompile time: 5.82 ms
+
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local u7 = {}
+local Terrain = game.Workspace.Terrain
+local Beam = Instance.new("Beam")
+Beam.Color = ColorSequence.new(Color3.new(1, 1, 1))
+Beam.Transparency = NumberSequence.new(0.5)
+Beam.FaceCamera = true
+Beam.Segments = 20
+Beam.Width0 = 0.1
+Beam.Width1 = 0.1
+local u28 = {}
+local u36 = Vector3.new(0, -game.Workspace.Gravity, 0)
+
+local function reflect(a1, a2) -- Line: 22
+    return -2 * a1:Dot(a2) * a2 + a1
+end
+
+local function drawBeamProjectile(a1, a2, a3, a4) -- Line: 26 -- upvalues: Beam (val), Terrain (val), u28 (val)
+    local v1 = 0.5 * a1 * a4 * a4 + a2 * a4 + a3
+    local v2 = v1 - (a1 * a4 * a4 + a2 * a4) / 3
+    local v3 = (0.125 * a1 * a4 * a4 + 0.5 * a2 * a4 + a3 - 0.125 * (a3 + v1)) / 0.375 - v2
+    local Magnitude = (v3 - a3).Magnitude
+    local Magnitude_2 = (v2 - v1).Magnitude
+    local unit = (a3 - v1).unit
+    local unit_2 = (v3 - a3).unit
+    local unit_3 = unit_2:Cross(unit).unit
+    local unit_4 = (v2 - v1).unit
+    local unit_5 = (unit_4:Cross(unit)).unit
+    local unit_6 = unit_3:Cross(unit_2).unit
+    local v4 = CFrame.fromMatrix(a3, unit_2, unit_3, unit_6)
+    local v5 = CFrame.fromMatrix(v1, unit_4, unit_5, unit_6)
+    local Attachment = Instance.new("Attachment")
+    local Attachment_2 = Instance.new("Attachment")
+    local v6 = Beam:Clone()
+    Attachment.CFrame = v4
+    Attachment.Parent = Terrain
+    Attachment_2.CFrame = v5
+    Attachment_2.Parent = Terrain
+    v6.Attachment0 = Attachment
+    v6.Attachment1 = Attachment_2
+    v6.CurveSize0 = Magnitude
+    v6.CurveSize1 = -Magnitude_2
+    v6.Parent = Terrain
+    table.insert(u28, Attachment)
+    table.insert(u28, Attachment_2)
+    table.insert(u28, v6)
+end
+
+function u7.velocity(a1, a2) -- Line: 65 -- upvalues: u36 (ref)
+    return u36 * a2 + a1
+end
+
+function u7.position(a1, a2, a3) -- Line: 69 -- upvalues: u36 (ref)
+    return u36 * 0.5 * a3 * a3 + a2 * a3 + a1
+end
+
+function u7.plane_quad_intersect(a1, a2, a3, a4) -- Line: 73 -- upvalues: u36 (ref)
+    local v1 = (u36 * 0.5):Dot(a4)
+    local v2 = a2:Dot(a4)
+    local v3 = (a1 - a3):Dot(a4)
+    if v1 == 0 then
+        return -v3 / v2
+    end
+    local v4 = math.sqrt(v2 * v2 - 4 * v1 * v3)
+    return (-v2 - v4) / (2 * v1)
+end
+
+function u7.calc_single(a1, a2, a3, a4) -- Line: 86 -- upvalues: u7 (val)
+    local Instance, v1, v2, v3, v4
+    local v5 = 0
+    local Instance_2 = nil
+    local Position = nil
+    local Normal = nil
+    local Material = nil
+    local v6, v7, v8 = a1, a2, a4
+    repeat
+        v4 = u7.position(v6, v7, v5)
+        v1 = u7.position(v6, v7, v5 + 0.05)
+        v5 = v5 + 0.05
+        v2 = RaycastParams.new()
+        v2.RespectCanCollide = true
+        v2.FilterType = Enum.RaycastFilterType.Exclude
+        if v8 then
+            v2.CollisionGroup = v8
+        end
+        while true do
+            v2.FilterDescendantsInstances = v9
+            v3 = game.Workspace:Raycast(v4, v1 - v4, v2)
+            if v3 == nil or not v3.Instance:GetAttribute("Shattered") then
+                break
+            end
+            Instance = v3.Instance
+            table.insert(v9, Instance)
+        end
+        if v3 then
+            Instance_2 = v3.Instance
+            Position = v3.Position
+            Normal = v3.Normal
+            Material = v3.Material
+        end
+    until Instance_2 or v5 >= 5
+    if not Instance_2 then
+        return
+    end
+    v4 = u7.plane_quad_intersect(v6, v7, Position, Normal)
+    u7.position(v6, v7, v4)
+    return v4, Normal, (PhysicalProperties.new(Material)), Position
+end
+
+function u7.cast(a1, a2, a3, a4, a5, a6) -- Line: 136 -- upvalues: u7 (val)
+    local v1, v2, v3, v4, v5, v6, v7
+    local v8 = 0
+    local v9 = PhysicalProperties.new(a3)
+    local v10 = {}
+    local v11 = a5 or 0
+    local v12 = nil
+    local v13, v14, v15, v16 = a2, a1, a4, a6
+    while true do
+        if not (10 <= (v13:Dot(v13))) or not (v8 <= v11) then
+            break
+        end
+        v2, v3, v4 = u7.calc_single(v14, v13, v15, v16)
+        v6 = v2
+        v7 = v3
+        v1 = v4
+        if not v6 then
+            v8 = v11 + 1
+        else
+            table.insert(v10, {v14, v13, v6, v12})
+            v2 = (v9.Elasticity * v9.ElasticityWeight + v1.Elasticity * v1.ElasticityWeight) / (v9.ElasticityWeight + v1.ElasticityWeight)
+            v3 = (v9.Friction * v9.FrictionWeight + v1.Friction * v1.FrictionWeight) / (v9.FrictionWeight + v1.FrictionWeight)
+            v4 = 1 - math.abs((v13.Unit:Dot(v7)))
+            v14 = u7.position(v14, v13, v6)
+            v5 = u7.velocity(v13, v6)
+            v13 = (-2 * v5:Dot(v7) * v7 + v5) * 0.5 + v13 * v3 * v4
+            v8 = v8 + 1
+        end
+    end
+    return v10
+end
+
+function u7.travel(a1, a2, a3) -- Line: 168 -- upvalues: Util (val)
+    local v1, v2
+    local v3 = 0
+    local u12 = math.max(a1.Size.X, a1.Size.Y, a1.Size.Z) * 0.7
+    local v4 = #a2
+    for i = 1, v4 do
+        v2 = a2[i]
+        u22, u23, v1, u25 = unpack(v2)
+        task.delay(v3, function() -- Line: 186 -- upvalues: a1 (val), u23 (val), Util (upval), u25 (val), u22 (ref), u12 (val)
+            a1.AssemblyLinearVelocity = u23
+            a1.AssemblyAngularVelocity = Vector3.new(Util.rand(-3, 3), Util.rand(-3, 3), (Util.rand(-3, 3)))
+            if u25 then
+                u22 = u22 + u25 * u12 / 2
+            end
+            a1.CFrame = CFrame.new(u22, u22 + u23)
+        end)
+        v3 = v3 + v1
+    end
+    if a3 then
+        task.delay(v3, a3)
+    end
+end
+
+function u7.draw(a1) -- Line: 204 -- upvalues: u7 (val), drawBeamProjectile (val), u36 (ref)
+    local v1, v2, v3
+    u7.clear_draw()
+    local v4 = #a1
+    for i = 1, v4 do
+        v2 = a1[i]
+        v1, v2, v3 = unpack(v2)
+        drawBeamProjectile(u36, v2, v1, v3)
+    end
+end
+
+function u7.clear_draw() -- Line: 212 -- upvalues: u28 (val)
+    for i, j in u28 do
+        j:Destroy()
+    end
+    table.clear(u28)
+end
+
+function u7.initiate() end
+
+function u7.loaded() -- Line: 223 -- upvalues: u36 (ref)
+    (game.Workspace:GetPropertyChangedSignal("Gravity")):Connect(function() -- Line: 224 -- upvalues: u36 (upval)
+        u36 = Vector3.new(0, -game.Workspace.Gravity, 0)
+    end)
+end
+
+return u7

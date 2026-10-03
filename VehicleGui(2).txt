@@ -1,0 +1,89 @@
+-- Path : ReplicatedStorage.Modules.Game.VehicleSystem.VehicleGui
+-- Script path: ReplicatedStorage.Modules.Game.VehicleSystem.VehicleGui
+-- Decompile time: 2.24 ms
+
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+require(game.ReplicatedStorage.Modules.Core.Char)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local UIFX = require(game.ReplicatedStorage.Modules.Core.UIFX)
+local Vehicle = require(game.ReplicatedStorage.Modules.Game.VehicleSystem.Vehicle)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+local LocalPlayer = game.Players.LocalPlayer
+require(game.ReplicatedStorage.Modules.Game.Keybinds)
+local u60 = {}
+u60.enabled = State.new(false)
+
+function u60.initiate() end
+
+function u60.loaded() -- Line: 19
+    -- upvalues: UI (val), LocalPlayer (val), State (val), Vehicle (val), u60 (val), Net (val), UIFX (val)
+    local VehicleOptions = UI.get("VehicleOptions")
+    local u5 = {}
+    u5[0] = (Color3.fromRGB(255, 255, 255))
+    u5[1] = (Color3.fromRGB(72, 214, 108))
+    u5[2] = (Color3.fromRGB(255, 53, 56))
+
+    local function in_a_crew() -- Line: 45 -- upvalues: LocalPlayer (upval)
+        return LocalPlayer:GetAttribute("CurrentGangId") ~= nil
+    end
+
+    local function next_lock_mode(a1) -- Line: 49 -- upvalues: LocalPlayer (upval) -- types: a1: number
+        if LocalPlayer:GetAttribute("CurrentGangId") ~= nil then
+            return (a1 + 1) % 3
+        end
+        if a1 == 2 then
+            return 0
+        end
+        return 2
+    end
+
+    local u27 = State.new(0)
+    u27.hook(function(a1) -- Line: 59 -- upvalues: UI (upval), u5 (val)
+        local LockVehicleImageLabel = UI.get("LockVehicleImageLabel")
+        LockVehicleImageLabel.Image = if a1 == 0 then "rbxassetid://14061898347" else "rbxassetid://6249640130"
+        local v1 = u5[a1] or u5[0]
+        LockVehicleImageLabel.ImageColor3 = v1
+    end)
+    Vehicle.current_driving.hook(function(a1) -- Line: 68 -- upvalues: Vehicle (upval), u27 (val), u60 (upval) -- types: a1: userdata
+        if not a1 then
+            u60.enabled.set(false)
+            return
+        end
+        local v1 = Vehicle.class.get(a1)
+        local v2 = v1.states.locked.get()
+        local v3 = v1.states.crew_access.get()
+        u27.set(if v2 then if not v3 then 2 else 1 else 0)
+        u60.enabled.set(true)
+    end)
+    UI.on_click("HornButton", function() -- Line: 85 -- upvalues: Vehicle (upval), Net (upval)
+        local v1 = Vehicle.current_driving.get()
+        if v1 then
+            Net.send("horn_vehicle", v1)
+        end
+    end)
+    UI.on_click("LockVehicleButton", function() -- Line: 92 -- upvalues: Vehicle (upval), u27 (val), next_lock_mode (val), Net (upval)
+        local v1 = Vehicle.current_driving.get()
+        if v1 then
+            u27.update(next_lock_mode)
+            Net.send("lock_vehicle", v1, u27.get())
+        end
+    end)
+    u60.enabled.hook(function(a1) -- Line: 101 -- upvalues: UIFX (upval), VehicleOptions (val), Vehicle (upval), UI (upval)
+        if not a1 then
+            UIFX.scale_close(VehicleOptions)
+            return
+        end
+        UIFX.scale_open(VehicleOptions)
+        local v1 = Vehicle.current_driving.get()
+        if not v1 then
+            return
+        end
+        local HornButton = UI.get("HornButton")
+        HornButton.Visible = v1:FindFirstChild("HornSound", true) ~= nil
+        local LockVehicleButton = UI.get("LockVehicleButton")
+        LockVehicleButton.Visible = (v1:GetAttribute("OwnerUserId")) == game.Players.LocalPlayer.UserId
+    end)
+end
+
+return u60

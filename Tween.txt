@@ -1,0 +1,72 @@
+-- Path : ReplicatedStorage.Modules.Core.Tween
+-- Script path: ReplicatedStorage.Modules.Core.Tween
+-- Decompile time: 1.63 ms
+
+local u0 = {}
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local TweenService = game:GetService("TweenService")
+
+function u0.play(a1, a2, a3) -- Line: 8 -- upvalues: TweenService (val)
+    if a1 == nil then
+        return
+    end
+    local v1 = TweenService:Create(a1, a2, a3)
+    v1:Play()
+    return v1
+end
+
+function u0.create(a1, a2, a3) -- Line: 15 -- upvalues: TweenService (val)
+    if a1 == nil then
+        return
+    end
+    return (TweenService:Create(a1, a2, a3))
+end
+
+function u0.play_model(a1, a2, a3) -- Line: 21 -- upvalues: TweenService (val)
+    local CFrameValue = Instance.new("CFrameValue")
+    CFrameValue.Value = a1:GetPivot()
+    ;(CFrameValue:GetPropertyChangedSignal("Value")):connect(function() -- Line: 25 -- upvalues: a1 (val), CFrameValue (val)
+        a1:PivotTo(CFrameValue.Value)
+    end)
+    local v1 = TweenService:Create(CFrameValue, a2, {Value = a3})
+    v1:Play()
+    v1.Completed:Connect(function() -- Line: 33 -- upvalues: CFrameValue (val)
+        CFrameValue:Destroy()
+    end)
+    return v1
+end
+
+function u0.empty() -- Line: 39 -- upvalues: TweenService (val)
+    local v1 = TweenService:Create(workspace, TweenInfo.new(0), {})
+    v1:Play()
+    return v1
+end
+
+function u0.typing_effect(a1, a2) -- Line: 47
+    local v1
+    local v2 = #a2
+    local v3, v4 = a2, a1
+    for i = 1, v2 do
+        v4.Text = v3:sub(1, i)
+        task.wait()
+        v1 = v3:sub(i, i)
+        if v1 == "!" or v1 == "?" or v1 == "." then
+            task.wait(0.4)
+        elseif v1 == "," then
+            task.wait(0.2)
+        end
+    end
+end
+
+function u0.initiate() end
+
+function u0.loaded() -- Line: 65 -- upvalues: Net (val), u0 (val)
+    Net.hook("tween_client", function(a1, a2, a3) -- Line: 66 -- upvalues: u0 (upval)
+        u0.play(a1, TweenInfo.new(table.unpack(a2)), a3)
+    end)
+    Net.hook("tween_model_client", function(a1, a2, a3) -- Line: 69 -- upvalues: u0 (upval)
+        u0.play_model(a1, TweenInfo.new(table.unpack(a2)), a3)
+    end)
+end
+
+return u0

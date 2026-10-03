@@ -1,0 +1,78 @@
+-- Path : ReplicatedStorage.Modules.Game.UI.Viewport
+-- Script path: ReplicatedStorage.Modules.Game.UI.Viewport
+-- Decompile time: 1.81 ms
+
+game:GetService("ReplicatedStorage")
+local v1 = {}
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+
+function v1.new(a1, a2, a3) -- Line: 7 -- upvalues: State (val), Char (val) -- types: a1: userdata
+    local WorldModel = a1:FindFirstChildOfClass("WorldModel")
+    local Camera = Instance.new("Camera")
+    Camera.FieldOfView = 40
+    Camera.CameraType = Enum.CameraType.Scriptable
+    Camera.Parent = WorldModel
+    a1.CurrentCamera = Camera
+    local u15 = State.new(nil)
+    local u16 = false
+
+    local function clear() -- Line: 19 -- upvalues: u15 (val)
+        if u15.get() then
+            u15.get():Destroy()
+            u15.set(nil)
+        end
+    end
+
+    local function update() -- Line: 26 -- upvalues: u15 (val), Char (upval), WorldModel (val), a3 (val), Camera (val)
+        local v1
+        if u15.get() then
+            u15.get():Destroy()
+            u15.set(nil)
+        end
+        if not Char.get() then
+            print("no character?")
+            return
+        end
+        Char.get().Archivable = true
+        local v2 = Char.get():Clone()
+        v2:PivotTo((CFrame.new(0, 0, 0)))
+        v2.Parent = WorldModel
+        u15.set(v2)
+        Char.get().Archivable = false
+        if not a3 then
+            Camera.CFrame = v2.Head.CFrame * CFrame.Angles(0, 3.141592653589793, 0) * CFrame.new(0, 0.2, 3.5)
+        else
+            Camera.CFrame = v2.HumanoidRootPart.CFrame * CFrame.Angles(0, 3.141592653589793, 0) * CFrame.new(0, -0.2, 9)
+        end
+        for i, j in v2:GetDescendants() do
+            if not j:IsA("BasePart") then
+                if j:IsA("LocalScript") or j:IsA("Sound") or j:IsA("IKControl") then
+                    j:Destroy()
+                end
+            elseif not a3 or j.Name == "HumanoidRootPart" then
+                v1 = j.Parent == v2
+                j.Anchored = v1
+            end
+        end
+    end
+
+    a2.hook(function(a1) -- Line: 66 -- upvalues: u16 (ref), update (val)
+        if a1 and u16 then
+            u16 = false
+            update()
+        end
+    end)
+    Char.hook(function(a1) -- Line: 75 -- upvalues: u16 (ref) -- types: a1: userdata
+        u16 = true
+        a1.DescendantAdded:Connect(function() -- Line: 78 -- upvalues: u16 (upval)
+            u16 = true
+        end)
+        a1.DescendantRemoving:Connect(function() -- Line: 81 -- upvalues: u16 (upval)
+            u16 = true
+        end)
+    end)
+    return u15
+end
+
+return v1

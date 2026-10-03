@@ -1,0 +1,5 @@
+-- Path : StarterPlayer.StarterPlayerScripts.Wind
+-- Script path: StarterPlayer.StarterPlayerScripts.Wind
+-- Decompile time: 0.10 ms
+
+require(game.ReplicatedStorage.WindShake):Init({MatchWorkspaceWind = false})

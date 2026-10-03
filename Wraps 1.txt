@@ -1,0 +1,18 @@
+-- Path : Workspace.Map.Tiles.GunShopTile.PatriotWeapons.Interior.Crates.Gunsmith Crate.CrateOptions.Wraps 1
+-- Script path: Workspace.Map.Tiles.GunShopTile.PatriotWeapons.Interior.Crates.Gunsmith Crate.CrateOptions.Wraps 1
+-- Decompile time: 0.41 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local v1 = {}
+require(ReplicatedStorage.Modules.Game.ItemCustomization.ItemCustomizationUI.CustomizationCategories)
+require(ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+v1.crate_name = "Wraps I"
+v1.crate_color_type = "Basic"
+v1.category = "weapon_visuals"
+v1.layout_order = 1
+v1.bias = 1
+v1.items = {}
+for i, j in {"Carbon", "Sci-Fi Grey Panel", "Cyan Cyber", "Frost", "Red Vector"} do
+    table.insert(v1.items, {item_type = "cosmetic", name = j})
+end
+return v1

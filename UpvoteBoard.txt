@@ -1,0 +1,42 @@
+-- Path : ReplicatedStorage.Modules.Game.Analytics.UpvoteBoard
+-- Script path: ReplicatedStorage.Modules.Game.Analytics.UpvoteBoard
+-- Decompile time: 1.44 ms
+
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+game:GetService("ReplicatedStorage")
+local u26 = {}
+u26.board_class = StatefulObject.new_class(function() -- Line: 8 -- upvalues: State (val)
+    return {start = State.new(0), likes = State.new(0), goal = State.new(0)}
+end, script.Name)
+
+function u26.initiate() end
+
+function u26.loaded() -- Line: 22 -- upvalues: u26 (val), Util (val), State (val)
+    u26.board_class.hook(function(a1) -- Line: 23 -- upvalues: Util (upval), State (upval)
+        local u5 = Util.wait_for_descendant(a1.instance, "LikeGoalLabel")
+        local u10 = Util.wait_for_descendant(a1.instance, "ProgressBar")
+        local u14 = State.new(function() -- Line: 27 -- upvalues: a1 (val)
+            local v1 = a1.states.start.get()
+            local v2 = a1.states.likes.get() - v1
+            local v3 = (a1.states.goal.get()) - v1
+            return (tostring(v2)) .. " / " .. tostring(v3)
+        end)
+        return function() -- Line: 35 -- upvalues: u14 (val), a1 (val), Util (upval), u10 (val), u5 (val)
+            u14.hook(function(a1_2) -- Line: 36 -- upvalues: a1 (upval), Util (upval), u10 (upval), u5 (upval)
+                local v1 = a1.states.start.get()
+                local v2 = a1.states.goal.get()
+                local v3 = a1.states.likes.get()
+                local v4 = 0
+                if v2 ~= 0 and v3 ~= 0 then
+                    v4 = math.clamp((v3 - v1) / (v2 - v1), 0, 1)
+                end
+                Util.tween(u10, TweenInfo.new(0.5), {Size = UDim2.fromScale(v4, 1)})
+                u5.Text = a1_2
+            end)
+        end
+    end)
+end
+
+return u26

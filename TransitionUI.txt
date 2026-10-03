@@ -1,0 +1,76 @@
+-- Path : ReplicatedStorage.Modules.Game.UI.TransitionUI
+-- Script path: ReplicatedStorage.Modules.Game.UI.TransitionUI
+-- Decompile time: 1.78 ms
+
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local Tween = require(game.ReplicatedStorage.Modules.Core.Tween)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local u28 = {}
+u28.enabled = State.new(false)
+u28.conditional_enabled = State.new(false)
+
+local function fade_in(a1) -- Line: 12 -- upvalues: UI (val), Tween (val) -- types: a1: number
+    local TransitionFrame = UI.get("TransitionFrame")
+    TransitionFrame.Visible = true
+    TransitionFrame.BackgroundTransparency = 1
+    TransitionFrame.LogoHolder.Logo.ImageTransparency = 1
+    local v1 = Tween.create(TransitionFrame, TweenInfo.new(a1 / 2), {BackgroundTransparency = 0})
+    local v2 = Tween.create(TransitionFrame.LogoHolder.Logo, TweenInfo.new(a1 / 2), {ImageTransparency = 0})
+    v1:Play()
+    task.wait(a1 / 2)
+    v2:Play()
+    v2.Completed:Wait()
+end
+
+local function fade_out(a1) -- Line: 30 -- upvalues: UI (val), Tween (val) -- types: a1: number
+    local TransitionFrame = UI.get("TransitionFrame")
+    local v1 = Tween.create(TransitionFrame, TweenInfo.new(a1 / 2), {BackgroundTransparency = 1})
+    Tween.create(TransitionFrame.LogoHolder.Logo, TweenInfo.new(a1 / 2), {ImageTransparency = 1}):Play()
+    task.wait(a1 / 2)
+    v1:Play()
+    v1.Completed:Wait()
+end
+
+function u28.conditional_transition(a1, a2, a3) -- Line: 44
+    -- upvalues: u28 (val), UI (val), fade_in (val), fade_out (val)
+    if u28.enabled.get() then
+        return
+    end
+    UI.get("TransitionFrame").LogoHolder.Visible = not a3
+    u28.enabled.set(true)
+    u28.conditional_enabled.set(true)
+    fade_in(a1, a3 or false)
+    if u28.conditional_enabled.get() then
+        u28.conditional_enabled.wait()
+    end
+    fade_out(a2, a3 or false)
+    u28.enabled.set(false)
+end
+
+function u28.transition(a1, a2, a3, a4) -- Line: 67
+    -- upvalues: u28 (val), UI (val), fade_in (val), fade_out (val)
+    if u28.enabled.get() then
+        return
+    end
+    UI.get("TransitionFrame").LogoHolder.Visible = not a4
+    u28.enabled.set(true)
+    fade_in(a1)
+    task.wait(a2)
+    fade_out(a3)
+    u28.enabled.set(false)
+end
+
+function u28.initiate() end
+
+function u28.loaded() -- Line: 90 -- upvalues: Util (val), UI (val)
+    Util.load_debug_print("Loading: Watch value")
+    Util.watch_attribute(game.Players.LocalPlayer, "is_session_locked", function(a1) -- Line: 104 -- upvalues: UI (upval)
+        local SessionLockedLabel = UI.get("SessionLockedLabel")
+        if typeof(SessionLockedLabel) == "Instance" then
+            SessionLockedLabel.Visible = a1 or false
+        end
+    end)
+end
+
+return u28

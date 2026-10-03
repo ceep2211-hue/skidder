@@ -1,0 +1,163 @@
+-- Path : ReplicatedStorage.Modules.Game.Ads.TVVideoAdsClient
+-- Script path: ReplicatedStorage.Modules.Game.Ads.TVVideoAdsClient
+-- Decompile time: 3.70 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Net = require(ReplicatedStorage.Modules.Core.Net)
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local AdService = game:GetService("AdService")
+local UI = require(ReplicatedStorage.Modules.Core.UI)
+local Util = require(ReplicatedStorage.Modules.Core.Util)
+local Char = require(ReplicatedStorage.Modules.Core.Char)
+local UIFX = require(ReplicatedStorage.Modules.Core.UIFX)
+local NotificationsUI = require(ReplicatedStorage.Modules.Game.UI.NotificationsUI)
+local u55 = {}
+u55.accept_gui_enabled = State.new(false)
+u55.home_video_ad_class = StatefulObject.new_class(function() -- Line: 14 -- upvalues: State (val)
+    return {ads_enabled = State.new(false), reward_per_ad_dollars = State.new(0)}
+end, "HomeVideoAdModel")
+local u66 = State.new(false)
+
+local function is_ad_session_stuck() -- Line: 34
+    return game.Players.LocalPlayer:GetAttribute("AdSessionStuck") == true
+end
+
+local u68 = {
+    [Enum.AdAvailabilityResult.PlayerIneligible] = "Your account is ineligible for ads",
+    [Enum.AdAvailabilityResult.DeviceIneligible] = "Your device is ineligible for ads",
+    [Enum.AdAvailabilityResult.PublisherIneligible] = "Ad could not be shown",
+    [Enum.AdAvailabilityResult.ExperienceIneligible] = "Ad could not be shown",
+    [Enum.AdAvailabilityResult.NoFill] = "There are currently no ads to show",
+    [Enum.AdAvailabilityResult.InternalError] = "Ads are not responding. Rejoin the game to watch ads again",
+}
+
+local function is_ineligible(a1) -- Line: 50 -- upvalues: u68 (val)
+    for i, j in u68 do
+        if a1 == i then
+            return true, j
+        end
+    end
+    return false, "You are eligible"
+end
+
+local function check_for_ads() -- Line: 60 -- upvalues: AdService (val), u68 (val)
+    local v1
+    local success, result = pcall(function() -- Line: 61 -- upvalues: AdService (upval)
+        return AdService:GetAdAvailabilityNowAsync(Enum.AdFormat.RewardedVideo)
+    end)
+    if not success then
+        return false, "Ads are not responding. Rejoin the game to watch ads again"
+    end
+    if success and result.AdAvailabilityResult == Enum.AdAvailabilityResult.IsAvailable then
+        return true
+    end
+    for i, j in u68 do
+        if result.AdAvailabilityResult == i then
+            v1 = j
+            if true then
+                return false, v1
+            end
+            return false, "No ads available"
+        end
+    end
+    if false then
+        return false, "You are eligible"
+    end
+    return false, "No ads available"
+end
+
+local function trigger_ad() -- Line: 82
+    -- upvalues: NotificationsUI (val), u55 (val), check_for_ads (val), u66 (val), Net (val)
+    if game.Players.LocalPlayer:GetAttribute("AdSessionStuck") == true then
+        NotificationsUI.show_notification(nil, "Your last ad did not close properly. Rejoin the game to watch ads again")
+        u55.accept_gui_enabled.set(false)
+        return
+    end
+    local v1, v2 = check_for_ads()
+    if not v1 then
+        NotificationsUI.show_notification(nil, (tostring(v2)))
+        u55.accept_gui_enabled.set(false)
+        return
+    end
+    if not u66.get() then
+        u55.accept_gui_enabled.set(false)
+        return
+    end
+    u55.accept_gui_enabled.set(false)
+    local play_tv_video_ad, play_tv_video_ad_2 = Net.get("play_tv_video_ad")
+    if not play_tv_video_ad and typeof(play_tv_video_ad_2) == "string" then
+        NotificationsUI.show_notification(nil, play_tv_video_ad_2)
+    end
+    u55.accept_gui_enabled.set(not play_tv_video_ad)
+end
+
+function u55.initiate() -- Line: 109 -- upvalues: Net (val), u55 (val)
+    Net.hook("finish_tv_video_ad", function(a1, a2) -- Line: 110 -- upvalues: u55 (upval) -- types: a1: boolean
+        u55.accept_gui_enabled.set(true)
+    end)
+end
+
+function u55.loaded() -- Line: 117
+    -- upvalues: UI (val), trigger_ad (val), u55 (val), UIFX (val), NotificationsUI (val), Util (val), Char (val)
+    -- upvalues: u66 (val)
+    UI.get("VideoAdAcceptGui")
+    local VideoAdAccept = UI.get("VideoAdAccept")
+    local VideoAdCancel = UI.get("VideoAdCancel")
+    local VideoAdLabel = UI.get("VideoAdLabel")
+    UI.on_click(VideoAdAccept, function() -- Line: 123 -- upvalues: trigger_ad (upval)
+        trigger_ad()
+    end)
+    UI.on_click(VideoAdCancel, function() -- Line: 127 -- upvalues: u55 (upval)
+        u55.accept_gui_enabled.set(false)
+    end)
+    u55.accept_gui_enabled.hook(function(a1, a2) -- Line: 131 -- upvalues: UIFX (upval), UI (upval)
+        if a1 then
+            UIFX.scale_open(UI.get("VideoAdAcceptFrame"))
+            return
+        end
+        UIFX.scale_close(UI.get("VideoAdAcceptFrame"))
+    end)
+    u55.home_video_ad_class.hook(function(a1) -- Line: 140
+        -- upvalues: NotificationsUI (upval), VideoAdLabel (val), u55 (upval), Util (upval), Char (upval), u66 (upval)
+        local function trigger() -- Line: 141
+            -- upvalues: a1 (val), NotificationsUI (upval), VideoAdLabel (upval), u55 (upval)
+            if not a1.states.ads_enabled.get() then
+                return
+            end
+            if game.Players.LocalPlayer:GetAttribute("AdSessionStuck") == true then
+                NotificationsUI.show_notification(nil, "Your last ad did not close properly. Rejoin the game to watch ads again")
+                return
+            end
+            local v1 = a1.states.reward_per_ad_dollars.get()
+            VideoAdLabel.Text = ("Watch an ad on your TV<br/>to earn <font color=\"#3DFF3D\"><b>$%*</b></font>"):format(v1)
+            u55.accept_gui_enabled.set(true)
+        end
+
+        Util.hook_children(a1.instance, function(a1) -- Line: 155
+            -- upvalues: Util (upval), Char (upval), u66 (upval), trigger (val), u55 (upval)
+            if a1:IsA("Seat") then
+                local u5 = false
+                Util.watch_property(a1, "Occupant", function(a1) -- Line: 159 -- upvalues: Char (upval), u5 (ref), u66 (upval), trigger (upval), u55 (upval)
+                    if a1 and a1 == Char.current_hum.get() then
+                        u5 = true
+                        u66.set(true)
+                        trigger()
+                        return
+                    end
+                    if u5 then
+                        u5 = false
+                        u66.set(false)
+                        u55.accept_gui_enabled.set(false)
+                    end
+                end)
+            end
+        end)
+        return function() -- Line: 177 -- upvalues: a1 (val)
+            a1.states.ads_enabled.hook(function(a1) end)
+            a1.states.reward_per_ad_dollars.hook(function(a1) end)
+        end
+    end)
+end
+
+return u55

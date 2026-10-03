@@ -1,0 +1,23 @@
+-- Path : Workspace.Vehicles.SRT.Scripts.Units
+-- Script path: Workspace.Vehicles.SRT.Scripts.Units
+-- Decompile time: 0.26 ms
+
+local u0 = {}
+
+function u0.studsToMiles(a1) -- Line: 7 -- types: a1: number
+    return a1 / 5280
+end
+
+function u0.milesToStuds(a1) -- Line: 11 -- types: a1: number
+    return a1 * 5280
+end
+
+function u0.studsPerSecondToMilesPerHour(a1) -- Line: 15 -- upvalues: u0 (val) -- types: a1: number
+    return u0.studsToMiles(a1) * 3600
+end
+
+function u0.milesPerHourToStudsPerSecond(a1) -- Line: 21 -- upvalues: u0 (val) -- types: a1: number
+    return u0.milesToStuds(a1) / 3600
+end
+
+return u0

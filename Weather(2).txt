@@ -1,0 +1,435 @@
+-- Path : ReplicatedStorage.Modules.Game.Weather
+-- Script path: ReplicatedStorage.Modules.Game.Weather
+-- Decompile time: 10.00 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Util = require(ReplicatedStorage.Modules.Core.Util)
+local State = require(ReplicatedStorage.Modules.Core.State)
+local Net = require(ReplicatedStorage.Modules.Core.Net)
+local Rain = require(script.Rain)
+local u24 = {}
+local u27 = TweenInfo.new(5)
+local u30 = TweenInfo.new(12)
+local u35 = Color3.fromRGB(124, 123, 121)
+local u40 = Color3.fromRGB(54, 54, 54)
+local u45 = Color3.fromRGB(60, 59, 60)
+local u50 = Color3.fromRGB(38, 38, 43)
+local u55 = Color3.fromRGB(120, 130, 145)
+local u60 = Color3.fromRGB(150, 158, 172)
+local u65 = Color3.fromRGB(226, 236, 255)
+u24.weather_density = 0
+u24.weather_blend = State.new(0)
+u24.raining = State.new(false)
+u24.storming = State.new(false)
+u24.misty = State.new(false)
+local u79 = nil
+local u80 = {}
+local u81 = {}
+local u82 = 0
+local u83 = 0
+local u84 = 0
+local u85 = nil
+local u86 = nil
+local u87 = nil
+
+local function build_lightning() -- Line: 115 -- upvalues: u79 (ref), u65 (val), u80 (val), u81 (val)
+    local Part, Sound
+    local __LightningFlash = game.Lighting:FindFirstChild("__LightningFlash")
+    if __LightningFlash then
+        __LightningFlash:Destroy()
+    end
+    local __LightningBolt = workspace:FindFirstChild("__LightningBolt")
+    if __LightningBolt then
+        __LightningBolt:Destroy()
+    end
+    u79 = Instance.new("ColorCorrectionEffect")
+    u79.Name = "__LightningFlash"
+    u79.Brightness = 0
+    u79.Contrast = 0
+    u79.Saturation = 0
+    u79.TintColor = Color3.new(1, 1, 1)
+    u79.Enabled = true
+    u79.Parent = game.Lighting
+    local Folder = Instance.new("Folder")
+    Folder.Name = "__LightningBolt"
+    for i = 1, 12 do
+        Part = Instance.new("Part")
+        Part.Name = "Segment"
+        Part.Anchored = true
+        Part.CanCollide = false
+        Part.CanQuery = false
+        Part.CanTouch = false
+        Part.CastShadow = false
+        Part.Locked = true
+        Part.Material = Enum.Material.Neon
+        Part.Color = u65
+        Part.Transparency = 1
+        Part.Size = Vector3.new(1, 1, 1)
+        Part.Parent = Folder
+        u80[i] = Part
+    end
+    Folder.Parent = workspace
+    for j = 1, 3 do
+        Sound = Instance.new("Sound")
+        Sound.Name = "Thunder" .. j
+        Sound.SoundId = "rbxassetid://4961240438"
+        Sound.Volume = 0
+        Sound.Parent = game:GetService("SoundService")
+        u81[j] = Sound
+    end
+end
+
+local function build_mist() -- Line: 167 -- upvalues: u85 (ref), u86 (ref)
+    local __MistVolume = workspace:FindFirstChild("__MistVolume")
+    if __MistVolume then
+        __MistVolume:Destroy()
+    end
+    u85 = Instance.new("Part")
+    u85.Name = "__MistVolume"
+    u85.Anchored = true
+    u85.CanCollide = false
+    u85.CanQuery = false
+    u85.CanTouch = false
+    u85.CastShadow = false
+    u85.Locked = true
+    u85.Transparency = 1
+    u85.Size = Vector3.new(260, 10, 260)
+    u85.CFrame = CFrame.new(0, 256, 0)
+    u85.Parent = workspace
+    u86 = Instance.new("ParticleEmitter")
+    u86.Name = "Mist"
+    u86.Texture = "rbxasset://textures/particles/smoke_main.dds"
+    u86.Color = ColorSequence.new(Color3.fromRGB(196, 204, 216))
+    u86.LightEmission = 0
+    u86.LightInfluence = 1
+    u86.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 40), (NumberSequenceKeypoint.new(1, 115))})
+    u86.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.3, 0.88),
+        NumberSequenceKeypoint.new(0.7, 0.88),
+        (NumberSequenceKeypoint.new(1, 1)),
+    })
+    u86.Lifetime = NumberRange.new(16, 24)
+    u86.Rate = 5
+    u86.Speed = NumberRange.new(1, 3)
+    u86.SpreadAngle = Vector2.new(180, 180)
+    u86.Rotation = NumberRange.new(0, 360)
+    u86.RotSpeed = NumberRange.new(-4, 4)
+    u86.Acceleration = Vector3.new(0.4000000059604645, 0, 0.25)
+    u86.ZOffset = -2
+    u86.Enabled = false
+    u86.Parent = u85
+end
+
+local function set_mist_active(a1) -- Line: 214
+    -- upvalues: u86 (ref), u87 (ref), Util (val), u85 (ref)
+    if not u86 then
+        return
+    end
+    u86.Enabled = a1
+    if a1 and not u87 then
+        u87 = Util.run(function() -- Line: 219 -- upvalues: u85 (upval)
+            local CurrentCamera = workspace.CurrentCamera
+            if not CurrentCamera then
+                return
+            end
+            local Position = CurrentCamera.CFrame.Position
+            u85.CFrame = CFrame.new(Position.X, 256, Position.Z)
+        end)
+        return
+    end
+    if not a1 and u87 then
+        u87:Disconnect()
+        u87 = nil
+    end
+end
+
+local function hide_bolt() -- Line: 231 -- upvalues: u80 (val)
+    for i, j in u80 do
+        j.Transparency = 1
+    end
+end
+
+local function show_bolt() -- Line: 238 -- upvalues: u83 (ref), u80 (val)
+    local v1
+    local v2 = u83
+    for i = 1, v2 do
+        v1 = u80[i]
+        v1.Transparency = 0
+    end
+end
+
+local function draw_bolt(a1, a2, a3, a4) -- Line: 246
+    -- upvalues: u83 (ref), u80 (val)
+    local Magnitude, lookAt, v1, v2, v3, v4, v5
+    local v6 = Random.new(a3)
+    local v7 = math.clamp(a4 / 250, 8, 40)
+    local v8 = Vector3.new(a1.X, a2, a1.Z)
+    local v9 = table.create(13)
+    for i = 0, 12 do
+        v1 = i / 12
+        v2 = v8:Lerp(a1, v1)
+        if i > 0 and i < 12 then
+            v3 = (1 - v1) * 90
+            v2 = v2 + Vector3.new(v6:NextNumber(-v3, v3), 0, (v6:NextNumber(-v3, v3)))
+        end
+        v9[i + 1] = v2
+    end
+    u83 = 0
+    for j, k in u80 do
+        v3 = v9[j]
+        v4 = v9[j + 1]
+        Magnitude = (v4 - v3).Magnitude
+        if not (Magnitude > 0.01) then
+            k.Transparency = 1
+        else
+            k.Size = Vector3.new(v7, v7, Magnitude)
+            lookAt = CFrame.lookAt
+            v5 = (v3 + v4) / 2
+            k.CFrame = lookAt(v5, v4)
+            k.Transparency = 0
+            u83 = j
+        end
+    end
+end
+
+local function play_flash(a1) -- Line: 279
+    -- upvalues: u84 (ref), u79 (ref), u80 (val), u83 (ref), Util (val)
+    u84 = u84 + 1
+    local u3 = u84
+    task.spawn(function() -- Line: 283
+        -- upvalues: u79 (upval), a1 (val), u84 (upval), u3 (val), u80 (upval), u83 (upval), Util (upval)
+        local v1
+        u79.Brightness = a1
+        task.wait(0.05)
+        if u84 ~= u3 then
+            return
+        end
+        u79.Brightness = a1 * 0.15
+        for i, j in u80 do
+            j.Transparency = 1
+        end
+        task.wait(0.04)
+        if u84 ~= u3 then
+            return
+        end
+        u79.Brightness = a1 * 0.7
+        local v2 = u83
+        for k = 1, v2 do
+            v1 = u80[k]
+            v1.Transparency = 0
+        end
+        Util.tween(u79, TweenInfo.new(0.35), {Brightness = 0})
+        task.wait(0.07)
+        if u84 ~= u3 then
+            return
+        end
+        for n, m in u80 do
+            m.Transparency = 1
+        end
+    end)
+end
+
+local function play_thunder(a1) -- Line: 302 -- upvalues: u82 (ref), u81 (val) -- types: a1: number
+    u82 = u82 % 3 + 1
+    local u6 = u81[u82]
+    local u9 = a1 < 4500
+    task.delay(a1 / 1100, function() -- Line: 307 -- upvalues: u6 (val), u9 (val), a1 (val)
+        u6.SoundId = if not u9 then "rbxassetid://4961240438" else "rbxassetid://140089926923698"
+        u6.Volume = math.clamp(1 - a1 / 10000, 0.2, 1) * 0.55
+        u6.PlaybackSpeed = if not u9 then 0.85 else 1
+        u6:Play()
+    end)
+end
+
+function u24.strike(a1, a2, a3) -- Line: 315
+    -- upvalues: draw_bolt (val), u84 (ref), u79 (ref), u80 (val), u83 (ref), Util (val), u82 (ref), u81 (val)
+    local Magnitude
+    local CurrentCamera = workspace.CurrentCamera
+    if not CurrentCamera then
+        Magnitude = 9000
+    else
+        Magnitude = (CurrentCamera.CFrame.Position - a1).Magnitude
+        if not Magnitude then
+            Magnitude = 9000
+        end
+    end
+    draw_bolt(a1, a2, a3, Magnitude)
+    local u29 = math.clamp(1 - Magnitude / 9000, 0.2, 1) * 0.55
+    u84 = u84 + 1
+    local u32 = u84
+    task.spawn(function() -- Line: 283
+        -- upvalues: u79 (upval), u29 (val), u84 (upval), u32 (val), u80 (upval), u83 (upval), Util (upval)
+        local v1
+        u79.Brightness = u29
+        task.wait(0.05)
+        if u84 ~= u32 then
+            return
+        end
+        u79.Brightness = u29 * 0.15
+        for i, j in u80 do
+            j.Transparency = 1
+        end
+        task.wait(0.04)
+        if u84 ~= u32 then
+            return
+        end
+        u79.Brightness = u29 * 0.7
+        local v2 = u83
+        for k = 1, v2 do
+            v1 = u80[k]
+            v1.Transparency = 0
+        end
+        Util.tween(u79, TweenInfo.new(0.35), {Brightness = 0})
+        task.wait(0.07)
+        if u84 ~= u32 then
+            return
+        end
+        for n, m in u80 do
+            m.Transparency = 1
+        end
+    end)
+    u82 = u82 % 3 + 1
+    local u41 = u81[u82]
+    local u44 = Magnitude < 4500
+    task.delay(Magnitude / 1100, function() -- Line: 307 -- upvalues: u41 (val), u44 (val), Magnitude (val)
+        u41.SoundId = if not u44 then "rbxassetid://4961240438" else "rbxassetid://140089926923698"
+        u41.Volume = math.clamp(1 - Magnitude / 10000, 0.2, 1) * 0.55
+        u41.PlaybackSpeed = if not u44 then 0.85 else 1
+        u41:Play()
+    end)
+end
+
+function u24.initiate() end
+
+function u24.loaded() -- Line: 328
+    -- upvalues: build_lightning (val), build_mist (val), u24 (val), u30 (val), u27 (val), Rain (val)
+    -- upvalues: set_mist_active (val), Util (val), u55 (val), u60 (val), u35 (val), u40 (val), u50 (val), u45 (val)
+    -- upvalues: u84 (ref), u79 (ref), u80 (val), Net (val)
+    build_lightning()
+    build_mist()
+    local Atmosphere = game.Lighting:FindFirstChild("Atmosphere")
+    local Clouds = workspace.Terrain:FindFirstChild("Clouds")
+    local Offset = Atmosphere
+    if Offset then
+        Offset = Atmosphere.Offset
+    end
+    local Glare = Atmosphere
+    if Glare then
+        Glare = Atmosphere.Glare
+    end
+    local Haze = Atmosphere
+    if Haze then
+        Haze = Atmosphere.Haze
+    end
+    local Decay = Atmosphere
+    if Decay then
+        Decay = Atmosphere.Decay
+    end
+    local Color = Atmosphere
+    if Color then
+        Color = Atmosphere.Color
+    end
+    local Cover = Clouds
+    if Cover then
+        Cover = Clouds.Cover
+    end
+    local Color_2 = Clouds
+    if Color_2 then
+        Color_2 = Clouds.Color
+    end
+    local NumberValue = Instance.new("NumberValue")
+    NumberValue.Changed:Connect(function(a1) -- Line: 348 -- upvalues: u24 (upval)
+        u24.weather_blend.set(a1)
+    end)
+    local NumberValue_2 = Instance.new("NumberValue")
+    NumberValue_2.Value = 0
+    NumberValue_2.Changed:Connect(function(a1) -- Line: 354 -- upvalues: u24 (upval)
+        u24.weather_density = a1
+    end)
+
+    local function apply_look() -- Line: 358
+        -- upvalues: u24 (upval), u30 (upval), u27 (upval), Rain (upval), set_mist_active (upval), Util (upval)
+        -- upvalues: NumberValue (val), NumberValue_2 (val), Atmosphere (val), u55 (upval), u60 (upval), u35 (upval)
+        -- upvalues: u40 (upval), Offset (val), Glare (val), Haze (val), Decay (val), Color (val), Clouds (val)
+        -- upvalues: Color_2 (val), u50 (upval), u45 (upval), Cover (val), u84 (upval), u79 (upval), u80 (upval)
+        local v1, v2
+        local v3 = u24.raining.get()
+        local v4 = u24.storming.get()
+        local v5 = u24.misty.get()
+        if not v3 then
+            Rain:Disable(u27)
+        else
+            Rain:Enable(u27)
+        end
+        set_mist_active(v5)
+        Util.tween(NumberValue, if not v5 then u27 else u30, {Value = if not v3 and not v5 then 0 else 1})
+        local v6 = {Value = if not v5 then 0 else 0.55}
+        Util.tween(NumberValue_2, v1, v6)
+        if Atmosphere then
+            local v7, v8, v9
+            if v5 then
+                v2 = 0.85
+                v7 = 0
+                v8 = 2.2
+                v6 = u55
+                v9 = u60
+            elseif not v3 then
+                v2 = Offset
+                v7 = Glare
+                v8 = Haze
+                v6 = Decay
+                v9 = Color
+            else
+                v2 = 0.5
+                v7 = 1.5
+                v8 = 3.5
+                v6 = u35
+                v9 = u40
+            end
+            Util.tween(Atmosphere, v1, {
+                Offset = v2,
+                Glare = v7,
+                Haze = v8,
+                Decay = v6,
+                Color = v9,
+            })
+        end
+        if Clouds then
+            v2 = Color_2
+            if v4 then
+                v2 = u50
+            elseif v3 then
+                v2 = u45
+            end
+            Util.tween(Clouds, v1, {Cover = if not v3 then Cover else 1, Color = v2})
+        end
+        if not v4 then
+            u84 = u84 + 1
+            if u79 then
+                u79.Brightness = 0
+            end
+            for i, j in u80 do
+                j.Transparency = 1
+            end
+        end
+    end
+
+    u24.raining.hook(apply_look)
+    u24.storming.hook(apply_look)
+    u24.misty.hook(apply_look)
+    Util.watch_attribute(game.Lighting, "Raining", function(a1) -- Line: 425 -- upvalues: u24 (upval)
+        u24.raining.set(a1 == true)
+    end)
+    Util.watch_attribute(game.Lighting, "Storming", function(a1) -- Line: 429 -- upvalues: u24 (upval)
+        u24.storming.set(a1 == true)
+    end)
+    Util.watch_attribute(game.Lighting, "Misty", function(a1) -- Line: 433 -- upvalues: u24 (upval)
+        u24.misty.set(a1 == true)
+    end)
+    Net.hook("lightning", function(a1, a2, a3) -- Line: 439 -- upvalues: u24 (upval)
+        u24.strike(a1, a2, a3)
+    end)
+end
+
+return u24

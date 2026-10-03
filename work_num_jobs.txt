@@ -1,0 +1,19 @@
+-- Path : ReplicatedStorage.Modules.Game.Quests.QuestsData.Milestones.work_num_jobs
+-- Script path: ReplicatedStorage.Modules.Game.Quests.QuestsData.Milestones.work_num_jobs
+-- Decompile time: 0.17 ms
+
+return {
+    {
+        display_name = "Work 3 different jobs",
+        max_counter = 3,
+        layout_order = 4,
+        requirements = "Work {max_counter} different jobs",
+        rewards = {
+            {
+                image = "rbxassetid://88361362997984",
+                name = "+{amount} XP",
+                item_info = {item_type = "xp", skill_name = "janitor", amount = 100},
+            },
+        },
+    },
+}

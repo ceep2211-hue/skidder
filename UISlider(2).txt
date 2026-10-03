@@ -1,0 +1,47 @@
+-- Path : ReplicatedStorage.Modules.Game.UI.UISlider
+-- Script path: ReplicatedStorage.Modules.Game.UI.UISlider
+-- Decompile time: 1.92 ms
+
+require(game.ReplicatedStorage.Modules.Core.Tween)
+require(game.ReplicatedStorage.Modules.Core.Util)
+require(game.ReplicatedStorage.Modules.Core.UIFX)
+require(game.ReplicatedStorage.Modules.Core.UI)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+require(game.ReplicatedStorage.Modules.Core.Audio)
+game:GetService("UserInputService")
+local Mouse = game.Players.LocalPlayer:GetMouse()
+return {
+    setup_slider = function(a1, a2) -- Line: 14 -- upvalues: State (val), Mouse (val)
+        local u2 = false
+        local u6 = State.new(a2 or 0)
+        u6.hook(function(a1_2) -- Line: 18 -- upvalues: a1 (val)
+            a1.Bar.Grab.Position = UDim2.fromScale(a1_2, 0.5)
+        end)
+        a1.InputBegan:Connect(function(a1_2) -- Line: 28 -- upvalues: u2 (ref), a1 (val), Mouse (upval), u6 (val)
+            if a1_2.UserInputType == Enum.UserInputType.MouseButton1
+                or a1_2.UserInputType == Enum.UserInputType.Touch then
+                u2 = true
+                local X = a1.Bar.AbsoluteSize.X
+                u6.set((math.clamp(((Vector2.new(Mouse.X, Mouse.Y)) - a1.Bar.AbsolutePosition).X / X, 0, 1)))
+            end
+        end)
+        a1.InputEnded:Connect(function(a1) -- Line: 38 -- upvalues: u2 (ref)
+            if a1.UserInputType == Enum.UserInputType.MouseButton1
+                or a1.UserInputType == Enum.UserInputType.Touch then
+                u2 = false
+            end
+        end)
+        a1.InputChanged:Connect(function(a1_2) -- Line: 44 -- upvalues: u2 (ref), a1 (val), Mouse (upval), u6 (val)
+            if u2 then
+                if a1_2.UserInputType == Enum.UserInputType.MouseMovement
+                    or a1_2.UserInputType == Enum.UserInputType.Touch then
+                    local X = a1.Bar.AbsoluteSize.X
+                    u6.set((math.clamp(((Vector2.new(Mouse.X, Mouse.Y)) - a1.Bar.AbsolutePosition).X / X, 0, 1)))
+                end
+            end
+        end)
+        return u6
+    end,
+    initiate = function() end,
+    loaded = function() end,
+}

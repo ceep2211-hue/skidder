@@ -1,0 +1,143 @@
+-- Path : ReplicatedStorage.Modules.Game.GameInfo.Updates
+-- Script path: ReplicatedStorage.Modules.Game.GameInfo.Updates
+-- Decompile time: 0.95 ms
+
+return {
+    version = "1.8.4.4",
+    updates = {
+        {
+            stamp = 1788890400,
+            content = "\t\t- Four new body wraps: Night, Cherry Blossom, Graffiti and Doodles! Find them in the Garage Crate\n",
+        },
+        {
+            stamp = 1788804000,
+            content = "\t\t- BlockSpin+ now has a server browser! Pick which BlockSpin+ server to join from the start screen\n\t\t- Fishing luck increases by 5% during thunderstorms\n",
+        },
+        {
+            stamp = 1788458400,
+            content = "\t\t- Added weather with Rain, Thunderstorms, and Fog/Mist\n\t\t\n",
+        },
+        {
+            stamp = 1779559200,
+            content = "\t\t- Protect your inventory items from being dropped when you die in combat\n\t\t- Sell multiple items at once with Bulk Sell in the Pawn Shop\n\t\t- Drop multiple items at once as well\n\t\t- Record and save funny moments instantly with the new Clip button in the top-left\n",
+        },
+        {
+            stamp = 1778954400,
+            content = "\t\t- Added new inventory slot purchase and inventory slot included with BlockSpin+\n\t\t- Added safe to the basement of the mansion\n\t\t- Bug fixes\n",
+        },
+        {
+            stamp = 1778349600,
+            content = "\t\t- Added new Legendary+ crate to the Personal crates, ONLY IN THE MANSION!\n\t\t- Added the new OMEGA M249, only available in the new Legendary+ crate!\n",
+        },
+        {
+            stamp = 1777744800,
+            content = "\t\t- Added NEW HUMVEE car, roll around in this military beast, with 8 passengers!\n\t\t- Added NEW Mansion Basement upgrade! How much do you have in your vault? \n\t\t- Added NEW Personal Pawnshop upgrade & and Personal Weapon crate upgrade, spin from the comfort of your mansion!\n",
+        },
+        {stamp = 1775325600, content = "\t\t- Spray and pray with the NEW Skorpion!\n"},
+        {stamp = 1772301600, content = "\t\t- The Hurricane is now out, only for the super rich!\n"},
+        {
+            stamp = 1768035600,
+            content = "\t\t- Christmas update is now over. Firework Launcher and Christmas skins are no longer available for purchase\n",
+        },
+        {
+            stamp = 1765652400,
+            content = "- New Lowrider car with Christmas skins\n- The Firework Launcher is for sale for a limited time only!\n- Snowballs added across the map\n- Minor bug fixes\n",
+        },
+        {
+            stamp = 1764152756,
+            content = "- Changes to the mansion lockdown mode to prevent non crew members from entering \n- Changes to address issues with invisible boxes on top of certain buildings\n- Minor fixes to areas of the game such as fishing, clothing and more...\n",
+        },
+        {stamp = 1763975988, content = "- Bug fixes\n"},
+        {stamp = 1763233200, content = "- The M16 has been released!\n"},
+        {
+            stamp = 1762023600,
+            content = "- New Update: Awesome Finishers!\n- In this new update for Blockspin, finish off your enemies with brand new, brutal finishers such as the MJ or the Baseball bat!\n- Which new finisher will be your favourite? \n",
+        },
+        {stamp = 1760810400, content = "- New Vehicle: Turbolin\n"},
+        {
+            stamp = 1759600800,
+            content = "- Week 6 of item customisation: Barrels!\n- New Barrels are available at the gunsmith, they are in the new \"barrels and underbarrels\" crate! Open crates and equip them to your favourite guns. \n- Barrels add a brand new way to customise your weapons, making them unique to you and more personal!\n- Silencers allow you to stay quiet, taking down your opponents with an element of stealth! \n- Variety of bug fixes and changes to different areas of the game.\n",
+        },
+        {
+            stamp = 1758996000,
+            content = "- Week 5 of item customisation: Under Barrels!\n- New laser sights are now available at the Gunsmith! Open crates and equip them to your favourite guns. \n- Laser sights add a new way to stand out from the crowd, with a variety to choose from!\n- Laser sights can be especially helpful when fighting players in the dark! \n- Variety of bug fixes and changes to different areas of the game.\n",
+        },
+        {
+            stamp = 1758391200,
+            content = "- Week 4 of item customisation: EXTENDED MAGS!\n- New extended mags are now available at the Gunsmith! Open crates and equip them to your favourite guns. \n- Extended mags allow you to carry more ammo in your weapon. e.g. 45 rounds, 60 rounds. \n- Extended mags can be equipped to a variety of guns, but not all guns.\n- Variety of bug fixes and changes to different areas of the game.\n",
+        },
+        {
+            stamp = 1757786400,
+            content = "- Week 3 of item customisation: Grips!\n- New grips are now available at the Gunsmith! Open crates and equip them to your favourite guns. \n- All grips provide weapons with a reduction in recoil, the rarer the grip, the better the reduction.\n- Scopes V.2 all scopes now provide different amounts of zoom! High rarity scopes provide slightly better accuracy. \n- Variety of bug fixes to different areas of the game.\n",
+        },
+        {
+            stamp = 1757181600,
+            content = "- Week 2 of item customisation: Scopes!\n- Buy and equip scopes at the new gunsmith found in the gun store.\n- All guns can use a variety of scopes based on the weapon platform! e.g. AK + Red dot.\n- Variety of bug fixes to different areas of the game.\n",
+        },
+        {
+            stamp = 1756576800,
+            content = "- Week 1 of item customisation: Skins\n- Buy and equip skins at the new gunsmith found in the gun store\n",
+        },
+        {
+            stamp = 1754679600,
+            content = "- New Fishing update!\t\t\n- New Job: Take on fishing at multiple locations and sell your catch for profit at the steak house. \n- New Gear: Four fishing rods and two bait types (Wormtec & Prawntec), each in three tiers.\n- Progression: Unlock new fishing areas as you level up.\n- Other Updates: New fish varieties and general bug fixes.\n",
+        },
+        {
+            stamp = 1754157600,
+            content = "- New Vehicle: Rezvani\n- Bug fixes\n- Fishing update is coming next week!\n",
+        },
+        {
+            stamp = 1752343200,
+            content = "- Farming: Grows Offline!\n- Regular houses are free to rent and can have up to 6 pots in the garden\n- 4 types of seeds, 3 pots, 2 soils, and 2 fertilisers all accessible at Jack's Hardware Store\n- The cellar in the Quick 11 is now open, check out what is in stock\n- Added an electronics box to the Quick 11 job, requires a high level in swiping\n- Added a sunflower seeds box to the Quick 11 job, requires a high level in farming\n- Added a golden box to the Quick 11 job, stock them every 6 hours for huge rewards\n- Bug fixes\n",
+        },
+        {
+            stamp = 1751673600,
+            content = "- Small Update: Mansion & More\n- The Mansion has been upgraded with state of the art security cameras & bulletproof shutters\n- Added Body Armor & Quick Revive products in the store\n- Added Stang & Mazede cars\n- Bug fixes\n",
+        },
+        {
+            stamp = 1751133600,
+            content = "- Vehicle Customisation Part 6: Braking\n- One time purchase per vehicle for braking upgrades\n- Added spawn protection that lasts until you move or equip an item\n- Bug fixes\n",
+        },
+        {
+            stamp = 1750528800,
+            content = "- Vehicle Customisation Part 5: Rims\n- Rims accessible from 3 vehicle garage crates\n- BlockSpin+ only servers accessible from the splash screen\n- Bug fixes\n",
+        },
+        {
+            stamp = 1749924000,
+            content = "- Vehicle Customisation Part 4: Spoilers\n- Spoilers accessible from 3 vehicle garage crates\n- Bug fixes\n",
+        },
+        {
+            stamp = 1749319200,
+            content = "- Vehicle Customisation Part 3: Glows\n- Glows accessible from the vehicle garage crates\n- Bug fixes\n",
+        },
+        {
+            stamp = 1748714400,
+            content = "- Vehicle Customisation Part 2: Suspension & Horns\n- One time purchase per vehicle for suspension & horn sounds\n- Cullivane and Snow Camo can now be sold at the pawn shop\n- Bug fixes\n",
+        },
+        {
+            stamp = 1748113200,
+            content = "- Vehicle Customisation Part 1: Body Wraps\n- Two accessible garages around the map\n- Open crates to get body wraps which can be used on all bikes & cars\n- Cosmetics can be sold at the pawn shop\n",
+        },
+        {stamp = 1746990000, content = "- Introducing the new Cullivane at a value of $100M"},
+        {
+            stamp = 1745694000,
+            content = "- x5 “EVERYTHING” Crate Tokens per player (Code will be posted in our community server)\n- 2X XP for the rest of the weekend\n- NEW: Accessible Sewers",
+        },
+        {
+            stamp = 1744837200,
+            content = "- Fixed ping issues (Sorry!)\n- Reduced vehicle repair prices for high tier vehicles\n- Improved mobile aiming\n- Moved Quantum Hack Tools to the Spin Club\n",
+        },
+        {
+            stamp = 1744484400,
+            content = "<bold>OMEGA Update:</bold>\nOmega Weapon Crate:\n- Anaconda\n- MP5\n- Uzi\n",
+        },
+        {
+            stamp = 1742634000,
+            content = "<bold>BIG Update:</bold>\nAirdrops:\n- Battle it out for airdrops with a rotating large drop with extra loot\n\nNew Hack Tool:\n- The quantum hack tool is here! At swiper level 90, it is the best hacking card on the market\n\nCrew system:\n- Available to purchase as a one time fee or free access with <bold>BlockSpin+</bold>. Invite up to four players to your crew which will show team members on the map and turn off friendly fire. Extra member slots available \n\nHeadbutt finisher:\n- Try out the awesome headbutt finisher at skill level 15 which has a live feed from everyone else in the game!\n\nSafe Slots:\n- 15 more safe slots available for purchase in bundles of 3 slots per purchase\n\nRoleplay features:\n- Dice Game (Quick-11)\n- Surgical Gloves (Basketball Court Dealer)\n- SpinClub\n\nExtras:\n- Anti cheat improvements \n- Daylight cycle\n- Ambient sound\n- More clothing\n- More visible keybinds (keyboard & gamepad devices)\n",
+        },
+        {
+            stamp = 1741348800,
+            content = "- Burger place shop: sells milkshakes which you can throw!\n- Basketball court dealer: stock up on energy shots to improve your speed\n- Death screen will show who killed you\n- Critical security fixes\n",
+        },
+    },
+}

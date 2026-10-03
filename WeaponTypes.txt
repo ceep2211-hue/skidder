@@ -1,0 +1,5 @@
+-- Path : ReplicatedStorage.Modules.Game.ItemTypes.WeaponTypes
+-- Script path: ReplicatedStorage.Modules.Game.ItemTypes.WeaponTypes
+-- Decompile time: 0.04 ms
+
+return nil

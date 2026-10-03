@@ -1,0 +1,319 @@
+-- Path : ReplicatedStorage.Modules.Game.VehicleSystem.VehicleSeat
+-- Script path: ReplicatedStorage.Modules.Game.VehicleSystem.VehicleSeat
+-- Decompile time: 9.36 ms
+
+game:GetService("ReplicatedStorage")
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local Ragdoll = require(game.ReplicatedStorage.Modules.Game.Ragdoll)
+local Keybinds = require(game.ReplicatedStorage.Modules.Game.Keybinds)
+local Jumping = require(game.ReplicatedStorage.Modules.Game.Character.Jumping)
+require(game.ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local Vehicle = require(game.ReplicatedStorage.Modules.Game.VehicleSystem.Vehicle)
+local SliderMinigame = require(game.ReplicatedStorage.Modules.Game.Minigames.SliderMinigame)
+local NotificationsUI = require(game.ReplicatedStorage.Modules.Game.UI.NotificationsUI)
+local FlagManager_2 = require(game.ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local MultiPlayerAnimation = require(game.ReplicatedStorage.Modules.Game.MultiAnimations.MultiPlayerAnimation)
+local Crate = require(game.ReplicatedStorage.Modules.Game.CrateSystem.Crate)
+local ItemCustomizationUI = require(game.ReplicatedStorage.Modules.Game.ItemCustomization.ItemCustomizationUI)
+local ProximityPromptService = game:GetService("ProximityPromptService")
+local u131 = {
+    FLAG_LOCKPICK_ENABLED = FlagManager_2.FLAG_LOCKPICK_ENABLED,
+    FLAG_PASSENGER_SEATS_CAN_LOCK = FlagManager_2.FLAG_PASSENGER_SEATS_CAN_LOCK,
+    FLAG_IMPROVED_VEHICLE_TELEPORTING = FlagManager_2.FLAG_IMPROVED_VEHICLE_TELEPORTING,
+}
+local LocalPlayer = (game:GetService("Players")).LocalPlayer
+local u142 = RaycastParams.new()
+local u143 = {}
+u143[1] = workspace.DroppedItems
+
+local function create_states() -- Line: 32 -- upvalues: State (val)
+    return {vehicle = State.new(nil), occupant = State.new(nil)}
+end
+
+u131.passenger_seat = StatefulObject.new_class(create_states, "PassengerSeat")
+u131.driver_seat = StatefulObject.new_class(create_states, "DriverSeat")
+
+local function getSeatWeld(a1) -- Line: 42 -- types: a1: userdata
+    local PrimaryPart = a1.PrimaryPart
+    if not PrimaryPart then
+        return nil
+    end
+    for i, j in (PrimaryPart:GetJoints()) do
+        if j.Name == "SeatWeld" then
+            return j
+        end
+    end
+    return nil
+end
+
+function u131.initiate() -- Line: 56
+    -- upvalues: Net (val), SliderMinigame (val), NotificationsUI (val), Char (val), u143 (val)
+    Net.hook("move_player_out_of_vehicle", function(a1, a2) -- Line: 57
+        move_player_out_of_vehicle(a1, a2)
+    end)
+    Net.hook("initiate_lockpicking", function(a1) -- Line: 61
+        -- upvalues: SliderMinigame (upval), NotificationsUI (upval), Net (upval)
+        local u3 = SliderMinigame.server_mode_enabled()
+        if not u3 then
+            SliderMinigame.tries.set(3)
+            SliderMinigame.levels.set(5)
+            SliderMinigame.bar_percentage_increase.set(0)
+            SliderMinigame.start()
+        end
+        SliderMinigame.win:Connect(function(a1_2) -- Line: 76 -- upvalues: NotificationsUI (upval), u3 (val), Net (upval), a1 (val)
+            if not a1_2 then
+                NotificationsUI.show_notification("", "Lockpicking failed!")
+            end
+            if not u3 then
+                if a1_2 then
+                    Net.send("lockpick_success", a1)
+                    return
+                end
+                Net.send("lockpick_fail", a1)
+            end
+        end)
+    end)
+    Net.hook("cancel_lockpicking", function() -- Line: 90 -- upvalues: SliderMinigame (upval), NotificationsUI (upval)
+        SliderMinigame.enabled.set(false)
+        NotificationsUI.show_notification("", "Lockpicking failed!")
+    end)
+    Char.hook_all(function(a1) -- Line: 95 -- upvalues: u143 (upval)
+        table.insert(u143, a1)
+        a1.Destroying:Connect(function() -- Line: 97 -- upvalues: u143 (upval), a1 (val)
+            table.remove(u143, table.find(u143, a1))
+        end)
+    end)
+end
+
+function move_player_out_of_vehicle(a1, a2) -- Line: 103
+    -- upvalues: u143 (val), u142 (val), Char (val)
+    local BoundingBox_2, Magnitude, v1, v2, v3, v4, v5
+    if not table.find(u143, a1) then
+        table.insert(u143, a1)
+    end
+    u142.FilterDescendantsInstances = u143
+    _, BoundingBox_2 = a1:GetBoundingBox()
+    local Pivot = a1:GetPivot()
+    local v6 = (math.atan2(Pivot.LookVector.X, Pivot.LookVector.Z)) + 3.141592653589793
+    local v7 = (CFrame.new(Pivot.Position)) * CFrame.Angles(0, v6, 0)
+    local v8 = nil
+    local v9 = nil
+    local RightVector = v7.RightVector
+    local LookVector_3 = v7.LookVector
+    local v10 = {
+        RightVector * (BoundingBox_2.X / 2 + 2),
+        -RightVector * (BoundingBox_2.X / 2 + 2),
+        LookVector_3 * (BoundingBox_2.Z / 2 + 2),
+        -LookVector_3 * (BoundingBox_2.Z / 2 + 2),
+    }
+    local v11 = nil
+    local v12 = nil
+    local v13, v14 = a1, a2
+    for i, j in v10, v11, v12 do
+        v1 = v7 + Vector3.new(0, 3, 0)
+        v2 = workspace
+        v4 = v1 - j * 1
+        v5 = j * 2
+        if not v2:Blockcast(v4, Vector3.new(2, 5, 2), v5, u142) then
+            v3 = v1 + j
+            Magnitude = (v14.Position - v3.Position).Magnitude
+            if not v8 or Magnitude < v9 then
+                v8 = v3
+            end
+        end
+    end
+    if not v8 then
+        v8 = Pivot + Vector3.new(0, BoundingBox_2.Y / 2 + 4, 0)
+    end
+    Char.get():PivotTo(v8)
+    Char.get_hrp().AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    Char.get_hrp().AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    table.remove(u143, table.find(u143, v13))
+end
+
+function u131.loaded() -- Line: 158
+    -- upvalues: State (val), u131 (val), Util (val), Ragdoll (val), MultiPlayerAnimation (val), Char (val)
+    -- upvalues: Vehicle (val), Crate (val), LocalPlayer (val), ProximityPromptService (val), Jumping (val)
+    -- upvalues: Keybinds (val), ItemCustomizationUI (val), Net (val)
+    local u3 = State.new(false)
+    local u7 = State.new(false)
+    local u8 = nil
+    local u9 = nil
+    local u10 = nil
+    u131.passenger_seat.hook(function(a1) -- Line: 165
+        -- upvalues: Util (upval), State (upval), u3 (val), Ragdoll (upval), MultiPlayerAnimation (upval), Char (upval)
+        -- upvalues: u131 (upval), Vehicle (upval), Crate (upval), u8 (ref), u9 (ref), u10 (ref)
+        local u8_2 = a1.states.vehicle.get()
+        if not u8_2 then
+            u8_2 = a1.states.vehicle.wait()
+        end
+        local u14 = Util.wait_for_descendant(a1.instance, "PassengerPrompt")
+        a1.instance.Disabled = true
+        local u20 = State.new(function() -- Line: 174
+            -- upvalues: u3 (upval), a1 (val), Ragdoll (upval), MultiPlayerAnimation (upval), Char (upval), u131 (upval)
+            local v1 = u3.get()
+            local v2 = a1.states.occupant.get()
+            local v3 = Ragdoll.is_ragdolling.get()
+            local v4 = MultiPlayerAnimation.block_input.get()
+            local v5 = Char.held_tool.get()
+            if v5 and v5:HasTag("Lockpick") and not u131.FLAG_PASSENGER_SEATS_CAN_LOCK then
+                return false
+            end
+            if not v1 and not v2 and not v3 and not v4 then
+                return true
+            end
+            return false
+        end)
+        Vehicle.class.get(u8_2)
+        local u30 = State.new(function() -- Line: 204 -- upvalues: u20 (val), Char (upval), Crate (upval)
+            local v1 = u20.get()
+            local v2 = Char.current_picking_up_player.get()
+            local v3 = Crate.spinning.get()
+            return v1 and not v2 and not v3
+        end)
+        return function() -- Line: 212
+            -- upvalues: u30 (val), u14 (val), a1 (val), Char (upval), u8 (upval), u8_2 (val), u9 (upval), u10 (upval)
+            u30.hook(function(a1) -- Line: 213 -- upvalues: u14 (upval)
+                u14.Enabled = a1
+            end)
+            a1.states.occupant.hook(function(a1_2) -- Line: 217 -- upvalues: Char (upval), u8 (upval), u8_2 (upval), u9 (upval), a1 (upval), u10 (upval)
+                if a1_2 and a1_2 == Char.get_hum() then
+                    u8 = u8_2:FindFirstChild("ExitLocationAttachment", true)
+                    u9 = a1.instance
+                    u10 = u8_2
+                end
+            end)
+        end
+    end)
+    u131.driver_seat.hook(function(a1) -- Line: 231
+        -- upvalues: Util (upval), State (upval), u3 (val), Ragdoll (upval), MultiPlayerAnimation (upval)
+        -- upvalues: Vehicle (upval), Char (upval), LocalPlayer (upval), u131 (upval), Crate (upval), u8 (ref), u9 (ref)
+        -- upvalues: u10 (ref)
+        local u8_2 = a1.states.vehicle.get()
+        if not u8_2 then
+            u8_2 = a1.states.vehicle.wait()
+        end
+        local v1 = Util.wait_for_descendant(u8_2, "Chassis")
+        local u19 = Util.wait_for_descendant(u8_2, "DrivePrompt")
+        a1.instance.Disabled = true
+        local u27 = Util.wait_for_descendant(v1, "LockpickPrompt")
+        local u31 = State.new(function() -- Line: 241 -- upvalues: u3 (upval), a1 (val), Ragdoll (upval), MultiPlayerAnimation (upval)
+            local v1 = u3.get()
+            local v2 = a1.states.occupant.get()
+            local v3 = Ragdoll.is_ragdolling.get()
+            local v4 = MultiPlayerAnimation.block_input.get()
+            if not v1 and not v2 and not v3 and not v4 then
+                return true
+            end
+            return false
+        end)
+        local u36 = Vehicle.class.get(u8_2)
+        local u40 = State.new(function() -- Line: 254 -- upvalues: u31 (val), Char (upval), u36 (val), u8_2 (val), LocalPlayer (upval), u131 (upval)
+            local v1 = u31.get()
+            local v2 = Char.held_tool.get()
+            local v3 = u36.states.locked.get()
+            local FLAG_LOCKPICK_ENABLED = false
+            if (u8_2:GetAttribute("OwnerUserId")) ~= LocalPlayer.UserId then
+                FLAG_LOCKPICK_ENABLED = v1 and v2 and v2:HasTag("Lockpick") and v3 and u131.FLAG_LOCKPICK_ENABLED
+            end
+            return FLAG_LOCKPICK_ENABLED
+        end)
+        local u44 = State.new(function() -- Line: 264 -- upvalues: u31 (val), u40 (val), Char (upval), Crate (upval)
+            local v1 = u31.get()
+            local v2 = u40.get()
+            local v3 = Char.current_picking_up_player.get()
+            local v4 = Crate.spinning.get()
+            return v1 and not v2 and not v3 and not v4
+        end)
+        return function() -- Line: 272
+            -- upvalues: a1 (val), Char (upval), u8 (upval), u8_2 (val), u9 (upval), u10 (upval), u44 (val), u19 (val)
+            -- upvalues: u40 (val), u27 (val)
+            a1.states.occupant.hook(function(a1_2) -- Line: 273 -- upvalues: Char (upval), u8 (upval), u8_2 (upval), u9 (upval), a1 (upval), u10 (upval)
+                if a1_2 and a1_2 == Char.get_hum() then
+                    u8 = u8_2:FindFirstChild("ExitLocationAttachment", true)
+                    u9 = a1.instance
+                    u10 = u8_2
+                end
+            end)
+            u44.hook(function(a1) -- Line: 281 -- upvalues: u19 (upval)
+                u19.Enabled = a1
+            end)
+            u40.hook(function(a1) -- Line: 285 -- upvalues: u27 (upval)
+                u27.Enabled = a1
+            end)
+        end
+    end)
+    Char.hook(function(a1) -- Line: 291 -- upvalues: u7 (val), Util (upval), u3 (val), ProximityPromptService (upval)
+        u7.set(false)
+        local Humanoid = a1:WaitForChild("Humanoid")
+        Util.watch_property(Humanoid, "SeatPart", function(a1) -- Line: 294 -- upvalues: u3 (upval), u7 (upval), ProximityPromptService (upval)
+            if not a1 then
+                ProximityPromptService.Enabled = true
+                u3.set(false)
+                u7.set(false)
+                return
+            end
+            u3.set(true)
+            if not a1:HasTag("PassengerSeat") and a1.Name ~= "DriverSeat" then
+                return
+            end
+            u7.set(true)
+            ProximityPromptService.Enabled = false
+        end)
+    end)
+    u7.hook(function(a1, a2) -- Line: 311
+        -- upvalues: Char (upval), Jumping (upval), Keybinds (upval), ItemCustomizationUI (upval), Crate (upval)
+        -- upvalues: Net (upval), u131 (upval), u10 (ref), u9 (ref), u8 (ref)
+        local u4 = Char.get_hum()
+        if not a1 then
+            if a2 then
+                Keybinds.unhook_action("exit_vehicle")
+            end
+            return
+        end
+        Jumping.vehicle_seat_can_jump_state.set(false)
+        Jumping.car_can_jump_state.set(false)
+        Keybinds.hook_action("exit_vehicle", function(a1) -- Line: 320
+            -- upvalues: ItemCustomizationUI (upval), Crate (upval), Jumping (upval), u4 (val), Net (upval)
+            -- upvalues: u131 (upval), u10 (upval), u9 (upval), Char (upval), u8 (upval)
+            if ItemCustomizationUI.enabled.get() or Crate.spinning.get() then
+                return
+            end
+            if a1 then
+                Jumping.vehicle_seat_can_jump_state.set(true)
+                Jumping.car_can_jump_state.set(true)
+                if u4:GetStateEnabled(Enum.HumanoidStateType.Jumping) == false then
+                    repeat
+                        u4.StateEnabledChanged:Wait()
+                    until u4:GetStateEnabled(Enum.HumanoidStateType.Jumping) == true
+                end
+                if not Net.get("exit_seat") then
+                    return
+                end
+                task.defer(function() -- Line: 352 -- upvalues: u4 (upval), u131 (upval), u10 (upval), u9 (upval), Char (upval), u8 (upval)
+                    if u4 then
+                        for i, j in {
+                            u4:FindFirstChild("LeftHandIKControl", true),
+                            u4:FindFirstChild("RightHandIKControl", true),
+                            u4:FindFirstChild("LeftFootIKControl", true),
+                            (u4:FindFirstChild("RightFootIKControl", true)),
+                        } do
+                            j.Enabled = false
+                        end
+                    end
+                    if u131.FLAG_IMPROVED_VEHICLE_TELEPORTING then
+                        move_player_out_of_vehicle(u10, u9)
+                        return
+                    end
+                    ;(Char.get()):MoveTo(u8.WorldCFrame.Position + Vector3.new(0, 5, 0))
+                end)
+            end
+        end, {label = "Exit Vehicle", priority = 5})
+    end)
+end
+
+return u131

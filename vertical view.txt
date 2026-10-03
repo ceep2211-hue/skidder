@@ -1,0 +1,114 @@
+-- Path : StarterPlayer.StarterPlayerScripts.vertical view
+-- Script path: StarterPlayer.StarterPlayerScripts.vertical view
+-- Decompile time: 2.33 ms
+
+local PlayerGui = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+local tiktok_recording_overlay = PlayerGui:FindFirstChild("tiktok_recording_overlay")
+if tiktok_recording_overlay then
+    tiktok_recording_overlay:Destroy()
+end
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "tiktok_recording_overlay"
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = PlayerGui
+local Frame = Instance.new("Frame")
+Frame.Name = "bar_a"
+Frame.BackgroundColor3 = Color3.new(0, 0, 0)
+Frame.BorderSizePixel = 0
+Frame.ZIndex = 100
+Frame.Parent = ScreenGui
+local Frame_2 = Instance.new("Frame")
+Frame_2.Name = "bar_b"
+Frame_2.BackgroundColor3 = Color3.new(0, 0, 0)
+Frame_2.BorderSizePixel = 0
+Frame_2.ZIndex = 100
+Frame_2.Parent = ScreenGui
+local Frame_3 = Instance.new("Frame")
+Frame_3.Name = "recording_guide"
+Frame_3.BackgroundTransparency = 1
+Frame_3.BorderSizePixel = 2
+Frame_3.BorderColor3 = Color3.fromRGB(255, 255, 255)
+Frame_3.ZIndex = 101
+Frame_3.Parent = ScreenGui
+task.spawn(function() -- Line: 43 -- upvalues: ScreenGui (val)
+    while task.wait() do
+        ScreenGui.Enabled = true
+    end
+end)
+
+local function get_screen_size() -- Line: 49 -- upvalues: ScreenGui (val)
+    local CurrentCamera = workspace.CurrentCamera
+    if CurrentCamera then
+        local ViewportSize = CurrentCamera.ViewportSize
+        if 0 < ViewportSize.X and 0 < ViewportSize.Y then
+            return ViewportSize.X, ViewportSize.Y
+        end
+    end
+    local AbsoluteSize = ScreenGui.AbsoluteSize
+    return AbsoluteSize.X, AbsoluteSize.Y
+end
+
+local function update_overlay() -- Line: 62 -- upvalues: ScreenGui (val), Frame (val), Frame_2 (val), Frame_3 (val)
+    local AbsoluteSize, X, Y
+    local CurrentCamera = workspace.CurrentCamera
+    if not CurrentCamera then
+        AbsoluteSize = ScreenGui.AbsoluteSize
+        X = AbsoluteSize.X
+        Y = AbsoluteSize.Y
+    else
+        local ViewportSize = CurrentCamera.ViewportSize
+        if not (0 < ViewportSize.X) or not (0 < ViewportSize.Y) then
+            AbsoluteSize = ScreenGui.AbsoluteSize
+            X = AbsoluteSize.X
+            Y = AbsoluteSize.Y
+        else
+            X = ViewportSize.X
+            Y = ViewportSize.Y
+        end
+    end
+    if not (X <= 0) and not (Y <= 0) then
+        local v1, v2
+        if 0.5625 < X / Y then
+            v1 = math.floor(Y * 0.5625 + 0.5)
+            v2 = math.floor((X - v1) / 2 + 0.5)
+            Frame.Position = UDim2.fromOffset(0, 0)
+            Frame.Size = UDim2.fromOffset(v2, Y)
+            Frame_2.Position = UDim2.fromOffset(X - v2, 0)
+            Frame_2.Size = UDim2.fromOffset(v2, Y)
+            Frame_3.Position = UDim2.fromOffset(v2, 0)
+            Frame_3.Size = UDim2.fromOffset(v1, Y)
+            return
+        end
+        v1 = math.floor(X / 0.5625 + 0.5)
+        v2 = math.floor((Y - v1) / 2 + 0.5)
+        Frame.Position = UDim2.fromOffset(0, 0)
+        Frame.Size = UDim2.fromOffset(X, v2)
+        Frame_2.Position = UDim2.fromOffset(0, Y - v2)
+        Frame_2.Size = UDim2.fromOffset(X, v2)
+        Frame_3.Position = UDim2.fromOffset(0, v2)
+        Frame_3.Size = UDim2.fromOffset(X, v1)
+        return
+    end
+end
+
+local function connect_camera() -- Line: 100 -- upvalues: update_overlay (val)
+    local CurrentCamera = workspace.CurrentCamera
+    if CurrentCamera then
+        (CurrentCamera:GetPropertyChangedSignal("ViewportSize")):Connect(update_overlay)
+    end
+end
+
+;(workspace:GetPropertyChangedSignal("CurrentCamera")):Connect(function() -- Line: 107 -- upvalues: update_overlay (val)
+    local CurrentCamera = workspace.CurrentCamera
+    if CurrentCamera then
+        (CurrentCamera:GetPropertyChangedSignal("ViewportSize")):Connect(update_overlay)
+    end
+    update_overlay()
+end)
+local CurrentCamera = workspace.CurrentCamera
+if CurrentCamera then
+    (CurrentCamera:GetPropertyChangedSignal("ViewportSize")):Connect(update_overlay)
+end
+update_overlay()

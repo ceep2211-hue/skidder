@@ -1,0 +1,35 @@
+-- Path : Workspace.Map.Tiles.GunShopTile.PatriotWeapons.Interior.Crates.Gunsmith Crate.CrateOptions.Underbarrel and Barrel 1
+-- Script path: Workspace.Map.Tiles.GunShopTile.PatriotWeapons.Interior.Crates.Gunsmith Crate.CrateOptions.Underbarrel and Barrel 1
+-- Decompile time: 0.45 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local v1 = {}
+require(ReplicatedStorage.Modules.Game.ItemCustomization.ItemCustomizationUI.CustomizationCategories)
+require(ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+v1.crate_name = "Barrel & Underbarrel"
+v1.crate_color_type = "Rare"
+v1.category = "weapon_visuals"
+v1.layout_order = 1
+v1.bias = 1
+v1.items = {}
+for i, j in {
+    "Short Barrel",
+    "Muzzle Brake",
+    "Compensator",
+    "Flash Hider",
+    "Boost Barrel",
+    "Silencer",
+    "Heavy Barrel",
+    "Orange Laser",
+    "Flashlight",
+    "Red Laser",
+    "Green Laser",
+    "Blue Laser",
+    "Purple Laser",
+    "Green Flashlight",
+    "Double Laser",
+    "Rainbow Laser",
+} do
+    table.insert(v1.items, {item_type = "cosmetic", name = j})
+end
+return v1

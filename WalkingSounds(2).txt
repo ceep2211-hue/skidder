@@ -1,0 +1,91 @@
+-- Path : ReplicatedStorage.Modules.Game.Character.WalkingSounds
+-- Script path: ReplicatedStorage.Modules.Game.Character.WalkingSounds
+-- Decompile time: 2.26 ms
+
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+require(game.ReplicatedStorage.Modules.Core.Util)
+local Timer = require(game.ReplicatedStorage.Modules.Core.Timer)
+require(game.ReplicatedStorage.Modules.Game.CrouchSystem)
+local FlagManager = require(game.ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+local Zone = require(game.ReplicatedStorage.Modules.Core.Zone)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local v1 = {}
+local LocalPlayer = game.Players.LocalPlayer
+local FLAG_SEWERS_CAN_BE_ENTERED = FlagManager.FLAG_SEWERS_CAN_BE_ENTERED
+
+function v1.initiate() end
+
+function v1.loaded() -- Line: 18
+    -- upvalues: FLAG_SEWERS_CAN_BE_ENTERED (val), StatefulObject (val), Char (val), State (val), Zone (val)
+    -- upvalues: Timer (val)
+    if not FLAG_SEWERS_CAN_BE_ENTERED then
+        return
+    end
+    local u1 = {}
+    ;(StatefulObject.new_class(function() -- Line: 22
+        return {}
+    end, "Water")).hook(function(a1) -- Line: 25 -- upvalues: u1 (val)
+        table.insert(u1, a1.instance)
+        return function() end
+    end)
+    Char.hook_all(function(a1, a2) -- Line: 33 -- upvalues: State (upval), Zone (upval), u1 (val), Timer (upval)
+        local u6 = script.Normal:Clone()
+        local HumanoidRootPart = a1:WaitForChild("HumanoidRootPart")
+        local Humanoid = a1:WaitForChild("Humanoid")
+        u6.Parent = HumanoidRootPart
+        local Volume = u6.Volume
+        local u16 = 1
+        local normal = State.new("normal")
+        normal.hook(function(a1, a2) -- Line: 45 -- upvalues: u6 (val), Volume (ref), u16 (ref)
+            if a1 == a2 then
+                return
+            end
+            if a1 == "normal" then
+                u6.SoundId = script.Normal.SoundId
+                Volume = script.Normal.Volume
+                u6.Volume = Volume * u16
+                return
+            end
+            if a1 == "water" then
+                u6.SoundId = script.Water.SoundId
+                Volume = script.Water.Volume
+                u6.Volume = Volume * u16
+            end
+        end)
+        local u29 = Timer.new(0.1, function() -- Line: 58
+            -- upvalues: a1 (val), HumanoidRootPart (val), u6 (val), Humanoid (val), u16 (ref), Volume (ref)
+            -- upvalues: Zone (upval), u1 (upval), normal (val)
+            if not a1:IsDescendantOf(game.Workspace) then
+                return
+            end
+            if HumanoidRootPart.Anchored or (Humanoid:GetState()) ~= Enum.HumanoidStateType.Running then
+                if u6.IsPlaying then
+                    u6:Stop()
+                end
+                return
+            end
+            local v1 = Humanoid.WalkSpeed * Humanoid.MoveDirection.Magnitude
+            if v1 >= 15 then
+                v1 = v1 * 2
+            end
+            u6.PlaybackSpeed = math.log(v1, 15)
+            u16 = math.log(v1, 12)
+            u6.Volume = Volume * u16
+            if not Zone.point_in_parts(HumanoidRootPart.Position - Vector3.new(0, 4, 0), u1) then
+                normal.set("normal")
+            else
+                normal.set("water")
+            end
+            if u6.IsPlaying then
+                return
+            end
+            u6:Play()
+        end)
+        a1.Destroying:Connect(function() -- Line: 99 -- upvalues: u29 (val)
+            u29.stop()
+        end)
+    end)
+end
+
+return v1

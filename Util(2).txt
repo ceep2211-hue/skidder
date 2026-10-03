@@ -1,0 +1,1116 @@
+-- Path : ReplicatedStorage.Modules.Core.Util
+-- Script path: ReplicatedStorage.Modules.Core.Util
+-- Decompile time: 26.56 ms
+
+require(game.ReplicatedStorage.Modules.Core.Signal)
+local V3 = require(game.ReplicatedStorage.Modules.Core.V3)
+require(game.ReplicatedStorage.Modules.Core.Net)
+local u21 = {}
+local DeveloperTools = require(game.ReplicatedStorage.Modules.Core.DeveloperTools)
+u21.friend_ids = {}
+u21.FLAG_STUDIO_WARN_ALL_TIMED_OUT_INSTANCES = true
+local u31 = {}
+
+function u21.debounce(a1, a2) -- Line: 13 -- upvalues: u31 (val)
+    if a2 then
+        return function(...) -- Line: 15 -- upvalues: u31 (upval), a1 (val), a2 (val)
+            if u31[a1] then
+                return
+            end
+            u31[a1] = true
+            local success, result = pcall(a2, ...)
+            u31[a1] = false
+            if not success then
+                error(result)
+            end
+            return result
+        end
+    end
+    local u3 = nil
+    return function(...) -- Line: 28 -- upvalues: u3 (ref), a1 (val)
+        if u3 then
+            return
+        end
+        u3 = true
+        local success, result = pcall(a1, ...)
+        u3 = false
+        if not success then
+            error(result)
+        end
+        return result
+    end
+end
+
+u21.db = u21.debounce
+local CollectionService = game:GetService("CollectionService")
+
+function u21.hook_tagged(a1, a2) -- Line: 46 -- upvalues: CollectionService (val) -- types: a1: string
+    for i, j in CollectionService:GetTagged(a1) do
+        task.spawn(a2, j)
+    end
+    return (CollectionService:GetInstanceAddedSignal(a1)):Connect(a2)
+end
+
+function u21.load_debug_print(...) end
+
+function u21.formatted_time(a1) -- Line: 62 -- types: a1: number
+    if a1 == (1 / 0) then
+        return "inf"
+    end
+    local v1 = math.floor(a1 / 86400)
+    local v2 = math.floor(a1 / 3600)
+    local v3 = math.floor(a1 / 60 % 60)
+    local v4 = a1 % 60
+    if v1 > 1 then
+        v2 = v2 % 24
+        if v2 < 10 then
+            v2 = ("0%*"):format(v2)
+        end
+        return (("%* days %* hours"):format(v1, v2))
+    end
+    if v2 < 10 then
+        v2 = ("0%*"):format(v2)
+    end
+    if v3 < 10 then
+        v3 = ("0%*"):format(v3)
+    end
+    if v4 < 10 then
+        v4 = ("0%*"):format(v4)
+    end
+    if 0 < (tonumber(v2)) then
+        return (("%*:%*:%*"):format(v2, v3, v4))
+    end
+    if 0 < (tonumber(v3)) then
+        return (("%*:%*"):format(v3, v4))
+    end
+    return (("%*"):format(v4))
+end
+
+function u21.seconds_to_legible_time(a1) -- Line: 101 -- types: a1: number
+    local v1
+    if a1 < 60 then
+        if a1 == 1 then
+            return (("%* second"):format(a1))
+        end
+        return (("%* seconds"):format(a1))
+    end
+    if a1 < 3600 then
+        v1 = math.floor(a1 / 60)
+        if v1 == 1 then
+            return (("%* minute"):format(v1))
+        end
+        return (("%* minutes"):format(v1))
+    end
+    if a1 < 86400 then
+        v1 = math.floor(a1 / 3600)
+        if v1 == 1 then
+            return (("%* hour"):format(v1))
+        end
+        return (("%* hours"):format(v1))
+    end
+    v1 = math.floor(a1 / 86400)
+    if v1 == 1 then
+        return (("%* day"):format(v1))
+    end
+    return (("%* days"):format(v1))
+end
+
+function u21.split_amount_into_piles(a1, a2) -- Line: 132
+    local v1 = math.ceil((math.log(a1, a2 or 2))) + 1
+    local v2 = math.floor(a1 / v1)
+    local v3 = a1 % v1
+    local v4 = {}
+    for i = 1, v1 do
+        v4[i] = v2
+    end
+    for j = 1, v3 do
+        v4[j] = v4[j] + 1
+    end
+    return v4
+end
+
+function u21.capitalize_first(a1) -- Line: 150
+    return a1:gsub("^%l", string.upper)
+end
+
+function u21.override(a1) -- Line: 155
+    return (setmetatable({
+        running = false,
+        cancel = function(self) -- Line: 159
+            if self.thread and self.running then
+                self.running = false
+                task.cancel(self.thread)
+            end
+        end,
+    }, {
+        __call = function(a1_2, ...) -- Line: 166 -- upvalues: a1 (val)
+            a1_2:cancel()
+            local u6 = table.pack(...)
+            a1_2.thread = task.spawn(function() -- Line: 169 -- upvalues: a1_2 (val), a1 (upval), u6 (val)
+                a1_2.running = true
+                a1(table.unpack(u6))
+                a1_2.running = false
+            end)
+        end,
+    }))
+end
+
+function u21.get_closest_tagged_instance(a1, a2) -- Line: 178 -- types: a1: string, a2: vector
+    local Magnitude, Position
+    local v1 = nil
+    local v2 = (1 / 0)
+    for i, j in (game:GetService("CollectionService")):GetTagged(a1) do
+        if j:IsA("Model") or j:IsA("BasePart") then
+            Position = j:IsA("Model") and j:GetPivot().Position or j.Position
+            Magnitude = (a2 - Position).Magnitude
+            if Magnitude < v2 then
+                v1 = j
+            end
+        end
+    end
+    return v1
+end
+
+function u21.all_parts_on_ray(a1, a2, a3, a4) -- Line: 197
+    local v1
+    local v2 = a3 or {}
+    local v3 = RaycastParams.new()
+    v3.FilterType = Enum.RaycastFilterType.Exclude
+    v3.FilterDescendantsInstances = v2
+    local v4, v5, v6 = a1, a2, a4
+    while true do
+        v1 = game.Workspace:Raycast(v4, v5, v3)
+        if v1 then
+            table.insert(v2, v1.Instance)
+            v3.FilterDescendantsInstances = v2
+            if not v6(v1) then
+                return
+            end
+        end
+        if not v1 then
+            return v2
+        end
+    end
+end
+
+function u21.create_red_point(a1, a2) -- Line: 218
+    local Part = Instance.new("Part")
+    Part.Size = Vector3.new(0.15000000596046448, 0.15000000596046448, 0.15000000596046448)
+    Part.Color = Color3.fromRGB(255, 0, 0)
+    Part.Anchored = true
+    Part.CanCollide = false
+    Part.CanQuery = false
+    Part.CanTouch = false
+    Part.Parent = game.Workspace
+    Part.CFrame = CFrame.new(a1)
+    if a2 then
+        game.Debris:AddItem(Part, a2)
+    end
+    return Part
+end
+
+function u21.convert_server_time_to_client(a1) -- Line: 234
+    return a1
+end
+
+function u21.create_trail(a1, a2) -- Line: 244
+    local Part = Instance.new("Part")
+    Part.Name = "TrailPoint"
+    Part.Color = Color3.fromRGB(255, 0, 0)
+    Part.Anchored = true
+    Part.CanCollide = false
+    Part.CanQuery = false
+    Part.Transparency = 0
+    Part.Size = Vector3.new(0.30000001192092896, 0.30000001192092896, 0.30000001192092896)
+    Part.Shape = Enum.PartType.Ball
+    Part.Parent = game.Workspace
+    Part.CFrame = CFrame.new(a1)
+    local Attachment = Instance.new("Attachment")
+    Attachment.Parent = Part
+    local u27 = Part:Clone()
+    u27.Parent = game.Workspace
+    u27.CFrame = CFrame.new(a2)
+    task.delay(5, function() -- Line: 263 -- upvalues: Part (val), u27 (val)
+        Part:Destroy()
+        u27:Destroy()
+    end)
+    local Beam = Instance.new("Beam")
+    Beam.Parent = Part
+    Beam.Attachment0 = Attachment
+    Beam.Attachment1 = u27.Attachment
+    Beam.Color = ColorSequence.new(Color3.fromRGB(255, 0, 0))
+    Beam.Width0 = 0.2
+    Beam.Width1 = 0.2
+end
+
+function u21.decodeHTML(a1) -- Line: 277
+    local v1 = a1
+    for k, v in pairs({
+        ["&lt;"] = "<",
+        ["&gt;"] = ">",
+        ["&amp;"] = "&",
+        ["&quot;"] = "\"",
+        ["&#39;"] = "'",
+    }) do
+        v1 = string.gsub(v1, k, v)
+    end
+    return v1
+end
+
+function u21.utc_clock() -- Line: 294
+    return workspace:GetServerTimeNow()
+end
+
+function u21.get_guid() -- Line: 298
+    return game:GetService("HttpService"):GenerateGUID()
+end
+
+local RunService = game:GetService("RunService")
+
+function u21.is_studio() -- Line: 303 -- upvalues: RunService (val)
+    return RunService:IsStudio()
+end
+
+function u21.create_cache_table(a1, a2) -- Line: 308 -- upvalues: u21 (val) -- types: a1: number, a2: boolean
+    return (setmetatable({tab = {}}, {
+        __index = function(a1, a2_2) -- Line: 312 -- upvalues: a2 (val)
+            if not a1.tab[a2_2] then
+                return nil
+            end
+            if a2 then
+                a1.tab[a2_2].destroy()
+            end
+            return a1.tab[a2_2].value
+        end,
+        __newindex = function(a1_2, a2, a3) -- Line: 322 -- upvalues: u21 (upval), a1 (val)
+            if a3 == nil then
+                if a1_2.tab[a2] then
+                    a1_2.tab[a2].destroy:cancel()
+                end
+                a1_2.tab[a2] = nil
+                return
+            end
+            local tab = a1_2.tab
+            local v1 = a1_2.tab[a2] or {
+                destroy = u21.override(function() -- Line: 330 -- upvalues: a1 (upval), a1_2 (val), a2 (val)
+                    task.wait(a1)
+                    a1_2.tab[a2] = nil
+                end),
+            }
+            tab[a2] = v1
+            a1_2.tab[a2].value = a3
+            a1_2.tab[a2].destroy()
+        end,
+    }))
+end
+
+function u21.dump(a1) -- Line: 343
+    local v1, v2, v3, v4, v5, v6
+    if not a1 then
+        print(nil)
+        return
+    end
+
+    local function tab(a1) -- Line: 348
+        local v1 = ""
+        for i = 1, a1 do
+            v1 = v1 .. "\t"
+        end
+        return v1
+    end
+
+    local v7 = {}
+    local v8 = {}
+    local v9 = {}
+    local v10 = 1
+    local v11 = "{\n"
+    local v12 = a1
+    while true do
+        v5 = 0
+        for k, v in pairs(v12) do
+            v5 = v5 + 1
+        end
+        v6 = 1
+        for k2, i in pairs(v12) do
+            if v7[v12] ~= nil and not (v7[v12] <= v6) then
+                if v6 == v5 then
+                    v3 = ""
+                    for j = 1, v10 - 1 do
+                        v3 = v3 .. "\t"
+                    end
+                    v11 = v11 .. "\n" .. v3 .. "}"
+                end
+                v6 = v6 + 1
+                continue
+            end
+            if string.find(v11, "}", v11:len()) then
+                v11 = v11 .. ",\n"
+            elseif not string.find(v11, "\n", v11:len()) then
+                v11 = v11 .. "\n"
+            end
+            table.insert(v9, v11)
+            v11 = ""
+            v2 = if type(k2) == "number" then "[" .. (tostring(k2)) .. "]" else if type(k2) ~= "boolean" then "['" .. (tostring(k2)) .. "']" else "[" .. (tostring(k2)) .. "]"
+            if type(i) ~= "number" and type(i) ~= "boolean" then
+                if type(i) == "table" then
+                    v3 = ""
+                    for k3 = 1, v10 do
+                        v3 = v3 .. "\t"
+                    end
+                    v11 = v11 .. v3 .. v2 .. " = {\n"
+                    table.insert(v8, v12)
+                    table.insert(v8, i)
+                    v7[v12] = v6 + 1
+                    break
+                end
+                v3 = ""
+                for n = 1, v10 do
+                    v3 = v3 .. "\t"
+                end
+                v11 = v11 .. v3 .. v2 .. " = '" .. (tostring(i)) .. "'"
+                if v6 ~= v5 then
+                    v11 = v11 .. ","
+                else
+                    v4 = ""
+                    for m = 1, v10 - 1 do
+                        v4 = v4 .. "\t"
+                    end
+                    v11 = v11 .. "\n" .. v4 .. "}"
+                end
+                v6 = v6 + 1
+                continue
+            end
+            v3 = ""
+            for i5 = 1, v10 do
+                v3 = v3 .. "\t"
+            end
+            v11 = v11 .. v3 .. v2 .. " = " .. tostring(i)
+            if v6 ~= v5 then
+                v11 = v11 .. ","
+            else
+                v4 = ""
+                for i6 = 1, v10 - 1 do
+                    v4 = v4 .. "\t"
+                end
+                v11 = v11 .. "\n" .. v4 .. "}"
+            end
+            v6 = v6 + 1
+        end
+        if v5 == 0 then
+            v1 = ""
+            for i7 = 1, v10 - 1 do
+                v1 = v1 .. "\t"
+            end
+            v11 = v11 .. "\n" .. v1 .. "}"
+        end
+        if not (#v8 > 0) then
+            break
+        end
+        v12 = v8[#v8]
+        v8[#v8] = nil
+        v10 = not (v7[v12] ~= nil) and v10 + 1 or v10 - 1
+    end
+    table.insert(v9, v11)
+    v11 = table.concat(v9)
+    print(v11)
+end
+
+function u21.get_mass(a1) -- Line: 418 -- types: a1: userdata
+    local v1 = 0
+    for k, v in pairs(a1:GetDescendants()) do
+        if v:IsA("BasePart") then
+            v1 = v1 + v.Mass
+        end
+    end
+    return v1
+end
+
+function u21.safe_root(a1, a2) -- Line: 428
+    return (math.sign(a1)) * (math.abs(a1)) ^ (1 / a2)
+end
+
+function u21.comma_format_number(a1) -- Line: 432
+    local v1, v2
+    local v3 = a1
+    repeat
+        v1, v2 = string.gsub(v3, "^(-?%d+)(%d%d%d)", "%1,%2")
+        v3 = v1
+    until v2 == 0
+    return v3
+end
+
+function u21.round(a1, a2) -- Line: 443
+    if a2 then
+        return (math.floor(a1 * 10 ^ a2 + 0.5)) / 10 ^ a2
+    end
+    return (math.floor(a1 + 0.5))
+end
+
+function u21.format_currency(a1, a2) -- Line: 451 -- upvalues: u21 (val)
+    local v1 = math.floor((math.abs((u21.round(a1, 2)))))
+    local v2 = u21.round(math.abs(a1) - v1, 2)
+    local v3 = u21.comma_format_number(v1)
+    v2 = string.sub(tostring(v2), 3)
+    v3 = v3 .. "." .. v2 .. string.rep("0", 2 - string.len(v2))
+    v3 = (a2 or "") .. v3
+    if a1 < 0 then
+        v3 = "-" .. v3
+    end
+    return v3
+end
+
+function u21.weld(a1, a2) -- Line: 487
+    local WeldConstraint = Instance.new("WeldConstraint")
+    WeldConstraint.Part0 = a1
+    WeldConstraint.Part1 = a2
+    WeldConstraint.Parent = a2
+    return WeldConstraint
+end
+
+function u21.weld_preserve_offset(a1, a2) -- Line: 496
+    local Weld = Instance.new("Weld")
+    Weld.Name = "PreserveOffsetWeld"
+    Weld.Part0 = a1
+    Weld.Part1 = a2
+    Weld.C0 = a1.CFrame:ToObjectSpace(a2.CFrame)
+    Weld.C1 = CFrame.new()
+    Weld.Parent = a1
+    a1.Anchored = false
+    return Weld
+end
+
+function u21.table_remove_value(a1, a2) -- Line: 513
+    local v1 = table.find(a1, a2)
+    if v1 then
+        return table.remove(a1, v1)
+    end
+    local v2 = #a1
+    for i = 1, v2 do
+        if a1[i] == nil then
+            return table.remove(a1, i)
+        end
+    end
+end
+
+function u21.plural_format(a1, a2) -- Line: 526
+    local v1 = a2:sub(#a2, #a2)
+    return a1 .. " " .. (not (a1 ~= 1) and a2 or a2 .. (if v1 ~= v1:upper() then "s" else "S"))
+end
+
+function u21.watch_property(a1, a2, a3) -- Line: 531
+    if a1 == nil then
+        return
+    end
+    task.spawn(a3, a1[a2])
+    return (a1:GetPropertyChangedSignal(a2)):Connect(function() -- Line: 534 -- upvalues: a3 (val), a1 (val), a2 (val)
+        a3(a1[a2])
+    end)
+end
+
+function u21.watch_attribute(a1, a2, a3) -- Line: 539
+    if a1 == nil then
+        return
+    end
+    local Attribute = a1:GetAttribute(a2)
+    task.spawn(a3, a1:GetAttribute(a2), Attribute)
+    return ((a1:GetAttributeChangedSignal(a2)):Connect(function() -- Line: 543 -- upvalues: a3 (val), a1 (val), a2 (val), Attribute (ref)
+        a3(a1:GetAttribute(a2), Attribute)
+        Attribute = a1:GetAttribute(a2)
+    end))
+end
+
+function u21.hook_players(a1) -- Line: 549
+    local v1 = next
+    local Players, Players_2 = game.Players:GetPlayers()
+    for k, v in v1, Players, Players_2 do
+        a1(v)
+    end
+    game.Players.PlayerAdded:Connect(function(a1_2) -- Line: 553 -- upvalues: a1 (val)
+        a1(a1_2)
+    end)
+end
+
+function u21.hook_children(a1, a2) -- Line: 558
+    local v1 = next
+    local Children, Children_2 = a1:GetChildren()
+    for k, v in v1, Children, Children_2 do
+        task.spawn(a2, v)
+    end
+    return a1.ChildAdded:Connect(a2)
+end
+
+function u21.hook_descendants(a1, a2, a3) -- Line: 565
+    if a1 == workspace then
+        warn("Hooking workspace on client?")
+    end
+    local v1 = next
+    local Descendants, Descendants_2 = a1:GetDescendants()
+    for k, v in v1, Descendants, Descendants_2 do
+        task.spawn(a2, v)
+    end
+    return a1.DescendantAdded:Connect(a2)
+end
+
+local CollectionService_2 = game:GetService("CollectionService")
+
+function u21.hook_tag(a1, a2) -- Line: 578 -- upvalues: CollectionService_2 (val)
+    for i, j in CollectionService_2:GetTagged(a1) do
+        task.spawn(a2, j)
+    end
+    return (CollectionService_2:GetInstanceAddedSignal(a1)):Connect(a2)
+end
+
+function u21.color_to_table(a1, a2) -- Line: 585 -- types: a1: userdata, a2: boolean
+    local v1
+    return {a1.R * (if not a2 then 1 else 255), a1.G * v1, a1.B * v1}
+end
+
+function u21.table_to_color(a1, a2) -- Line: 590 -- types: a1: table, a2: boolean
+    if a2 then
+        return Color3.fromRGB(a1[1], a1[2], a1[3])
+    end
+    return Color3.new(a1[1], a1[2], a1[3])
+end
+
+function u21.protected_retry(a1, a2, a3) -- Line: 597
+    local result, success
+    local v1 = 0
+    local v2, v3, v4 = a2, a1, a3
+    while v1 < v2 do
+        success, result = pcall(v3)
+        if success then
+            return result
+        end
+        v1 = v1 + 1
+        if v1 < v2 then
+            task.wait(v4)
+        end
+    end
+    task.spawn(error, nil)
+end
+
+function u21.map_value(a1, a2, a3) -- Line: 617 -- types: a1: number, a2: number, a3: number
+    return a2 + (a3 - a2) * a1
+end
+
+function u21.normalize_value_between(a1, a2, a3) -- Line: 622 -- types: a1: number, a2: number, a3: number
+    return (a1 - a2) / (a3 - a2)
+end
+
+function u21.hours_to_clock_time(a1, a2) -- Line: 627
+    if not a2 then
+        a1 = (a1 - 1) % 12 + 1
+    end
+    local v1 = math.floor(a1)
+    local v2 = math.floor((a1 - v1) * 60)
+    return v1 .. ":" .. (v2 < 10 and "0" .. v2 or v2)
+end
+
+function u21.seconds_to_time(a1) -- Line: 634
+    local v1 = math.floor(a1 / 60)
+    local v2 = a1 - v1 * 60
+    return (v1 < 10 and "0" .. v1 or v1) .. ":" .. (v2 < 10 and "0" .. v2 or v2)
+end
+
+function u21.seconds_to_time_full(a1) -- Line: 640
+    local v1 = math.floor(a1 / 3600)
+    local v2 = a1 - v1 * 3600
+    local v3 = math.floor(v2 / 60)
+    v2 = v2 - v3 * 60
+    return (v1 < 10 and "0" .. v1 or v1) .. ":" .. (v3 < 10 and "0" .. v3 or v3) .. ":" .. (v2 < 10 and "0" .. v2 or v2)
+end
+
+function u21.seconds_to_mins_seconds(a1) -- Line: 651
+    local v1 = math.floor(a1 / 60)
+    local v2 = a1 - v1 * 60
+    local v3 = tostring(v1 < 10 and "0" .. v1 or v1)
+    return v3, (tostring(v2 < 10 and "0" .. v2 or v2))
+end
+
+function u21.in_part_xyz(a1, a2) -- Line: 657
+    local v1 = a1.CFrame:pointToObjectSpace(a2)
+    v1 = Vector3.new(math.abs(v1.X), math.abs(v1.Y), (math.abs(v1.Z)))
+    local v2 = a1.Size / 2
+    local v3 = v1.X <= v2.X
+    local v4 = v1.Y <= v2.Y
+    local v5 = v1.Z <= v2.Z
+    return v3 and v4 and v5
+end
+
+function u21.in_part_xz(a1, a2) -- Line: 669
+    local v1 = a1.CFrame:pointToObjectSpace(a2)
+    v1 = Vector3.new(math.abs(v1.X), 0, (math.abs(v1.Z)))
+    local v2 = a1.Size / 2
+    local v3 = v1.X <= v2.X
+    local v4 = v1.Z <= v2.Z
+    return v3 and v4
+end
+
+function u21.get_descendants(a1, a2) -- Line: 680
+    local v1 = {}
+    local v2 = next
+    local Descendants, Descendants_2 = a1:GetDescendants()
+    for k, v in v2, Descendants, Descendants_2 do
+        if v.Name == a2 then
+            v1[#v1 + 1] = v
+        end
+    end
+    return v1
+end
+
+function u21.descendants_table(a1, a2) -- Line: 690 -- upvalues: u21 (val)
+    local u2 = {}
+    u21.hook_descendants(a1, function(a1) -- Line: 692 -- upvalues: a2 (val), u2 (val)
+        if a2(a1) then
+            table.insert(u2, a1)
+        end
+    end, "descendant table")
+    return u2
+end
+
+local TweenService = game:GetService("TweenService")
+
+function u21.tween(a1, a2, a3) -- Line: 701 -- upvalues: TweenService (val)
+    local v1 = TweenService:Create(a1, a2, a3)
+    v1:Play()
+    return v1
+end
+
+function u21.tween_model(a1, a2, a3) -- Line: 707 -- upvalues: TweenService (val)
+    if not a1.PrimaryPart then
+        print("NO PRIMARTY PART FOR ", a1:GetFullName())
+        return
+    end
+    local CFrameValue = Instance.new("CFrameValue")
+    CFrameValue.Value = a1:GetPivot()
+    ;(CFrameValue:GetPropertyChangedSignal("Value")):connect(function() -- Line: 715 -- upvalues: a1 (val), CFrameValue (val)
+        a1:PivotTo(CFrameValue.Value)
+    end)
+    local v1 = TweenService:Create(CFrameValue, a2, {Value = a3})
+    v1:Play()
+    v1.Completed:Connect(function() -- Line: 723 -- upvalues: CFrameValue (val)
+        CFrameValue:Destroy()
+    end)
+    return v1
+end
+
+function u21.tween_model_offset(a1, a2, a3, a4) -- Line: 729 -- upvalues: TweenService (val)
+    if not a1.PrimaryPart then
+        print("NO PRIMARTY PART FOR ", a1:GetFullName())
+        return
+    end
+    local CFrameValue = Instance.new("CFrameValue")
+    local PrimaryPartCFrame = a1:GetPrimaryPartCFrame()
+    ;(CFrameValue:GetPropertyChangedSignal("Value")):connect(function() -- Line: 737 -- upvalues: a1 (val), PrimaryPartCFrame (val), a4 (val), CFrameValue (val)
+        a1:SetPrimaryPartCFrame(PrimaryPartCFrame * a4 * CFrameValue.Value * (a4:Inverse()))
+    end)
+    local v1 = TweenService:Create(CFrameValue, a2, {Value = a3})
+    v1:Play()
+    v1.Completed:Connect(function() -- Line: 744 -- upvalues: CFrameValue (val)
+        CFrameValue:Destroy()
+    end)
+    return v1
+end
+
+local u104 = {}
+local u106 = CFrame.new()
+
+function u21.tween_model_alpha(a1, a2, a3, a4, a5, a6, a7) -- Line: 753
+    -- upvalues: u106 (val), u104 (val), TweenService (val)
+    if not a1.PrimaryPart then
+        print("NO PRIMARTY PART FOR ", a1:GetFullName())
+        return
+    end
+    local u16 = a7:Inverse()
+    local u24 = (a3:GetPropertyChangedSignal("Value")):Connect(function() -- Line: 760 -- upvalues: u106 (upval), a6 (val), a3 (val), a1 (val), a5 (val), a7 (val), u16 (val)
+        local v1 = u106:Lerp(a6, a3.Value)
+        a1:SetPrimaryPartCFrame(a5 * a7 * v1 * u16)
+    end)
+    if u104[a3] then
+        u104[a3]:Cancel()
+    end
+    local v1 = TweenService:Create(a3, a2, {Value = a4})
+    v1:Play()
+    u104[a3] = v1
+    v1.Completed:Connect(function() -- Line: 770 -- upvalues: u24 (val)
+        u24:Disconnect()
+    end)
+    return v1
+end
+
+function u21.cubic_blerp(a1, a2, a3, a4, a5) -- Line: 776
+    return a1 * math.pow(1 - a5, 3) + a2 * 3 * a5 * math.pow(1 - a5, 2) + a3 * 3 * math.pow(a5, 2) * (1 - a5) + a4 * math.pow(a5, 3)
+end
+
+function u21.quad_blerp(a1, a2, a3, a4) -- Line: 784
+    return a1 * math.pow(1 - a4, 2) + a2 * 2 * a4 * (1 - a4) + a3 * math.pow(a4, 2)
+end
+
+function u21.quad_tween(a1, a2, a3, a4) -- Line: 791 -- upvalues: u21 (val)
+    local u4 = {}
+    for i, j in a3 do
+        u4[i] = a1[i]
+    end
+    local NumberValue = Instance.new("NumberValue")
+    NumberValue.Changed:Connect(function(a1_2) -- Line: 797 -- upvalues: a3 (val), a1 (val), u21 (upval), u4 (val), a4 (val)
+        local quad_blerp, v1, v2, v3, v4
+        print(a1_2)
+        for i, j in a3 do
+            v2 = a1
+            quad_blerp = u21.quad_blerp
+            v3 = u4[i]
+            v4 = a3[i]
+            v1 = a4[i]
+            v2[i] = (quad_blerp(v3, v4, v1, a1_2))
+        end
+    end)
+    if typeof(a2) == "table" then
+        local u31 = #a2
+        task.spawn(function() -- Line: 805 -- upvalues: a2 (val), NumberValue (val), u31 (val)
+            local TweenService, v1, v2, v3
+            for i, j in a2 do
+                TweenService = game.TweenService
+                v2 = NumberValue
+                v3 = {Value = i / u31}
+                v1 = TweenService:Create(v2, j, v3)
+                v1:Play()
+                v1.Completed:Wait()
+            end
+        end)
+        return
+    end
+    local v1 = game.TweenService:Create(NumberValue, a2, {Value = 1})
+    v1:Play()
+    return v1
+end
+
+local CurrentCamera = workspace.CurrentCamera
+
+function u21.in_range_stepped(a1, a2, a3) -- Line: 821 -- upvalues: V3 (val), CurrentCamera (val)
+    local u3 = true
+
+    local function in_range() -- Line: 823 -- upvalues: u3 (ref), a1 (val), a2 (val)
+        if u3 then
+            local v1 = game.Players.LocalPlayer:DistanceFromCharacter(a1)
+            if v1 ~= 0 and v1 < a2 then
+                return v1
+            end
+            u3 = false
+            task.wait(3)
+            u3 = true
+        end
+    end
+
+    return ((game:GetService("RunService")).Heartbeat:Connect(function(a1_2) -- Line: 835 -- upvalues: u3 (ref), a1 (val), a2 (val), V3 (upval), CurrentCamera (upval), a3 (val)
+        local v1
+        if not u3 then
+            v1 = nil
+        else
+            local v2 = game.Players.LocalPlayer:DistanceFromCharacter(a1)
+            if v2 == 0 or not (v2 < a2) then
+                u3 = false
+                task.wait(3)
+                u3 = true
+                v1 = nil
+            else
+                v1 = v2
+            end
+        end
+        if v1 then
+            if v1 < a2 / 3
+                or 0 < ((V3.flat(CurrentCamera.CFrame.LookVector)).Unit:Dot((V3.flat(a1 - CurrentCamera.CFrame.Position)).Unit)) then
+                a3(a1_2, v1)
+            end
+        end
+    end))
+end
+
+function u21.in_range_of_part_stepped(a1, a2, a3) -- Line: 843 -- upvalues: V3 (val), CurrentCamera (val)
+    local u3 = true
+
+    local function in_range() -- Line: 845 -- upvalues: u3 (ref), a1 (val), a2 (val)
+        if u3 then
+            local v1 = game.Players.LocalPlayer:DistanceFromCharacter(a1.Position)
+            if v1 ~= 0 and v1 < a2 then
+                return v1
+            end
+            u3 = false
+            task.wait(3)
+            u3 = true
+        end
+    end
+
+    return ((game:GetService("RunService")).Heartbeat:Connect(function(a1_2) -- Line: 857 -- upvalues: u3 (ref), a1 (val), a2 (val), V3 (upval), CurrentCamera (upval), a3 (val)
+        local v1
+        if not u3 then
+            v1 = nil
+        else
+            local v2 = game.Players.LocalPlayer:DistanceFromCharacter(a1.Position)
+            if v2 == 0 or not (v2 < a2) then
+                u3 = false
+                task.wait(3)
+                u3 = true
+                v1 = nil
+            else
+                v1 = v2
+            end
+        end
+        if v1
+            and 0 < ((V3.flat(CurrentCamera.CFrame.LookVector)).Unit:Dot((V3.flat(a1.Position - CurrentCamera.CFrame.Position)).Unit)) then
+            a3(a1_2, v1)
+        end
+    end))
+end
+
+function u21.add_commas(a1) -- Line: 865
+    local v1, v2
+    local v3 = tostring(a1)
+    repeat
+        v1, v2 = v3:gsub("^(-?%d+)(%d%d%d)", "%1,%2")
+        v3 = v1
+    until v2 == 0
+    return v3
+end
+
+function u21.wait_on_events(...) -- Line: 875
+    local u0 = {}
+    u0[1] = ...
+    local BindableEvent = Instance.new("BindableEvent")
+    for k, v in next, u0 do
+        u0[k] = (v:Connect(function() -- Line: 878 -- upvalues: BindableEvent (val), u0 (val)
+            BindableEvent:Fire()
+            local v1 = #u0
+            for i = 1, v1 do
+                u0[i]:Disconnect()
+            end
+            table.clear(u0)
+            BindableEvent:Destroy()
+        end))
+    end
+    BindableEvent.Event:Wait()
+end
+
+function u21.wait_on_all_events(...) -- Line: 892
+    local u0 = {}
+    u0[1] = ...
+    local u2 = #u0
+    local u3 = 0
+    local BindableEvent = Instance.new("BindableEvent")
+
+    local function fire(a1) -- Line: 897 -- upvalues: u3 (ref), u2 (val), BindableEvent (val)
+        u3 = u3 + 1
+        if u2 <= u3 then
+            BindableEvent:Fire()
+        end
+    end
+
+    for k, v in next, u0 do
+        u0[k] = (v:Connect(function() -- Line: 904 -- upvalues: u0 (val), k (val), u3 (ref), u2 (val), BindableEvent (val)
+            local v1 = u0[k]
+            u3 = u3 + 1
+            if u2 <= u3 then
+                BindableEvent:Fire()
+            end
+        end))
+    end
+    BindableEvent.Event:Wait()
+    local v1 = #u0
+    for i = 1, v1 do
+        u0[i]:Disconnect()
+    end
+    table.clear(u0)
+    BindableEvent:Destroy()
+end
+
+local u119 = Random.new()
+
+function u21.rand(a1, a2, a3) -- Line: 917 -- upvalues: u119 (val), u21 (val) -- types: a3: boolean
+    if typeof(a1) == "number" then
+        return a3 and u119:NextInteger(a1, a2) or u119:NextNumber(a1, a2)
+    end
+    if typeof(a1) == "Vector3" then
+        return (Vector3.new(u21.rand(a1.X, a2.X, a3), u21.rand(a1.Y, a2.Y, a3), (u21.rand(a1.Z, a2.Z, a3))))
+    end
+end
+
+function u21.is_close(a1, a2, a3) -- Line: 929
+    local v1 = a3 or 0.001
+    if (typeof(a1)) ~= typeof(a2) then
+        return false
+    end
+    if typeof(a1) == "number" then
+        return math.abs(a1 - a2) <= v1
+    end
+    if typeof(a1) ~= "Vector3" and typeof(a1) ~= "Vector2" then
+        if typeof(a1) ~= "CFrame" then
+            error("Unsupported types: values must be numbers, vectors, or CFrames.")
+            return
+        end
+        local v2 = false
+        if (a1.Position - a2.Position).magnitude <= v1 then
+            v2 = (a1:ToEulerAnglesYXZ()) == a2:ToEulerAnglesYXZ()
+        end
+        return v2
+    end
+    return (a1 - a2).magnitude <= v1
+end
+
+function u21.run(a1) -- Line: 947
+    local u1 = nil
+    u1 = ((game:GetService("RunService")).Heartbeat:Connect(function(a1_2) -- Line: 949 -- upvalues: a1 (val), u1 (ref)
+        a1(a1_2, u1)
+    end))
+    return u1
+end
+
+function u21.stepped(a1) -- Line: 955
+    local u1 = nil
+    u1 = ((game:GetService("RunService")).Stepped:Connect(function(a1_2) -- Line: 957 -- upvalues: a1 (val), u1 (ref)
+        a1(a1_2, u1)
+    end))
+    return u1
+end
+
+function u21.run_parallel(a1) -- Line: 963
+    local u1 = nil
+    u1 = ((game:GetService("RunService")).Heartbeat:ConnectParallel(function(a1_2) -- Line: 965 -- upvalues: a1 (val), u1 (ref)
+        a1(a1_2, u1)
+    end))
+    return u1
+end
+
+function u21.render_stepped(a1) -- Line: 971
+    local u1 = nil
+    u1 = ((game:GetService("RunService")).RenderStepped:Connect(function(a1_2) -- Line: 973 -- upvalues: a1 (val), u1 (ref)
+        a1(a1_2, u1)
+    end))
+    return u1
+end
+
+function u21.wait_for_descendant(a1, a2, a3, a4) -- Line: 979
+    -- upvalues: u21 (val), DeveloperTools (val)
+    if not a3 then
+        a3 = 15
+    end
+    local v1 = a1:FindFirstChild(a2, true)
+    if v1 then
+        return v1
+    end
+    local u12 = nil
+    local u13 = nil
+    local u15 = coroutine.running()
+    if not a4 and u21.FLAG_STUDIO_WARN_ALL_TIMED_OUT_INSTANCES then
+        a4 = true
+    end
+    local u32 = nil
+    if a4 then
+        u32 = if not a1:IsA("Model") then a1:FindFirstAncestorWhichIsA("Model") else a1
+        if u32 then
+            DeveloperTools.billboard_loading_model(u32, a3)
+        end
+    end
+    u12 = a1.DescendantAdded:Connect(function(a1) -- Line: 1007 -- upvalues: a2 (val), u12 (ref), u13 (ref), u15 (val)
+        if a1.Name == a2 then
+            u12:Disconnect()
+            if u13 and coroutine.status(u13) == "suspended" then
+                task.cancel(u13)
+            end
+            task.spawn(u15, a1)
+        end
+    end)
+    local v2 = task.delay(a3, function() -- Line: 1018
+        -- upvalues: u12 (ref), u15 (val), a4 (ref), u32 (ref), DeveloperTools (upval), a2 (val), a1 (val)
+        if u12.Connected then
+            u12:Disconnect()
+            task.spawn(u15)
+            if a4 and u32 then
+                DeveloperTools.billboard_warn_model(u32, "Error: Could not find instance named " .. tostring(a2))
+            end
+            warn("Unexpectedly long wait for " .. a2 .. " in " .. a1:GetFullName())
+        end
+    end)
+    return (coroutine.yield(u15))
+end
+
+function u21.wait_for_descendant_which_is_a(a1, a2, a3, a4) -- Line: 1038 -- upvalues: u21 (val), DeveloperTools (val)
+    if not a3 then
+        a3 = 15
+    end
+    local v1 = a1:FindFirstChildWhichIsA(a2, true)
+    if v1 then
+        return v1
+    end
+    local u12 = nil
+    local u13 = nil
+    local u15 = coroutine.running()
+    if not a4 and u21.FLAG_STUDIO_WARN_ALL_TIMED_OUT_INSTANCES then
+        a4 = true
+    end
+    local u32 = nil
+    if a4 then
+        u32 = if not a1:IsA("Model") then a1:FindFirstAncestorWhichIsA("Model") else a1
+        if u32 then
+            DeveloperTools.billboard_loading_model(u32, a3)
+        end
+    end
+    u12 = a1.DescendantAdded:Connect(function(a1) -- Line: 1067 -- upvalues: a2 (val), u12 (ref), u13 (ref), u15 (val)
+        if a1:IsA(a2) then
+            u12:Disconnect()
+            if u13 and coroutine.status(u13) == "suspended" then
+                task.cancel(u13)
+            end
+            task.spawn(u15, a1)
+        end
+    end)
+    local v2 = task.delay(a3, function() -- Line: 1078
+        -- upvalues: u12 (ref), u15 (val), a4 (ref), u32 (ref), DeveloperTools (upval), a2 (val), a1 (val)
+        if u12.Connected then
+            u12:Disconnect()
+            task.spawn(u15)
+            if a4 and u32 then
+                DeveloperTools.billboard_warn_model(u32, "Error: Could not find class " .. tostring(a2))
+            end
+            warn("Unexpectedly long wait for class " .. a2 .. " in " .. a1:GetFullName())
+        end
+    end)
+    return (coroutine.yield(u15))
+end
+
+function u21.get_headshot(a1) -- Line: 1096
+    return ("rbxthumb://type=AvatarHeadShot&id=%s&w=60&h=60"):format((math.abs(a1)))
+end
+
+function u21.get_closest_index(a1, a2) -- Line: 1100
+    local Magnitude
+    local v1 = nil
+    local v2 = (1 / 0)
+    for i, j in a2 do
+        Magnitude = (j - a1).Magnitude
+        if Magnitude < v2 then
+            v1 = i
+        end
+    end
+    return v1
+end
+
+function u21.points_in_range_of_point(a1, a2, a3) -- Line: 1112
+    for i, j in a2 do
+        if (j - a1).Magnitude <= a3 then
+            return true
+        end
+    end
+    return false
+end
+
+function u21.points_out_range_of_point(a1, a2, a3) -- Line: 1121
+    for i, j in a2 do
+        if a3 <= (j - a1).Magnitude then
+            return true
+        end
+    end
+    return false
+end
+
+function u21.initiate() end
+
+return u21

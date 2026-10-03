@@ -1,0 +1,63 @@
+-- Path : ReplicatedStorage.Modules.Core.UIFX
+-- Script path: ReplicatedStorage.Modules.Core.UIFX
+-- Decompile time: 1.30 ms
+
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local u7 = {}
+local Scaler = require(script:WaitForChild("Scaler"))
+local Buttons = require(script:WaitForChild("Buttons"))
+local MoveEffects = require(script:WaitForChild("MoveEffects"))
+local Scrolling = require(script:WaitForChild("Scrolling"))
+local TextBoxEffects = require(script:WaitForChild("TextBoxEffects"))
+local RotationEffects = require(script:WaitForChild("RotationEffects"))
+local StrokeEffects = require(script:WaitForChild("StrokeEffects"))
+local FrameEffects = require(script:WaitForChild("FrameEffects"))
+u7.sine_wave = FrameEffects.sine_wave
+u7.remove_sine_wave = FrameEffects.remove_sine_wave
+u7.error_effect = StrokeEffects.error_effect
+u7.find_scaler = Scaler.find_scaler
+u7.scale_open = Scaler.scale_open
+u7.scale_close = Scaler.scale_close
+u7.set_open = Scaler.set_open
+u7.set_close = Scaler.set_close
+u7.scale_toggle = Scaler.scale_toggle
+u7.shrink_click = Buttons.shrink_click
+u7.image_fly_move = MoveEffects.image_fly_move
+u7.snap_to_element = Scrolling.snap_to_element
+u7.toggle_slider = Buttons.toggle_slider
+u7.character_limited = TextBoxEffects.character_limited
+u7.spin = RotationEffects.spin
+u7.spin_forward_and_back = RotationEffects.spin_forward_and_back
+local u80 = {}
+
+function u7.get(a1) -- Line: 32 -- upvalues: u80 (val)
+    while not u80[a1] do
+        task.wait()
+    end
+    return u80[a1]
+end
+
+function u7.initiate() end
+
+function u7.loaded() -- Line: 43 -- upvalues: Util (val), u7 (val), u80 (val)
+    local u0 = {}
+    Util.hook_children(game.Players.LocalPlayer, function(a1) -- Line: 46 -- upvalues: Util (upval), u7 (upval), u0 (val), u80 (upval)
+        if a1.Name == "PlayerGui" then
+            Util.hook_descendants(a1, function(a1) -- Line: 48 -- upvalues: u7 (upval), u0 (upval), u80 (upval)
+                if a1:IsA("Configuration")
+                    and u7[a1.Name]
+                    and a1.Name ~= "loaded"
+                    and not u0[a1.Parent]
+                    and a1.Parent then
+                    u0[a1.Parent] = true
+                    local v1 = u7[a1.Name](a1.Parent)
+                    if v1 then
+                        u80[a1.Parent] = v1
+                    end
+                end
+            end, "uifx")
+        end
+    end)
+end
+
+return u7

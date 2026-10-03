@@ -1,0 +1,297 @@
+-- Path : ReplicatedStorage.Modules.Game.VehicleSystem.Vehicle
+-- Script path: ReplicatedStorage.Modules.Game.VehicleSystem.Vehicle
+-- Decompile time: 8.25 ms
+
+require(game.ReplicatedStorage.Modules.Game.ShoulderCamera)
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local ItemUtils = require(game.ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local Data = require(game.ReplicatedStorage.Modules.Core.Data)
+require(game.ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local Players = game:GetService("Players")
+local u70 = {}
+local LocalPlayer = Players.LocalPlayer
+local u72 = {}
+for i, j in script.VehicleTypes:GetChildren() do
+    if j:IsA("ModuleScript") then
+        u72[j.Name] = (require(j))
+    end
+end
+u70.current_driving = State.new(nil)
+u70.class = StatefulObject.new_class(function() -- Line: 25 -- upvalues: State (val)
+    return {
+        health = State.new(1500),
+        driver = State.new(nil),
+        locked = State.new(false),
+        crew_access = State.new(false),
+        alarm = State.new(false),
+    }
+end, "Vehicle")
+
+function u70.get_car_player_is_in() -- Line: 38 -- upvalues: Char (val)
+    local SeatPart = Char.get_hum().SeatPart
+    if SeatPart then
+        local v1 = nil
+        for i, j in game.Workspace.Vehicles:GetChildren() do
+            if SeatPart:IsDescendantOf(j) then
+                v1 = j
+                break
+            end
+        end
+        if v1 then
+            return v1
+        end
+    end
+end
+
+function u70.local_occupant(a1) -- Line: 54 -- upvalues: Char (val), u70 (val), Util (val)
+    local instance = a1.instance
+    local DriverSeat = instance:WaitForChild("DriverSeat")
+
+    local function update_occupant() -- Line: 58
+        -- upvalues: DriverSeat (val), Char (upval), u70 (upval), instance (val)
+        local Occupant = DriverSeat.Occupant
+        if Occupant and Occupant == Char.current_hum.get() then
+            u70.current_driving.set(instance)
+            return
+        end
+        if u70.current_driving.get() == instance then
+            u70.current_driving.set(nil)
+        end
+    end
+
+    Util.watch_property(DriverSeat, "Occupant", update_occupant)
+    return update_occupant
+end
+
+function u70.locking(a1) -- Line: 72 -- upvalues: u70 (val)
+    local instance = a1.instance
+    local DriverSeat = instance:WaitForChild("DriverSeat")
+    a1.states.locked.hook(function(a1, a2) -- Line: 76 -- upvalues: u70 (upval), instance (val), DriverSeat (val)
+        if u70.current_driving.get() == instance and a1 ~= a2 then
+            local v1 = if not a1 then 1.05 else 0.95
+            DriverSeat.Lock.PlaybackSpeed = v1
+            DriverSeat.Lock:Play()
+        end
+    end)
+end
+
+function u70.initiate() -- Line: 84 -- upvalues: Net (val), Util (val)
+    Net.hook("locked_vehicle", function(a1) -- Line: 85 -- upvalues: Util (upval)
+        if a1 and a1:IsDescendantOf(game.Workspace) then
+            local v1 = script.Effects.Locked:Clone()
+            v1.Parent = a1
+            game.Debris:AddItem(v1, 3)
+            v1:Play()
+            local v2 = script.Effects.BillboardLock:Clone()
+            v2.Parent = a1
+            game.Debris:AddItem(v2, 2)
+            Util.tween(v2.Lock, TweenInfo.new(0.5), {ImageTransparency = 0.3}).Completed:Wait()
+            task.wait(1)
+            Util.tween(v2.Lock, TweenInfo.new(0.5), {ImageTransparency = 1})
+        end
+    end)
+    Net.hook("explode_car", function(a1) -- Line: 100 -- upvalues: Util (upval) -- types: a1: userdata
+        if a1 ~= nil and a1:IsDescendantOf(game.Workspace) and a1:FindFirstChild("Body") then
+            local v1, v2
+            local v3 = a1
+            for i, j in a1:GetDescendants() do
+                if j:IsA("BasePart") and j.Transparency < 1 then
+                    v1 = j:Clone()
+                    v1.Parent = game.Workspace
+                    v1.Color = Color3.new()
+                    v1.Reflectance = 0
+                    v1.Material = Enum.Material.SmoothPlastic
+                    v1.Anchored = false
+                    v1:ClearAllChildren()
+                    v1:PivotTo((j:GetPivot()))
+                    j.Transparency = 1
+                    j.CanCollide = false
+                    v2 = v1.Mass * 40
+                    v1:ApplyImpulse((Vector3.new(Util.rand(-v2, v2), Util.rand(0, v2), (Util.rand(-v2, v2)))))
+                    v1:ApplyAngularImpulse((Vector3.new(Util.rand(-v2, v2), Util.rand(-v2, v2), (Util.rand(-v2, v2)))))
+                end
+                if j:IsA("Light") then
+                    j.Enabled = false
+                end
+                if j:IsA("ParticleEmitter") then
+                    j.Enabled = false
+                end
+                if j:IsA("Sound") and j.IsPlaying then
+                    j:Stop()
+                end
+            end
+            local v4 = script.Effects.BigExplosion:Clone()
+            v4.Parent = v3.Body.Base
+            v4:Play()
+            local v5 = script.Effects.ExplosionEffect:Clone()
+            v5.Parent = v3.Body.Base
+            v5:Emit(30)
+        end
+    end)
+    Net.hook("explode_bike", function(a1) -- Line: 139 -- upvalues: Util (upval) -- types: a1: userdata
+        if a1 ~= nil and a1:IsDescendantOf(game.Workspace) then
+            local v1, v2
+            local v3 = a1
+            for i, j in a1:GetDescendants() do
+                if j:IsA("BasePart") and j.Transparency < 1 then
+                    v1 = j:Clone()
+                    v1.Parent = game.Workspace
+                    v1.Color = Color3.new()
+                    v1.Reflectance = 0
+                    v1.Material = Enum.Material.SmoothPlastic
+                    v1.Anchored = false
+                    v1:ClearAllChildren()
+                    v1:PivotTo((j:GetPivot()))
+                    j.Transparency = 1
+                    j.CanCollide = false
+                    v2 = v1.Mass * 40
+                    v1:ApplyImpulse((Vector3.new(Util.rand(-v2, v2), Util.rand(0, v2), (Util.rand(-v2, v2)))))
+                    v1:ApplyAngularImpulse((Vector3.new(Util.rand(-v2, v2), Util.rand(-v2, v2), (Util.rand(-v2, v2)))))
+                end
+                if j:IsA("Light") then
+                    j.Enabled = false
+                end
+                if j:IsA("ParticleEmitter") then
+                    j.Enabled = false
+                end
+                if j:IsA("Sound") and j.IsPlaying then
+                    j:Stop()
+                end
+            end
+            local v4 = script.Effects.BigExplosion:Clone()
+            v4.Parent = v3.Chassis
+            v4:Play()
+            local v5 = script.Effects.ExplosionEffect:Clone()
+            v5.Parent = v3.Chassis
+            v5:Emit(30)
+        end
+    end)
+    Net.hook("pop_wheel", function(a1) -- Line: 178
+        if a1 and a1:IsDescendantOf(game.Workspace) then
+            local v1 = script.Effects.TirePop:Clone()
+            v1.Parent = a1
+            v1:Play()
+            game.Debris:AddItem(v1, 1)
+            local v2 = script.Effects.Dust:Clone()
+            v2.Parent = a1
+            local v3 = script.Effects.NormalFacingDust:Clone()
+            v3.Parent = a1
+            v2:Emit(6)
+            v3:Emit(10)
+            game.Debris:AddItem(v2, 1.5)
+            game.Debris:AddItem(v3, 1.5)
+        end
+    end)
+end
+
+function u70.setup_lights_and_exhaust(a1) -- Line: 219 -- upvalues: Util (val)
+    local instance = a1.instance
+    local Body = instance:WaitForChild("Body")
+    local DriverSeat = instance:WaitForChild("DriverSeat", true)
+
+    local function brake_light_function() -- Line: 224 -- upvalues: instance (val), DriverSeat (val)
+        local BrakeLights = instance:FindFirstChild("BrakeLights", true)
+        local Throttle = DriverSeat.Throttle
+        if BrakeLights then
+            local Neon_2, v1
+            if BrakeLights:IsA("BasePart") then
+                BrakeLights.Material = if not (Throttle <= 0) then Enum.Material.SmoothPlastic else if not DriverSeat.Occupant then Enum.Material.SmoothPlastic else Enum.Material.Neon
+            end
+            for i, j in BrakeLights:GetDescendants() do
+                if j:IsA("BasePart") then
+                    Neon_2 = if not (Throttle <= 0) then Enum.Material.SmoothPlastic else if not DriverSeat.Occupant then Enum.Material.SmoothPlastic else Enum.Material.Neon
+                    j.Material = Neon_2
+                elseif j:IsA("Light") then
+                    v1 = if not (Throttle <= 0) then false else not not DriverSeat.Occupant
+                    j.Enabled = v1
+                end
+            end
+        end
+    end
+
+    Util.watch_property(DriverSeat, "Throttle", brake_light_function)
+    Util.watch_property(DriverSeat, "Occupant", brake_light_function)
+    return function() -- Line: 244 -- upvalues: a1 (val), instance (val), Body (val), brake_light_function (val)
+        a1.states.driver.hook(function(a1) -- Line: 245 -- upvalues: instance (upval), Body (upval)
+            local v1
+            local HeadLights = instance:FindFirstChild("HeadLights", true)
+            if HeadLights then
+                local Neon_2
+                if HeadLights:IsA("BasePart") then
+                    HeadLights.Material = if not a1 then Enum.Material.SmoothPlastic else Enum.Material.Neon
+                end
+                for i, j in HeadLights:GetDescendants() do
+                    if j:IsA("BasePart") then
+                        Neon_2 = if not a1 then Enum.Material.SmoothPlastic else Enum.Material.Neon
+                        j.Material = Neon_2
+                    elseif j:IsA("Light") then
+                        j.Enabled = not not a1
+                    end
+                end
+            end
+            for k, n in Body:GetDescendants() do
+                if n:IsA("ParticleEmitter") and n.Name == "SmokeParticles" then
+                    v1 = a1 ~= nil
+                    n.Enabled = v1
+                end
+            end
+        end)
+        brake_light_function()
+    end
+end
+
+function u70.loaded() -- Line: 270
+    -- upvalues: u70 (val), u72 (val), Players (val), LocalPlayer (val), ItemUtils (val), Data (val)
+    local ItemsUI = require(game.ReplicatedStorage.Modules.Game.Inventory.ItemsUI)
+    u70.class.hook(function(a1) -- Line: 273
+        -- upvalues: u72 (upval), u70 (upval), Players (upval), LocalPlayer (upval), ItemUtils (upval), Data (upval)
+        -- upvalues: ItemsUI (val)
+        local instance = a1.instance
+        local Attribute = instance:GetAttribute("VehicleType")
+        local u14 = nil
+        if u72[Attribute] then
+            u14 = u72[Attribute].init_vehicle(a1)
+        end
+        local u19 = u70.setup_lights_and_exhaust(a1)
+
+        local function get_player_for_occupant(a1) -- Line: 283 -- upvalues: Players (upval) -- types: a1: userdata?
+            if not a1 then
+                return nil
+            end
+            return Players:GetPlayerFromCharacter(a1.Parent)
+        end
+
+        local u24 = u70.local_occupant(a1)
+        return function() -- Line: 292
+            -- upvalues: u70 (upval), a1 (val), u24 (val), u19 (val), Players (upval), instance (val)
+            -- upvalues: LocalPlayer (upval), ItemUtils (upval), Data (upval), ItemsUI (upval), u14 (ref)
+            u70.locking(a1)
+            u24()
+            u19()
+            a1.states.driver.hook(function(a1, a2) -- Line: 297 -- upvalues: Players (upval)
+                local PlayerFromCharacter = if a1 then Players:GetPlayerFromCharacter(a1.Parent) else nil
+                local PlayerFromCharacter_2 = if a2 then Players:GetPlayerFromCharacter(a2.Parent) else nil
+                if PlayerFromCharacter and PlayerFromCharacter == Players.LocalPlayer then
+                    return
+                end
+            end)
+            a1.states.health.hook(function(a1) -- Line: 308
+                -- upvalues: instance (upval), LocalPlayer (upval), ItemUtils (upval), Data (upval), ItemsUI (upval)
+                if instance:GetAttribute("ItemGUID")
+                    and (instance:GetAttribute("OwnerUserId")) == LocalPlayer.UserId then
+                    ItemUtils.get_item_info(Data, instance:GetAttribute("ItemGUID")).health = a1
+                    ItemsUI.update_item_by_guid(instance:GetAttribute("ItemGUID"))
+                end
+            end)
+            if u14 then
+                u14()
+            end
+        end
+    end)
+end
+
+return u70

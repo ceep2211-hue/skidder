@@ -1,0 +1,432 @@
+-- Path : ReplicatedStorage.Modules.Core.UI
+-- Script path: ReplicatedStorage.Modules.Core.UI
+-- Decompile time: 10.99 ms
+
+game:GetService("ReplicatedStorage")
+require(game.ReplicatedStorage.Modules.Core.State)
+require(game.ReplicatedStorage.Modules.Core.Blur)
+local Input = require(game.ReplicatedStorage.Modules.Core.Input)
+local Audio = require(game.ReplicatedStorage.Modules.Core.Audio)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+require(game.ReplicatedStorage.Modules.Core.Tween)
+local DeveloperTools = require(game.ReplicatedStorage.Modules.Core.DeveloperTools)
+local FindFirstChild = game.FindFirstChild
+local GetService = game.GetService
+local WaitForChild = game.WaitForChild
+local StarterGui = game:GetService("StarterGui")
+game:GetService("TweenService")
+local u77 = {}
+u77.blue = Color3.fromRGB(58, 171, 211)
+u77.dark_blue = Color3.fromRGB(50, 152, 186)
+u77.green = Color3.fromRGB(19, 211, 80)
+u77.dark_green = Color3.fromRGB(17, 190, 72)
+u77.red = Color3.fromRGB(211, 47, 47)
+u77.dark_red = Color3.fromRGB(182, 40, 40)
+u77.orange = Color3.fromRGB(255, 118, 20)
+u77.dark_orange = Color3.fromRGB(221, 102, 16)
+local u118 = nil
+
+function u77.topbar(a1) -- Line: 33 -- upvalues: StarterGui (val)
+    pcall(function() -- Line: 33 -- upvalues: StarterGui (upval), a1 (val)
+        StarterGui:SetCore("TopbarEnabled", a1)
+    end)
+end
+
+function u77.topbar_transparency(a1) -- Line: 34 -- upvalues: u118 (ref)
+    pcall(function() -- Line: 34 -- upvalues: u118 (upval), a1 (val)
+        u118:SetTopbarTransparency(a1)
+    end)
+end
+
+function u77.reset_button(a1) -- Line: 35 -- upvalues: StarterGui (val)
+    pcall(function() -- Line: 35 -- upvalues: StarterGui (upval), a1 (val)
+        StarterGui:SetCore("ResetButtonCallback", a1)
+    end)
+end
+
+function u77.chat(a1) -- Line: 36 -- upvalues: StarterGui (val)
+    pcall(function() -- Line: 36 -- upvalues: StarterGui (upval), a1 (val)
+        StarterGui:setCoreGuiEnabled("Chat", a1)
+    end)
+end
+
+function u77.playerlist(a1) -- Line: 37 -- upvalues: StarterGui (val)
+    pcall(function() -- Line: 37 -- upvalues: StarterGui (upval), a1 (val)
+        StarterGui:setCoreGuiEnabled("PlayerList", a1)
+    end)
+end
+
+function u77.backpack(a1) -- Line: 38 -- upvalues: StarterGui (val)
+    pcall(function() -- Line: 38 -- upvalues: StarterGui (upval), a1 (val)
+        StarterGui:setCoreGuiEnabled("Backpack", a1)
+    end)
+end
+
+function u77.health(a1) -- Line: 39 -- upvalues: StarterGui (val)
+    pcall(function() -- Line: 39 -- upvalues: StarterGui (upval), a1 (val)
+        StarterGui:setCoreGuiEnabled("Health", a1)
+    end)
+end
+
+function u77.emotes(a1) -- Line: 40 -- upvalues: StarterGui (val)
+    pcall(function() -- Line: 40 -- upvalues: StarterGui (upval), a1 (val)
+        StarterGui:setCoreGuiEnabled("EmotesMenu", a1)
+    end)
+end
+
+function u77.toggle_all(a1) -- Line: 41 -- upvalues: StarterGui (val)
+    pcall(function() -- Line: 41 -- upvalues: StarterGui (upval), a1 (val)
+        StarterGui:setCoreGuiEnabled("All", a1)
+    end)
+end
+
+function u77.mobile_controls(a1) -- Line: 42 -- upvalues: u118 (ref)
+    local TouchGui = u118:FindFirstChild("TouchGui")
+    if TouchGui then
+        TouchGui.Enabled = a1
+    end
+end
+
+function u77.fade(a1, a2, a3) -- Line: 49 -- upvalues: u77 (val)
+    u77.fade_in(a2)
+    task.wait(a1 or 0.8)
+    u77.fade_out(a3)
+end
+
+function u77.fade_in(a1) -- Line: 56 -- upvalues: u77 (val), Util (val)
+    local TransitionFrame = u77.get("TransitionFrame")
+    TransitionFrame.Visible = true
+    icon.setTopbarEnabled(false)
+    TransitionFrame.TitleLogo.ImageTransparency = 1
+    TransitionFrame.GradientBackground.BackgroundTransparency = 1
+    Util.tween(TransitionFrame.TitleLogo, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {ImageTransparency = 0})
+    Util.tween(
+        TransitionFrame.GradientBackground,
+        TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
+        {BackgroundTransparency = 0}
+    ).Completed:Wait()
+    if a1 then
+        task.spawn(a1)
+    end
+end
+
+function u77.fade_out(a1) -- Line: 69 -- upvalues: u77 (val), Util (val)
+    local TransitionFrame = u77.get("TransitionFrame")
+    icon.setTopbarEnabled(true)
+    Util.tween(TransitionFrame.TitleLogo, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {ImageTransparency = 1})
+    ;(Util.tween(
+        TransitionFrame.GradientBackground,
+        TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.In),
+        {BackgroundTransparency = 1}
+    )).Completed:Connect(function() -- Line: 73 -- upvalues: TransitionFrame (val)
+        TransitionFrame.Visible = false
+    end)
+    if a1 then
+        task.spawn(a1)
+    end
+end
+
+function u77.get_screen_type() -- Line: 81
+    local ViewportSize = workspace.CurrentCamera.ViewportSize
+    local v1 = math.sqrt(ViewportSize.X * ViewportSize.Y)
+    if v1 < 700 then
+        return "Phone"
+    end
+    if v1 < 1000 then
+        return "Tablet"
+    end
+    if v1 < 1300 then
+        return "Laptop"
+    end
+    return "Desktop"
+end
+
+local u133 = {"Phone", "Tablet", "Laptop", "Desktop"}
+
+function u77.is_screen_atleast(a1) -- Line: 96 -- upvalues: u77 (val), u133 (val)
+    local v1 = u77.get_screen_type()
+    for k, v in next, u133 do
+        if v == a1 then
+            return true
+        end
+        if v == v1 then
+            return false
+        end
+    end
+end
+
+function u77.offset_jump_button(a1) -- Line: 107 -- upvalues: u118 (ref) -- types: a1: userdata
+    local JumpButton = u118:FindFirstChild("JumpButton", true)
+    if JumpButton then
+        JumpButton.Position = UDim2.new(
+            JumpButton.Position.X.Scale + a1.X.Scale,
+            JumpButton.Position.X.Offset + a1.X.Offset,
+            JumpButton.Position.Y.Scale + a1.Y.Scale,
+            JumpButton.Position.Y.Offset + a1.Y.Offset
+        )
+    end
+end
+
+function u77.arrow(a1, a2) -- Line: 120
+    local ImageLabel = Instance.new("ImageLabel")
+    ImageLabel.Image = "rbxassetid://136011733"
+    ImageLabel.Size = UDim2.new(0, 70, 0, 125)
+    ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+    ImageLabel.BackgroundTransparency = 1
+    ImageLabel.Rotation = math.deg((math.atan2(-a2.Y, a2.X))) - 90
+    ImageLabel.Position = UDim2.new(0, 35 * a2.X, 0, 62.5 * a2.Y)
+    ImageLabel.Parent = a1
+    return ImageLabel
+end
+
+function u77.animate_button(a1) -- Line: 132 -- upvalues: Audio (val), Util (val)
+    if a1.Name == "Inner" then
+        pcall(function() -- Line: 134 -- upvalues: a1 (val), Audio (upval), Util (upval)
+            a1.Parent.Parent.MouseButton1Down:Connect(function() -- Line: 135 -- upvalues: Audio (upval), Util (upval), a1 (upval)
+                Audio.play({
+                    SoundId = "rbxassetid://452267918",
+                    Volume = 0.1,
+                    PlaybackSpeed = 0.95 + math.random() * 0.1,
+                })
+                Util.tween(a1, TweenInfo.new(0.1, Enum.EasingStyle.Linear), {Position = UDim2.new(0.5, 0, 0, 0)})
+            end)
+            a1.Parent.Parent.MouseButton1Up:Connect(function() -- Line: 139 -- upvalues: Util (upval), a1 (upval)
+                Util.tween(a1, TweenInfo.new(1, Enum.EasingStyle.Elastic), {Position = UDim2.new(0.5, 0, 0, -6)})
+            end)
+            a1.Parent.Parent.MouseLeave:Connect(function() -- Line: 142 -- upvalues: Util (upval), a1 (upval)
+                Util.tween(a1, TweenInfo.new(1, Enum.EasingStyle.Elastic), {Position = UDim2.new(0.5, 0, 0, -6)})
+            end)
+        end)
+    end
+end
+
+function u77.woosh() -- Line: 149 -- upvalues: Audio (val)
+    Audio.play({SoundId = "rbxassetid://4255432837", Volume = 0.2, PlaybackSpeed = 0.9})
+end
+
+function u77.sparkle() -- Line: 153 -- upvalues: Audio (val)
+    Audio.play({SoundId = "rbxassetid://245520987", Volume = 0.3, PlaybackSpeed = 0.9})
+end
+
+function u77.deny(a1) -- Line: 161 -- upvalues: Audio (val), Util (val), u118 (ref)
+    Audio.play({SoundId = "rbxassetid://550209561", Volume = 1})
+    if a1 then
+        local u5 = nil
+        local v1 = (Util.tween(u118.ScreenGui.Deny, TweenInfo.new(0.3), {TextTransparency = 0, TextStrokeTransparency = 0.8})).Completed:Connect(function() -- Line: 165 -- upvalues: Util (upval), u118 (upval), u5 (ref)
+            task.wait(3)
+            Util.tween(u118.ScreenGui.Deny, TweenInfo.new(0.3), {TextTransparency = 1, TextStrokeTransparency = 1})
+            u5:Disconnect()
+            u5 = nil
+        end)
+        u118.ScreenGui.Deny.Text = a1
+    end
+end
+
+function u77.info(a1) -- Line: 175 -- upvalues: Util (val), u118 (ref)
+    if a1 then
+        local u1 = nil
+        local v1 = (Util.tween(u118.ScreenGui.Deny, TweenInfo.new(0.3), {TextTransparency = 0, TextStrokeTransparency = 0.8})).Completed:Connect(function() -- Line: 178 -- upvalues: Util (upval), u118 (upval), u1 (ref)
+            task.wait(3)
+            Util.tween(u118.ScreenGui.Deny, TweenInfo.new(0.3), {TextTransparency = 1, TextStrokeTransparency = 1})
+            u1:Disconnect()
+            u1 = nil
+        end)
+        u118.ScreenGui.Deny.Text = a1
+    end
+end
+
+local GuiService = game:GetService("GuiService")
+
+function u77.console_select(a1) -- Line: 189 -- upvalues: Input (val), GuiService (val)
+    if Input.get_type() == "console" then
+        GuiService.SelectedObject = a1
+    end
+end
+
+local u159 = game:GetService("RunService"):IsStudio()
+local u160 = {}
+local u161 = {}
+local u162 = {}
+
+function u77.get(a1, a2) -- Line: 201 -- upvalues: u159 (val), u160 (val), u161 (val), u162 (val), DeveloperTools (val)
+    if u159 and type(a1) == "string" then
+        if not u160[a1] then
+            warn((("No UI element named \"%*\" found"):format(a1)))
+        elseif u161[a1] and not u162[a1] then
+            u162[a1] = true
+            warn((("Detected UI naming collision for %*"):format(a1)))
+            DeveloperTools.local_warn_developer((("Detected UI naming collision for %*"):format(a1)))
+        end
+    end
+    if u160[a1] and a2 then
+        local v1 = u160[a1]
+        v1.Name = tostring((math.random(100, 10000)))
+    end
+    return not (type(a1) ~= "string") and u160[a1] or a1
+end
+
+local u164 = {}
+
+function u77.open(a1) -- Line: 223 -- upvalues: u77 (val), u164 (val), Util (val)
+    if type(a1) == "string" then
+        a1 = u77.get(a1)
+    end
+    if a1:IsA("ScreenGui") then
+        a1 = a1.ScaleHolder
+    end
+    if not u164[a1] then
+        local v1 = a1.AbsolutePosition - workspace.CurrentCamera.ViewportSize / 2
+        local v2 = math.abs(v1.x)
+        v1 = if not (math.abs(v1.y) < v2) then UDim2.new(0, 0, math.sign(v1.y), 0) else UDim2.new(math.sign(v1.x), 0, 0, 0)
+        u164[a1] = {a1.Position, a1.Position + v1}
+    end
+    if not a1.Visible then
+        a1.Position = u164[a1][2]
+        a1.Visible = true
+    end
+    a1.woosh()
+    Util.tween(a1, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = u164[a1][1]})
+end
+
+function u77.close(a1) -- Line: 244 -- upvalues: u77 (val), u164 (val), Util (val)
+    local v1
+    local v2 = a1
+    if type(v2) == "string" then
+        a1 = u77.get(a1)
+    end
+    if not u164[a1] then
+        local v3 = workspace.CurrentCamera.ViewportSize / 2
+        v2 = a1.AbsolutePosition - v3
+        local v4 = math.abs(v2.x)
+        v2 = if not (math.abs(v2.y) < v4) then UDim2.new(0, 0, math.sign(v2.y), 0) else UDim2.new(math.sign(v2.x), 0, 0, 0)
+        v4 = u164
+        v1 = {a1.Position, a1.Position + v2}
+        v4[a1] = v1
+    end
+    local u49 = nil
+    local tween = Util.tween
+    v1 = TweenInfo.new(0.5, Enum.EasingStyle.Quint)
+    local v5 = {Position = u164[a1][2]}
+    v2 = (tween(a1, v1, v5)).Completed:Connect(function() -- Line: 257 -- upvalues: u49 (ref), a1 (ref), u164 (upval)
+        u49:Disconnect()
+        u49 = nil
+        if a1.Position == u164[a1][2] then
+            a1.Visible = false
+        end
+    end)
+end
+
+function u77.toggle(a1, a2) -- Line: 266 -- upvalues: u77 (val)
+    if type(a1) == "string" then
+        a1 = u77.get(a1)
+    end
+    if a2 ~= nil then
+        if a2 then
+            u77.open(a1)
+            return
+        end
+        u77.close(a1)
+        return
+    end
+    if a1.Visible then
+        u77.close(a1)
+        return
+    end
+    u77.open(a1)
+end
+
+function u77.is_open(a1) -- Line: 279 -- upvalues: u77 (val)
+    if type(a1) == "string" then
+        a1 = u77.get(a1)
+    end
+    return a1.Visible
+end
+
+function u77.on_click(a1, a2) -- Line: 284 -- upvalues: u77 (val)
+    local u5 = u77.get(a1)
+    if u5 and u5.Active == false and not u5:FindFirstChild("silence_active_warning") then
+        warn(
+            u5.Name,
+            " HAS ACTIVE PROPERTY SET TO FALSE, THIS PREVENTS CONSOLE PLAYERS CLICKING ON IT. SILENCE BY INSERTING AN INSTANCE NAMED silence_active_warning"
+        )
+    end
+    if u5 and u5:GetAttribute("being_listened_to") and not u5:FindFirstChild("silence_listen_warning") then
+        warn(
+            u5.Name,
+            " IS ALREADY BEING LISTENED TO. CONSIDER IF THIS COULD CAUSE A MEMORY LEAK. SILENCE BY INSERTING AN INSTANCE NAMED silence_listen_warning"
+        )
+    end
+    u5:SetAttribute("being_listened_to", true)
+    return u5.MouseButton1Click:Connect(function() -- Line: 298 -- upvalues: a2 (val), u5 (val)
+        a2(u5)
+    end)
+end
+
+function u77.tween(a1, a2, a3) -- Line: 303 -- upvalues: Util (val), u77 (val)
+    return Util.tween(u77.get(a1), a2, a3)
+end
+
+function u77.notify(a1, a2, a3, a4, a5, a6, a7) -- Line: 307
+    (game:GetService("StarterGui")):SetCore("SendNotification", {
+        Title = a1,
+        Text = a2,
+        Icon = a3,
+        Duration = a4,
+        Callback = a5,
+        Button1 = a6,
+        Button2 = a7,
+    })
+end
+
+function u77.initiate() -- Line: 319
+    -- upvalues: u118 (ref), WaitForChild (val), u77 (val), u160 (val), u161 (val), Net (val), Input (val)
+    local Name
+    u118 = WaitForChild(game.Players.LocalPlayer, "PlayerGui")
+    u77.player_gui = u118
+    local v1 = {}
+    for i, j in u118:GetDescendants() do
+        if j.Name ~= j.ClassName then
+            Name = j.Name
+            v1[Name] = v1[j.Name] and v1[j.Name] + 1 or 1
+            u160[j.Name] = j
+        end
+    end
+    for k, n in v1 do
+        if n >= 2 then
+            u161[k] = true
+        end
+    end
+    table.clear(v1)
+    Net.hook("notify", u77.notify)
+    Net.hook("fade_in", u77.fade_in)
+    Net.hook("fade_out", u77.fade_out)
+    Net.hook("fade", u77.fade)
+    Net.hook("flip_cam", function() -- Line: 347
+        local CurrentCamera = workspace.CurrentCamera
+        CurrentCamera.CFrame = (CFrame.Angles(0, 3.141592653589793, 0)) * workspace.CurrentCamera.CFrame
+    end)
+    Net.hook("show_chat", function(a1) -- Line: 350
+        (game:GetService("StarterGui")):SetCore("ChatMakeSystemMessage", a1)
+    end)
+    task.spawn(function() -- Line: 360 -- upvalues: Input (upval), u118 (upval)
+        local Descendants, Descendants_2, v1, v2
+        local v3 = nil
+        repeat
+            v1 = Input.get_type() == "console"
+            if v3 ~= v1 then
+                v2 = next
+                Descendants, Descendants_2 = u118:GetDescendants()
+                for k, v in v2, Descendants, Descendants_2 do
+                    if v.Name == "ControllerUI" then
+                        v.Visible = v1
+                    end
+                end
+            end
+        until not wait(3)
+    end)
+end
+
+function u77.loaded() end
+
+return u77

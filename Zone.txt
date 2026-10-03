@@ -1,0 +1,151 @@
+-- Path : ReplicatedStorage.Modules.Core.Zone
+-- Script path: ReplicatedStorage.Modules.Core.Zone
+-- Decompile time: 3.88 ms
+
+local Timer = require(game.ReplicatedStorage.Modules.Core.Timer)
+require(game.ReplicatedStorage.Modules.Core.Net)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+require(game.ReplicatedStorage.Modules.Core.V3)
+local Signal = require(game.ReplicatedStorage.Modules.Core.Signal)
+require(game.ReplicatedStorage.Modules.Core.Util)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+require(game.ReplicatedStorage.Modules.Core.Tbl)
+local v1 = {}
+local u57 = {}
+
+local function point_in_part(a1, a2) -- Line: 14 -- types: a2: userdata
+    local v1 = a2.CFrame:PointToObjectSpace(a1)
+    local v2 = false
+    if (math.abs(v1.X)) <= a2.Size.X / 2 then
+        v2 = false
+        if (math.abs(v1.Y)) <= a2.Size.Y / 2 then
+            v2 = (math.abs(v1.Z)) <= a2.Size.Z / 2
+        end
+    end
+    return v2
+end
+
+function v1.point_in_parts(a1, a2) -- Line: 21 -- upvalues: point_in_part (val)
+    for i, j in a2 do
+        if point_in_part(a1, j) then
+            return true
+        end
+    end
+    return false
+end
+
+function v1.new(a1, a2) -- Line: 32
+    -- upvalues: State (val), Signal (val), point_in_part (val), u57 (val)
+    local u2 = {}
+    if typeof(a1) == "table" then
+        u2.parts = a1
+    elseif not a1:IsA("Model") then
+        u2.parts = {a1}
+    else
+        u2.parts = a1:GetChildren()
+        a1.ChildAdded:Connect(function() -- Line: 40 -- upvalues: u2 (val), a1 (val)
+            u2.parts = a1:GetChildren()
+        end)
+        a1.ChildRemoved:Connect(function() -- Line: 44 -- upvalues: u2 (val), a1 (val)
+            u2.parts = a1:GetChildren()
+        end)
+    end
+    u2.position_type = a2
+    u2.inside = State.new(false)
+    u2.enabled = State.new(true)
+    u2.Entered = Signal.new()
+    u2.Exited = Signal.new()
+    u2.inside.hook(function(a1, a2) -- Line: 59 -- upvalues: u2 (val)
+        if a1 ~= a2 then
+            if a1 then
+                u2.Entered:Fire()
+                return
+            end
+            u2.Exited:Fire()
+        end
+    end)
+
+    function u2.get_players_in() -- Line: 69 -- upvalues: u2 (val), point_in_part (upval)
+        local PrimaryPart
+        local v1 = {}
+        for i, j in game.Players:GetPlayers() do
+            if j.Character then
+                PrimaryPart = j.Character.PrimaryPart
+                if PrimaryPart then
+                    for k, n in u2.parts do
+                        if point_in_part(PrimaryPart.Position, n) then
+                            if true then
+                                table.insert(v1, j)
+                            end
+                            break
+                        end
+                    end
+                    if false then
+                        table.insert(v1, j)
+                    end
+                end
+            end
+        end
+        return v1
+    end
+
+    function u2.is_player_in_part() -- Line: 82 -- upvalues: u2 (val), point_in_part (upval)
+        local PrimaryPart
+        for i, j in game.Players:GetPlayers() do
+            if j.Character then
+                PrimaryPart = j.Character.PrimaryPart
+                if PrimaryPart then
+                    for k, n in u2.parts do
+                        if point_in_part(PrimaryPart.Position, n) then
+                            if true then
+                                return true
+                            end
+                            break
+                        end
+                    end
+                    if false then
+                        return true
+                    end
+                end
+            end
+        end
+        return false
+    end
+
+    u2.enabled.hook(function(a1) -- Line: 95 -- upvalues: u2 (val)
+        if not a1 then
+            u2.inside.set(false)
+        end
+    end)
+    table.insert(u57, u2)
+    return u2
+end
+
+function v1.initiate() end
+
+function v1.loaded() -- Line: 110 -- upvalues: Timer (val), Char (val), u57 (val), point_in_part (val)
+    Timer.new(0.1, function() -- Line: 111 -- upvalues: Char (upval), u57 (upval), point_in_part (upval)
+        local v1 = Char.current_hrp.get()
+        if v1 then
+            local set, v2
+            local Position = v1.Position
+            local Position_2 = workspace.CurrentCamera.CFrame.Position
+            local v3 = nil
+            local v4 = nil
+            for i, j in u57, v3, v4 do
+                if j.enabled.get() then
+                    v2 = if j.position_type ~= "camera" then Position else Position_2
+                    for k, n in j.parts do
+                        if point_in_part(v2, n) then
+                            j.inside.set(true)
+                            break
+                        end
+                    end
+                    set(false)
+                end
+            end
+        end
+    end)
+end
+
+return v1

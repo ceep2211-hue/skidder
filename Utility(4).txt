@@ -1,0 +1,27 @@
+-- Path : ReplicatedStorage.Utility
+-- Script path: ReplicatedStorage.Utility
+-- Decompile time: 0.49 ms
+
+local v1 = {Instance = {}}
+
+function v1.Instance.new(a1, a2, a3) -- Line: 5
+    local v1 = if typeof(a1) ~= "Instance" then Instance.new(a1) else a1:Clone()
+    if a3 then
+        for i, j in a3 do
+            j.Parent = v1
+        end
+    end
+    if a2 then
+        for k, n in a2 do
+            if k ~= "Parent" then
+                v1[k] = n
+            end
+        end
+        if a2.Parent then
+            v1.Parent = a2.Parent
+        end
+    end
+    return v1
+end
+
+return v1
