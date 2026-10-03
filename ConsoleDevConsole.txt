@@ -1,0 +1,15 @@
+-- Path : StarterPlayer.StarterPlayerScripts.Debug.ConsoleDevConsole
+-- Script path: StarterPlayer.StarterPlayerScripts.Debug.ConsoleDevConsole
+-- Decompile time: 0.36 ms
+
+game.UserInputService.InputBegan:Connect(function(a1, a2) -- Line: 1
+    if a2 then
+        return
+    end
+    if a1.KeyCode == Enum.KeyCode.DPadLeft then
+        if not game.Players.LocalPlayer:GetAttribute("IsAdmin") then
+            return
+        end
+        game.StarterGui:SetCore("DevConsoleVisible", not (game.StarterGui:GetCore("DevConsoleVisible")))
+    end
+end)

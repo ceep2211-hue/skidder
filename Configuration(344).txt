@@ -1,0 +1,5 @@
+-- Path : ReplicatedStorage.Items.car.Civic.Upgrades.Suspension.High.Configuration
+-- Script path: ReplicatedStorage.Items.car.Civic.Upgrades.Suspension.High.Configuration
+-- Decompile time: 0.10 ms
+
+return {AttributeName = "suspensionMultiplier", AttributeValue = 1.2, FolderName = "Suspension"}

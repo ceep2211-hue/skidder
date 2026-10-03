@@ -1,0 +1,5 @@
+-- Path : ReplicatedStorage.Items.car.Rezvani.Upgrades.Body.SWAT Body.Configuration
+-- Script path: ReplicatedStorage.Items.car.Rezvani.Upgrades.Body.SWAT Body.Configuration
+-- Decompile time: 0.06 ms
+
+return {UpgradeType = "BodyUpgrade", UpgradeName = "SWAT Body"}

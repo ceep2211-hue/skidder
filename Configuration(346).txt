@@ -1,0 +1,5 @@
+-- Path : ReplicatedStorage.Items.car.Civic.Upgrades.Horn.Goofy Horn.Configuration
+-- Script path: ReplicatedStorage.Items.car.Civic.Upgrades.Horn.Goofy Horn.Configuration
+-- Decompile time: 0.06 ms
+
+return {SoundId = "rbxassetid://9902726382", SoundName = "HornSound"}
