@@ -1,0 +1,5 @@
+-- Path : ReplicatedStorage.Items.bike.BMX.Upgrades.Horn.Rubber Duck.Configuration
+-- Script path: ReplicatedStorage.Items.bike.BMX.Upgrades.Horn.Rubber Duck.Configuration
+-- Decompile time: 0.06 ms
+
+return {SoundId = "rbxassetid://134225335736765", SoundName = "HornSound"}

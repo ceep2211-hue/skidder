@@ -1,0 +1,5 @@
+-- Path : Workspace.Vehicles.Rezvani.Upgrades.Body.SWAT Body.Configuration
+-- Script path: Workspace.Vehicles.Rezvani.Upgrades.Body.SWAT Body.Configuration
+-- Decompile time: 0.06 ms
+
+return {UpgradeType = "BodyUpgrade", UpgradeName = "SWAT Body"}

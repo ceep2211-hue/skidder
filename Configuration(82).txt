@@ -1,0 +1,11 @@
+-- Path : ReplicatedStorage.Items.cosmetic.Thermal Scope.Configuration
+-- Script path: ReplicatedStorage.Items.cosmetic.Thermal Scope.Configuration
+-- Decompile time: 0.14 ms
+
+return {
+    Attributes = {
+        {AttributeName = "Zoom", AttributeValue = 1.8},
+        {AttributeName = "SniperScope", AttributeValue = false},
+    },
+    States = {{Tag = "Gun", StateName = "accuracy", StateMultiplier = 1.025}},
+}

@@ -1,0 +1,10 @@
+-- Path : ReplicatedStorage.Items.cosmetic.Red Dot Sight.Configuration
+-- Script path: ReplicatedStorage.Items.cosmetic.Red Dot Sight.Configuration
+-- Decompile time: 0.11 ms
+
+return {
+    Attributes = {
+        {AttributeName = "Zoom", AttributeValue = 1.25},
+        {AttributeName = "SniperScope", AttributeValue = false},
+    },
+}

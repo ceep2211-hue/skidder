@@ -1,0 +1,11 @@
+-- Path : ReplicatedStorage.Items.gun.Hunting Rifle.ScopeCosmetic.Configuration
+-- Script path: ReplicatedStorage.Items.gun.Hunting Rifle.ScopeCosmetic.Configuration
+-- Decompile time: 0.13 ms
+
+return {
+    Attributes = {
+        {AttributeName = "SniperScope", AttributeValue = true},
+        {AttributeName = "Zoom", AttributeValue = 2.5},
+    },
+    States = {},
+}

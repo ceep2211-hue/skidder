@@ -1,0 +1,5 @@
+-- Path : Workspace.Vehicles.Rezvani.Upgrades.Horn.MLG Air Horn.Configuration
+-- Script path: Workspace.Vehicles.Rezvani.Upgrades.Horn.MLG Air Horn.Configuration
+-- Decompile time: 0.07 ms
+
+return {SoundId = "rbxassetid://833707554", SoundName = "HornSound", SoundVolume = 0.5}

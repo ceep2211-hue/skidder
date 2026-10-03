@@ -1,0 +1,5 @@
+-- Path : ReplicatedStorage.Items.cosmetic.Flashlight.Configuration
+-- Script path: ReplicatedStorage.Items.cosmetic.Flashlight.Configuration
+-- Decompile time: 0.07 ms
+
+return {Tag = "Gun", StateName = "accuracy", StateMultiplier = 1.1}

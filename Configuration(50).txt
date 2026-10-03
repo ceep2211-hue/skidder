@@ -1,0 +1,5 @@
+-- Path : Workspace.Vehicles.Rezvani.Upgrades.Suspension.High.Configuration
+-- Script path: Workspace.Vehicles.Rezvani.Upgrades.Suspension.High.Configuration
+-- Decompile time: 0.08 ms
+
+return {AttributeName = "suspensionMultiplier", AttributeValue = 1.4, FolderName = "Suspension"}

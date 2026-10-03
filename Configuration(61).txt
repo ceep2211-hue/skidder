@@ -1,0 +1,5 @@
+-- Path : ReplicatedStorage.Items.cosmetic.Bipod Rest.Configuration
+-- Script path: ReplicatedStorage.Items.cosmetic.Bipod Rest.Configuration
+-- Decompile time: 0.09 ms
+
+return {AttributeName = "Recoil", AttributeMultiplier = 0.875}

@@ -1,0 +1,11 @@
+-- Path : ReplicatedStorage.Items.cosmetic.Digital Sight.Configuration
+-- Script path: ReplicatedStorage.Items.cosmetic.Digital Sight.Configuration
+-- Decompile time: 0.15 ms
+
+return {
+    Attributes = {
+        {AttributeName = "Zoom", AttributeValue = 2.03},
+        {AttributeName = "SniperScope", AttributeValue = false},
+    },
+    States = {{Tag = "Gun", StateName = "accuracy", StateMultiplier = 1.035}},
+}

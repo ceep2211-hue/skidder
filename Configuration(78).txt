@@ -1,0 +1,10 @@
+-- Path : ReplicatedStorage.Items.cosmetic.Hybrid Scope.Configuration
+-- Script path: ReplicatedStorage.Items.cosmetic.Hybrid Scope.Configuration
+-- Decompile time: 0.12 ms
+
+return {
+    Attributes = {
+        {AttributeName = "Zoom", AttributeValue = 1.25},
+        {AttributeName = "SniperScope", AttributeValue = false},
+    },
+}

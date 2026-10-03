@@ -1,0 +1,12 @@
+-- Path : ReplicatedStorage.Items.cosmetic.60 Drum Mag.Configuration
+-- Script path: ReplicatedStorage.Items.cosmetic.60 Drum Mag.Configuration
+-- Decompile time: 0.10 ms
+
+require(game.ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+return {
+    AttributeName = "MagSize",
+    AttributeValue = 60,
+    Tag = "Gun",
+    StateName = "reload_time",
+    StateMultiplier = 2,
+}

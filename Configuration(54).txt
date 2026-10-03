@@ -1,0 +1,5 @@
+-- Path : ReplicatedStorage.Items.bike.DirtBike.Upgrades.Horn.Air Horn.Configuration
+-- Script path: ReplicatedStorage.Items.bike.DirtBike.Upgrades.Horn.Air Horn.Configuration
+-- Decompile time: 0.06 ms
+
+return {SoundId = "rbxassetid://92590289191334", SoundName = "HornSound"}

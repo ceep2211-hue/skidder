@@ -1,0 +1,5 @@
+-- Path : ReplicatedStorage.Items.car.Urus.Upgrades.Horn.Alarm Horn.Configuration
+-- Script path: ReplicatedStorage.Items.car.Urus.Upgrades.Horn.Alarm Horn.Configuration
+-- Decompile time: 0.07 ms
+
+return {SoundId = "rbxassetid://6760257364", SoundName = "HornSound", SoundVolume = 0.5}

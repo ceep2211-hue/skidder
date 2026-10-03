@@ -1,0 +1,5 @@
+-- Path : ReplicatedStorage.Items.cosmetic.Ergonomic Grip.Configuration
+-- Script path: ReplicatedStorage.Items.cosmetic.Ergonomic Grip.Configuration
+-- Decompile time: 0.06 ms
+
+return {AttributeName = "Recoil", AttributeMultiplier = 0.9}

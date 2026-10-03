@@ -1,0 +1,11 @@
+-- Path : ReplicatedStorage.Items.cosmetic.10x Scope.Configuration
+-- Script path: ReplicatedStorage.Items.cosmetic.10x Scope.Configuration
+-- Decompile time: 0.14 ms
+
+return {
+    Attributes = {
+        {AttributeName = "Zoom", AttributeValue = 3.25},
+        {AttributeName = "SniperScope", AttributeValue = true},
+    },
+    States = {{Tag = "Gun", StateName = "accuracy", StateMultiplier = 1.05}},
+}

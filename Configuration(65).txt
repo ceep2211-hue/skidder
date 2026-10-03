@@ -1,0 +1,26 @@
+-- Path : ReplicatedStorage.Items.cosmetic.Silencer.Configuration
+-- Script path: ReplicatedStorage.Items.cosmetic.Silencer.Configuration
+-- Decompile time: 0.57 ms
+
+local ItemUtils = require(game.ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+return {
+    ApplyFunction = function(a1) -- Line: 5
+        local BarrelAttachment = a1:FindFirstChild("BarrelAttachment", true)
+        if BarrelAttachment then
+            local Sound = BarrelAttachment:FindFirstChildWhichIsA("Sound")
+            if Sound then
+                Sound.SoundId = ("rbxassetid://%*"):format(9119136138)
+            end
+        end
+    end,
+    RemoveFunction = function(a1) -- Line: 19 -- upvalues: ItemUtils (val)
+        local v1 = ItemUtils.get_item_instance(a1.Name)
+        local BarrelAttachment = a1:FindFirstChild("BarrelAttachment", true)
+        if BarrelAttachment then
+            local Sound = BarrelAttachment:FindFirstChildWhichIsA("Sound")
+            if Sound then
+                Sound.SoundId = (v1:FindFirstChild("BarrelAttachment", true)):FindFirstChildWhichIsA("Sound").SoundId
+            end
+        end
+    end,
+}
