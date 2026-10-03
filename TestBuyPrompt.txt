@@ -1,0 +1,11 @@
+-- Path : ReplicatedStorage.Modules.Game.Inventory.TestBuyPrompt
+-- Script path: ReplicatedStorage.Modules.Game.Inventory.TestBuyPrompt
+-- Decompile time: 0.22 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+game:GetService("UserInputService")
+require(ReplicatedStorage.Modules.Game.UI.BuyPromptUI)
+require(ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+return {
+    loaded = function() end,
+}

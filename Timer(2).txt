@@ -1,0 +1,34 @@
+-- Path : ReplicatedStorage.Modules.Core.Timer
+-- Script path: ReplicatedStorage.Modules.Core.Timer
+-- Decompile time: 0.50 ms
+
+return {
+    new = function(a1, a2, a3) -- Line: 3
+        local u3 = {enabled = false}
+
+        function u3.start() -- Line: 8 -- upvalues: u3 (val), a2 (val), a1 (val)
+            if u3.enabled then
+                return
+            end
+            local u3_2 = os.clock()
+            u3.enabled = u3_2
+            task.spawn(function() -- Line: 12 -- upvalues: u3 (upval), u3_2 (val), a2 (upval), a1 (upval)
+                while u3.enabled == u3_2 do
+                    task.spawn(a2, u3)
+                    task.wait(a1)
+                end
+            end)
+        end
+
+        function u3.stop() -- Line: 20 -- upvalues: u3 (val)
+            u3.enabled = false
+        end
+
+        if not a3 then
+            u3.start()
+        end
+        return u3
+    end,
+    initiate = function() end,
+    loaded = function() end,
+}

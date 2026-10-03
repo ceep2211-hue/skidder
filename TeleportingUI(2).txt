@@ -1,0 +1,79 @@
+-- Path : ReplicatedStorage.Modules.Game.UI.TeleportingUI
+-- Script path: ReplicatedStorage.Modules.Game.UI.TeleportingUI
+-- Decompile time: 1.54 ms
+
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+game:GetService("ReplicatedStorage")
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local Spinner = require(game.ReplicatedStorage.Modules.Game.UI.Spinner)
+local u34 = {}
+u34.teleporting_to_server = State.new(false)
+u34.active_teleport_button = State.new(nil)
+
+local function server_button_spinner(a1, a2) -- Line: 11 -- upvalues: Spinner (val) -- types: a2: number?
+    a1.TextLabel.Visible = false
+    local v1 = Instance.new("Frame", a1)
+    v1.ZIndex = 20
+    v1.Size = UDim2.fromScale(0.5, 0.5)
+    v1.BackgroundTransparency = 1
+    v1.Position = UDim2.fromScale(0.5, 0.45)
+    v1.AnchorPoint = Vector2.new(0.5, 0.5)
+    local v2 = Instance.new("UIAspectRatioConstraint", v1)
+    v2.AspectRatio = 1
+    local v3 = Spinner.new()
+    v3.Parent = v1
+    if a2 then
+        for i, j in v3:GetDescendants() do
+            if j:IsA("ImageLabel") or j:IsA("Frame") then
+                j.ZIndex = a2
+            end
+        end
+    end
+    return v1
+end
+
+function u34.initiate() -- Line: 37 -- upvalues: Net (val), u34 (val)
+    Net.hook("set_teleporting", function(a1) -- Line: 38 -- upvalues: u34 (upval)
+        u34.teleporting_to_server.set(a1)
+    end)
+end
+
+function u34.loaded() -- Line: 43 -- upvalues: UI (val), u34 (val), server_button_spinner (val), Spinner (val)
+    UI.get("TeleportingGui")
+    local u4 = nil
+    u34.teleporting_to_server.hook(function(a1, a2) -- Line: 48
+        -- upvalues: u34 (upval), UI (upval), u4 (ref), server_button_spinner (upval), Spinner (upval)
+        if a1 == a2 then
+            return
+        end
+        local v1 = u34.active_teleport_button.get()
+        UI.get("TeleportingGui").Enabled = a1
+        if not a1 then
+            if v1 then
+                v1.TextLabel.Visible = true
+            end
+            if u4 then
+                u4:Destroy()
+            end
+            return
+        end
+        if v1 == nil then
+            u4 = server_button_spinner(UI.get("TeleportingGui").Frame.RedirectTeleport, 11)
+            return
+        end
+        v1.TextLabel.Visible = false
+        local v2 = Instance.new("Frame", v1)
+        v2.ZIndex = 20
+        v2.Size = UDim2.fromScale(0.5, 0.5)
+        v2.BackgroundTransparency = 1
+        v2.Position = UDim2.fromScale(0.5, 0.45)
+        v2.AnchorPoint = Vector2.new(0.5, 0.5)
+        local v3 = Instance.new("UIAspectRatioConstraint", v2)
+        v3.AspectRatio = 1
+        Spinner.new().Parent = v2
+        u4 = v2
+    end)
+end
+
+return u34

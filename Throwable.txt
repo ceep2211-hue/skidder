@@ -1,0 +1,516 @@
+-- Path : ReplicatedStorage.Modules.Game.ItemTypes.Throwable
+-- Script path: ReplicatedStorage.Modules.Game.ItemTypes.Throwable
+-- Decompile time: 14.31 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local Sprint = require(game.ReplicatedStorage.Modules.Game.Sprint)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local Spring = require(game.ReplicatedStorage.Modules.Core.Spring)
+local ShoulderCamera = require(game.ReplicatedStorage.Modules.Game.ShoulderCamera)
+local Keybinds = require(game.ReplicatedStorage.Modules.Game.Keybinds)
+local Audio = require(game.ReplicatedStorage.Modules.Core.Audio)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local Trajectory = require(game.ReplicatedStorage.Modules.Game.Trajectory)
+local ThrowableTypes = require(script.ThrowableTypes)
+local Crosshair = require(ReplicatedStorage.Modules.Game.UI.Crosshair)
+local Vehicle = require(ReplicatedStorage.Modules.Game.VehicleSystem.Vehicle)
+local ToolUtil = require(ReplicatedStorage.Modules.Game.ToolUtil)
+local Data = require(game.ReplicatedStorage.Modules.Core.Data)
+local HitDetection = require(game.ReplicatedStorage.Modules.Game.HitDetection)
+local ItemUtils = require(ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+local FlagManager = require(game.ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local u138 = {}
+local LocalPlayer = game.Players.LocalPlayer
+local CurrentCamera = game.Workspace.CurrentCamera
+LocalPlayer:GetMouse()
+u138.FLAG_SINGLE_THROWABLE_INSTANCE = FlagManager.FLAG_SINGLE_THROWABLE_INSTANCE
+u138.equipped_throwable = State.new(nil)
+u138.class = StatefulObject.new_class(function() -- Line: 35 -- upvalues: State (val)
+    return {
+        pouring = State.new(false),
+        damage = State.new(0),
+        explode_damage = State.new(0),
+        throw_speed = State.new(1),
+    }
+end, script.Name)
+
+function can_go_through(a1) -- Line: 44
+    if a1:HasTag("Glass") and a1:GetAttribute("Shattered") then
+        return true
+    end
+end
+
+function u138.create_throwable_model(a1, a2) -- Line: 50 -- upvalues: Vehicle (val), ThrowableTypes (val)
+    local Model = Instance.new("Model")
+    Model.Name = a2.Name
+    for i, j in a2:GetAttributes() do
+        Model:SetAttribute(i, j)
+    end
+    for k, n in a2:Clone():GetDescendants() do
+        if n:IsA("BasePart") then
+            n.CollisionGroup = "loose_props"
+            n.Parent = Model
+        end
+    end
+    Model.PrimaryPart = Model.Handle
+    local u38 = Vehicle.get_car_player_is_in()
+    local u44 = ThrowableTypes[a2.Name](Model)
+    local u45 = nil
+    local v1 = Model.PrimaryPart.Touched:Connect(function(a1_2) -- Line: 75 -- upvalues: a1 (val), u38 (val), u44 (val), u45 (ref)
+        if not a1_2:IsDescendantOf(a1.Character) then
+            if u38 == nil or not a1_2:IsDescendantOf(u38) then
+                if a1_2.CanCollide then
+                    if u44(a1_2) then
+                        u45:Disconnect()
+                        u45 = nil
+                    end
+                elseif a1_2.Parent:FindFirstChild("Humanoid") and u44(a1_2) then
+                    u45:Disconnect()
+                    u45 = nil
+                end
+            end
+        end
+    end)
+    if Model.PrimaryPart:FindFirstChild("ThrowWhooshSound") then
+        Model.PrimaryPart.ThrowWhooshSound:Play()
+    end
+    return Model
+end
+
+function u138.thrown_item(a1, a2, a3, a4) -- Line: 91 -- upvalues: ItemUtils (val), u138 (val), Trajectory (val)
+    local u7 = ItemUtils.get_item_instance(a2)
+    local u12 = u138.create_throwable_model(a1, u7)
+    local Attribute = u7:GetAttribute("throw_speed")
+    local v1 = a4 * Attribute + Vector3.new(0, Attribute * 0.2, 0)
+    u12:PivotTo((CFrame.new(a3)))
+    u12.Parent = game.Workspace
+    Trajectory.travel(u12.PrimaryPart, Trajectory.cast(a3, v1, Enum.Material.SmoothPlastic, {a1.Character}, u7:GetAttribute("Bounces"), "loose_props"), function() -- Line: 105 -- upvalues: u12 (val), u7 (val)
+        if u12.PrimaryPart == nil then
+            return
+        end
+        task.delay(0.2, function() -- Line: 107 -- upvalues: u12 (upval)
+            u12.PrimaryPart.CanTouch = false
+            u12.PrimaryPart.CanQuery = false
+        end)
+        if 0 < (u7:GetAttribute("Bounces")) then
+            if u7:GetAttribute("Explodes") then
+                u12.PrimaryPart.Anchored = true
+                return
+            end
+            if u12:GetAttribute("LeavesProp") then
+                for i, j in u12:GetChildren() do
+                    if j:IsA("BasePart") then
+                        j.Transparency = 1
+                    end
+                end
+                game.Debris:AddItem(u12, 1)
+                return
+            end
+            u12.PrimaryPart.CanCollide = true
+        end
+    end)
+end
+
+initialized_instances = {}
+
+function u138.initiate() -- Line: 133 -- upvalues: Net (val), u138 (val), ThrowableTypes (val)
+    Net.hook("thrown_item", u138.thrown_item)
+    Net.hook("throwable_splash_effect", function(a1, a2, a3) -- Line: 135 -- upvalues: ThrowableTypes (upval)
+        if a1
+            and a1:IsDescendantOf(game.Workspace)
+            and ThrowableTypes[a1.Name]
+            and a2
+            and a2:IsDescendantOf(game.Workspace) then
+            local v1 = initialized_instances[a1]
+            if v1 == nil then
+                v1 = ThrowableTypes[a1.Name](a1)
+                initialized_instances[a1] = v1
+                a1.Destroying:Connect(function() -- Line: 142 -- upvalues: a1 (val)
+                    initialized_instances[a1] = nil
+                end)
+            end
+            v1(a2, a3)
+        end
+    end)
+end
+
+function u138.loaded() -- Line: 153
+    -- upvalues: StatefulObject (val), LocalPlayer (val), Vehicle (val), ThrowableTypes (val), HitDetection (val)
+    -- upvalues: Net (val), UI (val), ShoulderCamera (val), u138 (val), ToolUtil (val), Char (val), Spring (val)
+    -- upvalues: State (val), Sprint (val), Crosshair (val), CurrentCamera (val), Audio (val), Keybinds (val)
+    -- upvalues: Data (val), ItemUtils (val), Util (val)
+    (StatefulObject.new_class(function() -- Line: 155
+        return {}
+    end, "ThrownInstance")).hook(function(a1) -- Line: 157
+        -- upvalues: LocalPlayer (upval), Vehicle (upval), ThrowableTypes (upval), HitDetection (upval), Net (upval)
+        local instance = a1.instance
+        if (instance:GetAttribute("throw_owner_id")) ~= LocalPlayer.UserId then
+            warn("no owner id")
+            return function() end
+        end
+        local v1 = Vehicle.get_car_player_is_in()
+        while instance.Parent ~= nil do
+            if instance.PrimaryPart ~= nil then
+                break
+            end
+            task.wait()
+        end
+        if instance.Parent == nil then
+            return function() end
+        end
+        local u27 = ThrowableTypes[instance.Name](instance)
+        local u28 = 0
+        local v2 = {LocalPlayer.Character}
+        if v1 then
+            table.insert(v2, v1)
+        end
+        local u38 = nil
+        local FastTouched = HitDetection.FastTouched
+        local PrimaryPart = instance.PrimaryPart
+        local v3 = instance.PrimaryPart.Size.Magnitude * 0.5
+        local v4 = FastTouched(PrimaryPart, function(a1) -- Line: 178 -- upvalues: u28 (ref), u27 (val), u38 (ref), Net (upval), instance (val)
+            local Instance = a1.Instance
+            if not Instance.CanCollide and not Instance.Parent:FindFirstChild("Humanoid") then
+                return
+            end
+            if os.clock() - u28 < 0.1 then
+                return
+            end
+            u28 = os.clock()
+            if u27(Instance) then
+                u38:Disconnect()
+                u38 = nil
+            end
+            Net.send("throw_hit", instance, Instance, instance.PrimaryPart.CFrame)
+        end, v3, v2, "loose_props")
+        return function() end
+    end)
+    local Bullets = UI.get("Bullets")
+    ShoulderCamera.spring_crosshair.hook(function(a1) -- Line: 211 -- upvalues: u138 (upval), Bullets (val)
+        if u138.equipped_throwable.get() then
+            Bullets.Visible = a1 > 0
+            Bullets.TextTransparency = 0.3 + (1 - a1) * 0.7
+        end
+    end)
+    u138.equipped_throwable.hook(function(a1) -- Line: 219 -- upvalues: Bullets (val)
+        if a1 == nil then
+            Bullets.Text = ""
+        end
+    end)
+    local u22 = {}
+    u138.class.hook(function(a1) -- Line: 227
+        -- upvalues: ToolUtil (upval), Char (upval), Spring (upval), State (upval), UI (upval), u138 (upval)
+        -- upvalues: Sprint (upval), Crosshair (upval), CurrentCamera (upval), Audio (upval), Net (upval)
+        -- upvalues: LocalPlayer (upval), u22 (ref), Keybinds (upval), ShoulderCamera (upval), Data (upval)
+        -- upvalues: ItemUtils (upval), Util (upval)
+        local instance = a1.instance
+        local Handle = a1.get("Handle")
+        ToolUtil.override_ik_hold(a1)
+        local Animations = instance.Animations
+        local u10 = {}
+        u10.idle = Char.anim(Animations.Idle)
+        u10.throw_prepare = Char.anim(Animations.ThrowPrepare)
+        u10.throw_hold = Char.anim(Animations.ThrowHold)
+        u10.throw_release = Char.anim(Animations.ThrowRelease)
+        u10.pour = instance:GetAttribute("CanPour") and Char.anim(Animations.Pour) or nil
+        local u44 = Spring.new(1, 0.9, 0)
+        local u50 = Spring.new(3, 0.9, 0)
+        local u57 = Spring.new_v3(1, 0.9, (Vector3.new()))
+        local u58 = nil
+        local u74 = nil
+        local Attachment0 = nil
+        local Attachment1 = nil
+        local SplashParticles = nil
+        if instance:GetAttribute("CanPour") then
+            u74 = instance.Handle:FindFirstChild("PourBeam")
+            Attachment0 = u74.Attachment0
+            Attachment1 = u74.Attachment1
+            SplashParticles = instance.Handle.PourBeamAttachment1.SplashParticles
+        end
+        if instance:GetAttribute("CanPour") then
+            State.new(function() -- Line: 257
+                -- upvalues: instance (val), u50 (val), u44 (val), u74 (ref), Attachment1 (ref), Attachment0 (ref)
+                -- upvalues: u57 (val), SplashParticles (ref)
+                if not instance:FindFirstChild("Handle") then
+                    return
+                end
+                local s = u50.s
+                local s_2 = u44.s
+                if s == 0 then
+                    u74.Enabled = false
+                    return
+                end
+                if not u74.Enabled then
+                    u74.Enabled = true
+                end
+                local WorldPosition = instance.Handle.PourBeamOrigin.WorldPosition
+                if u50.r ~= 0 then
+                    Attachment0.WorldPosition = WorldPosition
+                    Attachment1.WorldPosition = WorldPosition - Vector3.new(0, 1, 0) * s_2 * s - u57.s
+                else
+                    Attachment1.WorldPosition = WorldPosition - Vector3.new(0, 1, 0) * s_2
+                    Attachment0.WorldPosition = WorldPosition - Vector3.new(0, 1, 0) * s_2 * (1 - s)
+                end
+                if u50.r == 0 and s > 0.05 then
+                    SplashParticles.Enabled = true
+                    return
+                end
+                if s > 0.95 then
+                    SplashParticles.Enabled = true
+                    return
+                end
+                SplashParticles.Enabled = false
+            end)
+        end
+        a1.states.pouring.hook(function(a1) -- Line: 289 -- upvalues: u44 (val), instance (val), u58 (ref), u50 (val), u74 (ref), u10 (val), u57 (val)
+            if not a1 then
+                if u58 then
+                    u58:Disconnect()
+                    u58 = nil
+                end
+                u50.r = 0
+                return
+            end
+            u44.r = 0
+            local u4 = RaycastParams.new()
+            u4.FilterDescendantsInstances = {instance.Parent}
+            u58 = (game:GetService("RunService")).PostSimulation:Connect(function() -- Line: 296
+                -- upvalues: instance (upval), u58 (upval), u50 (upval), u74 (upval), u10 (upval), u4 (val), u44 (upval)
+                -- upvalues: u57 (upval)
+                if instance.Parent and instance.Parent:FindFirstChild("HumanoidRootPart") then
+                    local WorldPosition = instance.Handle.PourBeamOrigin.WorldPosition
+                    local v1 = workspace:Raycast(WorldPosition, Vector3.new(-0, -100, -0), u4)
+                    if not v1 then
+                        u44.r = 100
+                    else
+                        u44.r = math.max(WorldPosition.Y - v1.Position.Y, 0)
+                    end
+                    u57.r = instance.Parent:FindFirstChild("HumanoidRootPart").AssemblyLinearVelocity * 0.1
+                    return
+                end
+                u58:Disconnect()
+                u50.r = 0
+                u74.Enabled = false
+                u10.pour:Stop()
+            end)
+            u50.r = 1
+        end)
+        local u114 = false
+        local u115 = false
+        local u120 = instance:GetAttribute("ThrowDebounceTime") or 0.3
+        local u121 = {}
+
+        local function set_tool_visibility(a1) -- Line: 335 -- upvalues: u121 (val) -- types: a1: boolean
+            local Attribute, Transparency
+            local v1 = nil
+            local v2 = nil
+            for i, j in u121, v1, v2 do
+                if not j:GetAttribute("DefaultTransparency") then
+                    Transparency = j.Transparency
+                    j:SetAttribute("DefaultTransparency", Transparency)
+                end
+                Attribute = if not v3 then 1 else j:GetAttribute("DefaultTransparency")
+                j.Transparency = Attribute
+            end
+        end
+
+        local function update_amount_left(a1) -- Line: 345 -- upvalues: UI (upval)
+            local Bullets = UI.get("Bullets")
+            Bullets.Text = ("%*"):format(a1)
+        end
+
+        local u127 = State.new(0)
+        u127.hook(function(a1) -- Line: 351 -- upvalues: Char (upval), instance (val), UI (upval)
+            if Char.get(true) and instance.Parent == Char.get(true) then
+                local Bullets = UI.get("Bullets")
+                Bullets.Text = ("%*"):format(a1)
+            end
+        end)
+
+        local function u131(a1_2) -- Line: 357
+            -- upvalues: u127 (val), u138 (upval), instance (val), u115 (ref), a1 (val), Sprint (upval)
+            -- upvalues: set_tool_visibility (val), Crosshair (upval), u120 (val), CurrentCamera (upval), u10 (val)
+            -- upvalues: Audio (upval), u58 (ref), u50 (val), u74 (ref), Net (upval), LocalPlayer (upval)
+            if a1_2 and 0 < u127.get() and u138.equipped_throwable.get() == instance then
+                if u115 then
+                    return
+                end
+                local v1 = a1.instance:GetAttribute("Stamina") or 10
+                if not Sprint.consume_stamina(v1) then
+                    return
+                end
+                u127.update(function(a1) -- Line: 363
+                    return a1 - 1
+                end)
+                set_tool_visibility(false)
+                u115 = true
+                Crosshair.reloading_length.set(u120)
+                Crosshair.is_reloading.set(true)
+                task.delay(u120, function() -- Line: 371 -- upvalues: set_tool_visibility (upval), u115 (upval), Crosshair (upval)
+                    set_tool_visibility(true)
+                    u115 = false
+                    Crosshair.is_reloading.set(false)
+                end)
+                local LookVector = CurrentCamera.CFrame.LookVector
+                local Position = instance:GetPivot().Position
+                u10.throw_release.Priority = Enum.AnimationPriority.Action
+                u10.throw_release:AdjustSpeed(4)
+                u10.throw_release:Play()
+                if math.random(1, 100) == 1 then
+                    Audio.play(525743689, 0.1, 1, game.SoundService)
+                end
+                if instance:GetAttribute("CanPour") then
+                    if u58 then
+                        u58:Disconnect()
+                    end
+                    u50.r = 0
+                    u74.Enabled = false
+                    u10.pour:Stop()
+                end
+                Net.send("throw_item", instance, Position, LookVector)
+                if not u138.FLAG_SINGLE_THROWABLE_INSTANCE then
+                    u138.thrown_item(LocalPlayer, instance.Name, Position, LookVector)
+                end
+            end
+        end
+
+        local function u132(a1) -- Line: 408 -- upvalues: u114 (ref), Net (upval), instance (val), u10 (val)
+            if a1 then
+                if u114 then
+                    return
+                end
+                u114 = true
+                Net.send("begin_pour", instance)
+                u10.pour.Priority = Enum.AnimationPriority.Action
+                u10.pour:Play()
+                task.delay(4, function() -- Line: 419 -- upvalues: u114 (upval)
+                    u114 = false
+                end)
+            end
+        end
+
+        local u133 = nil
+
+        local function aiming(a1) -- Line: 427
+            -- upvalues: instance (val), u133 (ref), u22 (upval), Keybinds (upval), u131 (val), ShoulderCamera (upval)
+            -- upvalues: u10 (val), u138 (upval), u132 (val)
+            if not a1 then
+                if u138.equipped_throwable.get() == instance then
+                    Keybinds.unhook_action("shoot")
+                    if instance:GetAttribute("CanPour") and u133 == nil then
+                        u133 = Keybinds.hook_action("pour_throwable", u132, {label = "Pour", priority = 4})
+                        table.insert(u22, u133.unhook)
+                    end
+                end
+                u10.throw_prepare:Stop(0.2)
+                u10.throw_hold:Stop(0.2)
+                return
+            end
+            if instance:GetAttribute("CanPour") and u133 then
+                local v1 = table.find(u22, u133.unhook)
+                if v1 then
+                    table.remove(u22, v1)
+                end
+                u133.unhook()
+                u133 = nil
+            end
+            Keybinds.hook_action("shoot", u131, {label = "Throw", priority = 1})
+            ShoulderCamera.throwing.set(true)
+            u10.throw_prepare.Priority = Enum.AnimationPriority.Movement
+            u10.throw_prepare:AdjustSpeed(6)
+            u10.throw_prepare:Play()
+            if instance.PrimaryPart:FindFirstChild("ThrowPrepareSound") then
+                instance.PrimaryPart.ThrowPrepareSound:Play()
+            end
+            u10.throw_hold.Priority = Enum.AnimationPriority.Movement
+            u10.throw_hold:Play()
+        end
+
+        instance.Equipped:Connect(function() -- Line: 466
+            -- upvalues: Char (upval), instance (val), u22 (upval), u133 (ref), Keybinds (upval), u132 (val)
+            -- upvalues: Data (upval), ItemUtils (upval), u127 (val), ShoulderCamera (upval), aiming (val), Handle (val)
+            -- upvalues: u138 (upval), UI (upval)
+            if Char.get(true) ~= nil then
+                local v1 = instance
+                if v1:IsDescendantOf((Char.get(true))) then
+                    if not Char.get_hum():GetAttribute("IsDead") and not Char.get_hum():GetAttribute("Stunned") then
+                        for i, j in u22 do
+                            if typeof(j) == "function" then
+                                j()
+                            end
+                        end
+                        u22 = {}
+                        if instance:GetAttribute("CanPour") then
+                            u133 = Keybinds.hook_action("pour_throwable", u132, {label = "Pour", priority = 4})
+                            table.insert(u22, u133.unhook)
+                        end
+                        table.insert(u22, (Data.hook("items", function(a1) -- Line: 484 -- upvalues: ItemUtils (upval), Data (upval), instance (upval), u127 (upval)
+                            local v1 = ItemUtils.get_item_info(Data, instance:GetAttribute("ItemGUID"))
+                            u127.set(v1.amount)
+                        end)).unhook)
+                        v1 = ItemUtils.get_item_info(Data, instance:GetAttribute("ItemGUID"))
+                        u127.set(v1.amount)
+                        table.insert(u22, (Keybinds.hook_action("aim", function(a1) -- Line: 495 -- upvalues: ShoulderCamera (upval), aiming (upval)
+                            ShoulderCamera.enabled.set(a1)
+                            aiming(ShoulderCamera.enabled.get())
+                        end, {label = "Aim", priority = 2})).unhook)
+                        table.insert(u22, (Keybinds.hook_action("aim_toggle", function(a1) -- Line: 500 -- upvalues: ShoulderCamera (upval), aiming (upval)
+                            if a1 then
+                                ShoulderCamera.enabled.update(function(a1) -- Line: 502
+                                    return not a1
+                                end)
+                                aiming(ShoulderCamera.enabled.get())
+                            end
+                        end, {label = "Alt Aim", priority = 3})).unhook)
+                        table.insert(u22, function() -- Line: 509 -- upvalues: Keybinds (upval)
+                            Keybinds.unhook_action("shoot")
+                        end)
+                        if Handle:FindFirstChild("EquipSound") then
+                            Handle.EquipSound:Play()
+                        end
+                        u138.equipped_throwable.set(instance)
+                        local v2 = u127.get()
+                        local Bullets = UI.get("Bullets")
+                        Bullets.Text = ("%*"):format(v2)
+                        return
+                    end
+                    return
+                end
+            end
+        end)
+
+        local function unhook() -- Line: 524
+            -- upvalues: u138 (upval), instance (val), u22 (upval), u10 (val), Handle (val)
+            if u138.equipped_throwable.get() == instance then
+                u138.equipped_throwable.set(nil)
+                for i, j in u22 do
+                    if typeof(j) == "function" then
+                        j()
+                    end
+                end
+                u22 = {}
+                for k, n in u10 do
+                    n:Stop()
+                end
+                if Handle:FindFirstChild("EquipSound") then
+                    Handle.EquipSound:Stop()
+                end
+            end
+        end
+
+        instance.Unequipped:Connect(unhook)
+        instance.Destroying:Connect(unhook)
+        Util.hook_descendants(instance, function(a1) -- Line: 548 -- upvalues: u121 (val) -- types: a1: userdata
+            if a1:IsA("BasePart") then
+                table.insert(u121, a1)
+            end
+        end)
+        return function() end
+    end)
+end
+
+return u138

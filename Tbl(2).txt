@@ -1,0 +1,230 @@
+-- Path : ReplicatedStorage.Modules.Core.Tbl
+-- Script path: ReplicatedStorage.Modules.Core.Tbl
+-- Decompile time: 4.35 ms
+
+local u0 = {}
+local u2 = Random.new()
+
+function u0.remove_duplicates_raw(a1) -- Line: 7
+    local v1 = {}
+    for i = #a1, 1, -1 do
+        if not v1[a1[i]] then
+            v1[a1[i]] = true
+        else
+            table.remove(a1, i)
+        end
+    end
+    return a1
+end
+
+function u0.remove_duplicates(a1) -- Line: 21
+    local v1 = {}
+    local v2 = {}
+    for i, j in a1 do
+        if not v1[j] then
+            v1[j] = true
+            table.insert(v2, j)
+        end
+    end
+    return v2
+end
+
+function u0.safe_loop(a1, a2) -- Line: 35
+    for i, j in (table.clone(a1)) do
+        if table.find(a1, j) then
+            a2(j)
+        end
+    end
+end
+
+function u0.to_array(a1) -- Line: 44
+    local v1 = {}
+    for i, j in a1 do
+        table.insert(v1, j)
+    end
+    return v1
+end
+
+function u0.remove_value(a1, a2) -- Line: 52
+    local v1 = table.find(a1, a2)
+    if v1 then
+        return table.remove(a1, v1)
+    end
+    local v2 = #a1
+    for i = 1, v2 do
+        if a1[i] == nil then
+            return table.remove(a1, i)
+        end
+    end
+end
+
+function u0.replace(a1, a2, a3) -- Line: 65
+    local v1 = #a1
+    local v2, v3, v4 = a1, a2, a3
+    for i = 1, v1 do
+        if v2[i] == v3 then
+            v2[i] = v4
+        end
+    end
+end
+
+function u0.map(a1, a2, a3) -- Line: 73 -- types: a1: table, a2: function, a3: boolean?
+    local v1
+    local v2 = {}
+    if not a3 then
+        for i, v in ipairs(a1) do
+            v2[i] = (a2(v))
+        end
+        return v2
+    end
+    for i2, i3 in ipairs(a1) do
+        v1 = a2(i3)
+        if v1 ~= nil then
+            table.insert(v2, v1)
+        end
+    end
+    return v2
+end
+
+function u0.dict_size(a1) -- Line: 94
+    local v1 = 0
+    for i in a1 do
+        v1 = v1 + 1
+    end
+    return v1
+end
+
+function u0.reduce(a1, a2, a3) -- Line: 102 -- types: a2: function
+    local v1 = if a3 == nil then 0 else a3
+    for i, j in a1 do
+        v1 = a2(v1, j)
+    end
+    return v1
+end
+
+function u0.filter(a1, a2) -- Line: 110
+    local v1 = {}
+    for i, j in a1 do
+        if a2(j) then
+            table.insert(v1, j)
+        end
+    end
+    return v1
+end
+
+function u0.sum(a1) -- Line: 120 -- upvalues: u0 (val)
+    return u0.reduce(a1, function(a1, a2) -- Line: 121
+        return a1 + a2
+    end)
+end
+
+function u0.sum_size(...) -- Line: 126
+    local v1 = {...}
+    local v2 = 0
+    local v3 = #v1
+    for i = 1, v3 do
+        v2 = v2 + #v1[i]
+    end
+    return v2
+end
+
+function u0.sub(a1, a2, a3) -- Line: 135
+    if a3 < a2 then
+        error("start_index must be smaller or equal to finish_index in table.sub")
+    end
+    return table.move(a1, a2, a3, 1, table.create(a3 - a2 + 1))
+end
+
+function u0.merge(...) -- Line: 140
+    local v1
+    local v2 = {...}
+    local v3 = 0
+    local v4 = #v2
+    for i = 1, v4 do
+        v3 = v3 + #v2[i]
+    end
+    v4 = table.create(v3)
+    v3 = 1
+    local v5 = #v2
+    for j = 1, v5 do
+        v1 = #v2[j]
+        table.move(v2[j], 1, v1, v3, v4)
+        v3 = v3 + v1
+    end
+    return v4
+end
+
+function u0.merge_dictionary_values(...) -- Line: 157
+    local v1 = {...}
+    local v2 = {}
+    local v3 = nil
+    local v4 = nil
+    for i, j in v1, v3, v4 do
+        for k, n in j do
+            table.insert(v2, n)
+        end
+    end
+    return v2
+end
+
+function u0.reverse(a1) -- Line: 170
+    local v1, v2, v3
+    for i = 1, (math.floor(#a1 / 2)) do
+        v1 = #a1 - i + 1
+        v2 = a1[v1]
+        v3 = a1[i]
+        a1[i] = v2
+        a1[v1] = v3
+    end
+end
+
+function u0.max(a1) -- Line: 177
+    return (math.max((table.unpack(a1))))
+end
+
+function u0.min(a1) -- Line: 181
+    return (math.min((table.unpack(a1))))
+end
+
+function u0.keys_to_values(a1) -- Line: 185
+    local v1 = {}
+    for i in a1 do
+        table.insert(v1, i)
+    end
+    return v1
+end
+
+function u0.rand(a1, a2) -- Line: 193 -- upvalues: u0 (val), u2 (val)
+    if a2 then
+        a1 = u0.copy(a1)
+        if typeof(a2) ~= "function" then
+            if typeof(a2) ~= "table" then
+                a2 = {a2}
+            end
+            for i, j in a2 do
+                u0.remove_value(a1, j)
+            end
+        else
+            for k, n in a1 do
+                if a2(n) then
+                    u0.remove_value(a1, n)
+                end
+            end
+        end
+    end
+    return a1[u2:NextInteger(1, #a1)]
+end
+
+function u0.copy(a1) -- Line: 214 -- upvalues: u0 (val)
+    local v1 = table.clone(a1)
+    for k, v in pairs(v1) do
+        if type(v) == "table" then
+            v1[k] = (u0.copy(v))
+        end
+    end
+    return v1
+end
+
+function u0.initiate() end
+
+return u0

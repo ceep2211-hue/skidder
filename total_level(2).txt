@@ -1,0 +1,121 @@
+-- Path : ReplicatedStorage.Modules.Game.Skills.SkillsList.total_level
+-- Script path: ReplicatedStorage.Modules.Game.Skills.SkillsList.total_level
+-- Decompile time: 1.42 ms
+
+local FLAG_LEVEL_100_INVENTORY_SLOT = (require(game.ReplicatedStorage.Modules.Game.GameInfo.FlagManager)).FLAG_LEVEL_100_INVENTORY_SLOT
+local v1 = {
+    {
+        level = 1,
+        name = "stomp_execution",
+        display_name = "Execution: Stomp",
+        display_reward = {{image = "rbxassetid://75845164974333", text = "Unlocked Execution: Stomp"}},
+    },
+    {
+        level = 10,
+        name = "emote_spin",
+        display_name = "Emote: Spin",
+        display_reward = {{image = "rbxassetid://75845164974333", text = "Unlocked Emote: Emote Spin"}},
+    },
+    {
+        level = 35,
+        name = "emote_running_man",
+        display_name = "Emote: Running Man",
+        display_reward = {{image = "rbxassetid://75845164974333", text = "Unlocked Emote: Running Man"}},
+    },
+    {
+        level = 8,
+        name = "inventory_upgrade_1",
+        display_name = "Inventory Upgrade #1",
+        reward_info = {upgrade_amount = 2},
+        display_reward = {{image = "rbxassetid://135184226521959", text = "+2 Inventory Space!"}},
+    },
+    {
+        level = 12,
+        name = "safe_upgrade_1",
+        display_name = "Safe Upgrade #1",
+        reward_info = {upgrade_amount = 1},
+        display_reward = {{image = "rbxassetid://135184226521959", text = "+1 Safe Space!"}},
+    },
+    {
+        level = 30,
+        name = "emote_indian_step",
+        display_name = "Emote: Indian Step",
+        display_reward = {{image = "rbxassetid://75845164974333", text = "Unlocked Emote: Indian Step"}},
+    },
+    {
+        level = 15,
+        name = "emote_v_step",
+        display_name = "Emote: Vstep",
+        display_reward = {{image = "rbxassetid://75845164974333", text = "Unlocked Emote: Vstep"}},
+    },
+    {
+        level = 5,
+        name = "emote_hips",
+        display_name = "Emote: Hips",
+        display_reward = {{image = "rbxassetid://75845164974333", text = "Unlocked Emote: Hips"}},
+    },
+    {
+        level = 25,
+        name = "emote_reverse_heel_toe",
+        display_name = "Emote: Reverse Heel Toe",
+        display_reward = {{image = "rbxassetid://75845164974333", text = "Unlocked Emote: Reverse Heel Toe"}},
+    },
+    {
+        level = 15,
+        name = "execution_1",
+        display_name = "Finisher: Concrete Justice",
+        display_reward = {{image = "rbxassetid://105963773026090", text = "Unlocked Finisher: Concrete Justice"}},
+    },
+    {
+        level = 35,
+        name = "execution_2",
+        display_name = "Finisher: Stick to the Face",
+        display_reward = {{image = "rbxassetid://105963773026090", text = "Unlocked Finisher: Stick to the Face"}},
+    },
+    {
+        level = 70,
+        name = "execution_3",
+        display_name = "Finisher: Raijin's Judgment",
+        display_reward = {{image = "rbxassetid://105963773026090", text = "Unlocked Finisher: Raijin's Judgment"}},
+    },
+    {
+        level = 20,
+        name = "emote_kick_back",
+        display_name = "Emote: Kick Back",
+        display_reward = {{image = "rbxassetid://75845164974333", text = "Unlocked Emote: Kick Back"}},
+    },
+    {
+        level = 15,
+        name = "headbutt",
+        display_name = "Headbutt",
+        display_reward = {{image = "rbxassetid://75845164974333", text = "Unlocked Finisher: Headbutt"}},
+    },
+    {
+        level = 100,
+        name = "shoe_kiss",
+        display_name = "Shoe kiss",
+        display_reward = {{image = "rbxassetid://75845164974333", text = "Unlocked Finisher: Shoe kiss"}},
+    },
+    {
+        level = 80,
+        name = "mj",
+        display_name = "MJ",
+        display_reward = {{image = "rbxassetid://75845164974333", text = "Unlocked Finisher: MJ"}},
+    },
+    {
+        level = 50,
+        name = "baseball_bat",
+        display_name = "Baseball Bat",
+        display_reward = {{image = "rbxassetid://75845164974333", text = "Unlocked Finisher: Baseball Bat"}},
+    },
+}
+if FLAG_LEVEL_100_INVENTORY_SLOT then
+    table.insert(v1, {
+        level = 100,
+        name = "inventory_upgrade_2",
+        display_name = "Inventory Upgrade #2",
+        reward_info = {upgrade_amount = 1},
+        display_reward = {{image = "rbxassetid://135184226521959", text = "+1 Inventory Space!"}},
+    })
+end
+return v1

@@ -1,0 +1,129 @@
+-- Path : ReplicatedStorage.Modules.Game.UI.SubMenuBackground
+-- Script path: ReplicatedStorage.Modules.Game.UI.SubMenuBackground
+-- Decompile time: 2.80 ms
+
+game:GetService("ReplicatedStorage")
+local Tween = require(game.ReplicatedStorage.Modules.Core.Tween)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local Keybinds = require(game.ReplicatedStorage.Modules.Game.Keybinds)
+local Signal = require(game.ReplicatedStorage.Modules.Core.Signal)
+local u40 = {}
+u40.enabled = State.new(nil)
+local u44 = nil
+local u45 = nil
+u40.override_closing = State.new(false)
+u40.on_closing = Signal.new()
+local u51 = nil
+local u52 = nil
+
+function u40.initiate() end
+
+function u40.can_open() -- Line: 25 -- upvalues: u40 (val)
+    if u40.enabled.get() and u40.override_closing.get() then
+        return false
+    end
+    return true
+end
+
+function u40.open(a1, a2) -- Line: 32 -- upvalues: u44 (ref), u52 (ref), UI (val), u40 (val)
+    if u44 then
+        if u52.PlaybackState == Enum.PlaybackState.Playing then
+            u52:Cancel()
+            local SubMenuBackgroundTextButton = UI.get("SubMenuBackgroundTextButton")
+            SubMenuBackgroundTextButton.Transparency = 1
+        end
+        u44.set(false)
+    end
+    u44 = a1
+    u40.enabled.set(a2)
+end
+
+function u40.close(a1) -- Line: 46 -- upvalues: u40 (val), u44 (ref) -- types: a1: string?
+    u40.override_closing.set(false)
+    if u44 then
+        if typeof((u44.get())) ~= "boolean" then
+            u44.set(nil)
+        else
+            u44.set(false)
+        end
+    end
+    u40.on_closing:Fire(u44, a1)
+    u44 = nil
+    local v1 = u40.enabled.get()
+    if v1 then
+        v1.DisplayOrder = v1.DisplayOrder - 1
+    end
+    u40.enabled.set(nil, true)
+end
+
+function u40.loaded() -- Line: 67
+    -- upvalues: UI (val), u51 (ref), Tween (val), u52 (ref), u40 (val), u44 (ref), State (val), u45 (ref)
+    -- upvalues: Keybinds (val)
+    local SubMenuBackground = UI.get("SubMenuBackground")
+    local SubMenuBackgroundTextButton = UI.get("SubMenuBackgroundTextButton")
+    u51 = Tween.create(SubMenuBackgroundTextButton, TweenInfo.new(0.3), {BackgroundTransparency = 0.5})
+    u52 = Tween.create(SubMenuBackgroundTextButton, TweenInfo.new(0.3), {BackgroundTransparency = 1})
+
+    local function exit_trigger() -- Line: 79 -- upvalues: u40 (upval), SubMenuBackgroundTextButton (val), u44 (upval)
+        if not u40.enabled.get() and not SubMenuBackgroundTextButton.Visible then
+            return
+        end
+        if u44 then
+            if typeof((u44.get())) ~= "boolean" then
+                u44.set(nil)
+            else
+                u44.set(false)
+            end
+        end
+        if u40.override_closing.get() then
+            return
+        end
+        u40.close("close")
+    end
+
+    local u28 = State.new("")
+    local v1 = State.new(function() -- Line: 100 -- upvalues: u28 (val), u40 (upval)
+        local v1 = u28.get()
+        local v2 = u40.enabled.get()
+        if v1 ~= "" and v2 then
+            return true
+        end
+    end)
+    u40.enabled.hook(function(a1) -- Line: 107 -- upvalues: u45 (upval), SubMenuBackground (val), u51 (upval), u52 (upval)
+        if not a1 then
+            u52:Play()
+            u52.Completed:Once(function(a1) -- Line: 119 -- upvalues: SubMenuBackground (upval)
+                if a1 == Enum.PlaybackState.Completed then
+                    SubMenuBackground.Enabled = false
+                end
+            end)
+            return
+        end
+        u45 = a1.DisplayOrder
+        a1.DisplayOrder = 11
+        SubMenuBackground.Enabled = true
+        SubMenuBackground.DisplayOrder = a1.DisplayOrder - 2
+        u51:Play()
+    end)
+    Keybinds.hook_action("exit_sub_menu", function() -- Line: 128 -- upvalues: u40 (upval), exit_trigger (val)
+        if u40.enabled.get() then
+            exit_trigger()
+        end
+    end)
+    Keybinds.hook_action_icon("exit_sub_menu", function(a1) -- Line: 134 -- upvalues: u28 (val)
+        u28.set(a1 or "")
+    end)
+    v1.hook(function(a1) -- Line: 138 -- upvalues: u28 (val), UI (upval)
+        local v1 = u28.get()
+        UI.get("SubMenuExitTextLabel").Visible = a1
+        if v1 then
+            UI.get("SubMenuExitButtonImage").Image = v1
+        end
+    end)
+    UI.on_click(SubMenuBackgroundTextButton, function() -- Line: 146 -- upvalues: exit_trigger (val)
+        exit_trigger()
+    end)
+end
+
+return u40

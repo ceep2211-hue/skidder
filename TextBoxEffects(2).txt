@@ -1,0 +1,26 @@
+-- Path : ReplicatedStorage.Modules.Core.UIFX.TextBoxEffects
+-- Script path: ReplicatedStorage.Modules.Core.UIFX.TextBoxEffects
+-- Decompile time: 0.62 ms
+
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+require(game.ReplicatedStorage.Modules.Core.Util)
+require(game.ReplicatedStorage.Modules.Core.Ease)
+require(game.ReplicatedStorage.Modules.Core.UI)
+return {
+    character_limited = function(a1) -- Line: 7 -- upvalues: State (val) -- types: a1: userdata
+        local Attribute = a1:GetAttribute("limit")
+        if typeof(Attribute) ~= "number" then
+            warn("character_count set up incorrectly, no limit attribute found!")
+            return
+        end
+        local Value = a1:WaitForChild("count_textlabel").Value
+        ;(State.watch(a1, "Text")).hook(function(a1_2) -- Line: 16 -- upvalues: Attribute (val), a1 (val), Value (val)
+            local v1 = #a1_2
+            if Attribute < #a1_2 then
+                a1.Text = a1_2:sub(1, Attribute)
+                return
+            end
+            Value.Text = v1 .. "/" .. Attribute
+        end)
+    end,
+}

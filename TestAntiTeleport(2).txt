@@ -1,0 +1,9 @@
+-- Path : ReplicatedStorage.Modules.Game.Character.TestAntiTeleport
+-- Script path: ReplicatedStorage.Modules.Game.Character.TestAntiTeleport
+-- Decompile time: 0.13 ms
+
+require(game.ReplicatedStorage.Modules.Core.Char)
+return {
+    initiate = function() end,
+    loaded = function() end,
+}

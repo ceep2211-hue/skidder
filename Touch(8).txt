@@ -1,0 +1,154 @@
+-- Path : Workspace.Vehicles.SRT.Scripts.Client.Input.Touch
+-- Script path: Workspace.Vehicles.SRT.Scripts.Client.Input.Touch
+-- Decompile time: 4.02 ms
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local Constants = require(script.Parent.Parent.Parent.Constants)
+local disconnectAndClear = require(script.Parent.Parent.disconnectAndClear)
+local handBrakeHandler = require(script.Parent.handBrakeHandler)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local Keybinds = require(game.ReplicatedStorage.Modules.Game.Keybinds)
+local PlayerGui = Players.LocalPlayer.PlayerGui
+local u44 = false
+local u45 = nil
+local u46 = {}
+local u47 = 0
+local u48 = 0
+local u49 = nil
+local u50 = nil
+local u51 = nil
+local u52 = nil
+
+local function onInputEnded(a1) -- Line: 25
+    -- upvalues: Constants (val), u49 (ref), u50 (ref), u51 (ref), u52 (ref)
+    a1:RemoveTag(Constants.TOUCH_INPUT_OBJECT_IGNORE_TAG)
+    if a1 == u49 then
+        u49 = nil
+        return
+    end
+    if a1 == u50 then
+        u50 = nil
+        return
+    end
+    if a1 == u51 then
+        u51 = nil
+        return
+    end
+    if a1 == u52 then
+        u52 = nil
+    end
+end
+
+local function onGasPedalInputBegan(a1) -- Line: 46
+    -- upvalues: Constants (val), u50 (ref), u47 (ref)
+    if a1:HasTag(Constants.TOUCH_INPUT_OBJECT_IGNORE_TAG) then
+        return
+    end
+    a1:AddTag(Constants.TOUCH_INPUT_OBJECT_IGNORE_TAG)
+    u50 = a1
+    u47 = 1
+end
+
+local function onBrakePedalInputBegan(a1) -- Line: 55
+    -- upvalues: Constants (val), u51 (ref), u48 (ref)
+    if a1:HasTag(Constants.TOUCH_INPUT_OBJECT_IGNORE_TAG) then
+        return
+    end
+    a1:AddTag(Constants.TOUCH_INPUT_OBJECT_IGNORE_TAG)
+    u51 = a1
+    u48 = 1
+end
+
+local function onWheelInputBegan(a1) -- Line: 64 -- upvalues: Constants (val), u49 (ref) -- types: a1: userdata
+    if a1:HasTag(Constants.TOUCH_INPUT_OBJECT_IGNORE_TAG) then
+        return
+    end
+    a1:AddTag(Constants.TOUCH_INPUT_OBJECT_IGNORE_TAG)
+    u49 = a1
+end
+
+local function onHandBrakeInputBegan(a1) -- Line: 74
+    -- upvalues: Constants (val), u52 (ref), handBrakeHandler (val)
+    if a1:HasTag(Constants.TOUCH_INPUT_OBJECT_IGNORE_TAG) then
+        return
+    end
+    a1:AddTag(Constants.TOUCH_INPUT_OBJECT_IGNORE_TAG)
+    u52 = a1
+    handBrakeHandler(Constants.TOUCH_HAND_BRAKE_BIND_NAME, Enum.UserInputState.Begin)
+end
+
+local function updateScale() -- Line: 84 -- upvalues: u45 (ref), Constants (val)
+    local v1 = (math.min(u45.AbsoluteSize.X, u45.AbsoluteSize.Y)) < Constants.UI_SMALL_SCREEN_THRESHOLD
+    u45.UIScale.Scale = if not v1 then 1 else Constants.UI_SMALL_SCREEN_SCALE
+end
+
+return {
+    getThrottleAndSteering = function(a1) -- Line: 93 -- upvalues: u47 (ref), u48 (ref), u49 (ref), u45 (ref)
+        local v1 = u47 - u48
+        local v2 = 0
+        if u49 then
+            v2 = math.clamp(
+                (u49.Position.X - (u45.Wheel.AbsolutePosition.X + u45.Wheel.AbsoluteSize.X / 2)) / u45.Wheel.AbsoluteSize.X * 2,
+                -1,
+                1
+            )
+        end
+        u45.Wheel.WheelLabel.Rotation = v2 * 90
+        return v1, v2
+    end,
+    enable = function(a1) -- Line: 112
+        -- upvalues: u44 (ref), u45 (ref), UI (val), u46 (val), onWheelInputBegan (val), Keybinds (val), u47 (ref)
+        -- upvalues: u48 (ref), handBrakeHandler (val), Constants (val), UserInputService (val), onInputEnded (val)
+        -- upvalues: updateScale (val)
+        if u44 then
+            return
+        end
+        u44 = true
+        u45 = UI.get("VehicleTouchGui")
+        u45.Enabled = true
+        table.insert(u46, (u45.Wheel.InputButton.InputBegan:Connect(onWheelInputBegan)))
+        Keybinds.hook_action("gas", function(a1) -- Line: 128 -- upvalues: u47 (upval)
+            if a1 then
+                u47 = 1
+                return
+            end
+            u47 = 0
+        end)
+        table.insert(u46, function() -- Line: 135 -- upvalues: Keybinds (upval)
+            Keybinds.unhook_action("gas")
+        end)
+        Keybinds.hook_action("brake", function(a1) -- Line: 139 -- upvalues: u48 (upval)
+            if a1 then
+                u48 = 1
+                return
+            end
+            u48 = 0
+        end)
+        table.insert(u46, function() -- Line: 146 -- upvalues: Keybinds (upval)
+            Keybinds.unhook_action("brake")
+        end)
+        Keybinds.hook_action("handbrake", function(a1) -- Line: 160 -- upvalues: handBrakeHandler (upval), Constants (upval)
+            if a1 then
+                handBrakeHandler(Constants.TOUCH_HAND_BRAKE_BIND_NAME, Enum.UserInputState.Begin)
+                return
+            end
+            handBrakeHandler(Constants.TOUCH_HAND_BRAKE_BIND_NAME, Enum.UserInputState.End)
+        end, {label = "Handbrake", priority = 4})
+        table.insert(u46, function() -- Line: 167 -- upvalues: Keybinds (upval)
+            Keybinds.unhook_action("handbrake")
+        end)
+        table.insert(u46, (UserInputService.InputEnded:Connect(onInputEnded)))
+        table.insert(u46, ((u45:GetPropertyChangedSignal("AbsoluteSize")):Connect(updateScale)))
+        local v1 = (math.min(u45.AbsoluteSize.X, u45.AbsoluteSize.Y)) < Constants.UI_SMALL_SCREEN_THRESHOLD
+        u45.UIScale.Scale = if not v1 then 1 else Constants.UI_SMALL_SCREEN_SCALE
+    end,
+    disable = function(a1) -- Line: 177 -- upvalues: u44 (ref), u45 (ref), disconnectAndClear (val), u46 (val)
+        if not u44 then
+            return
+        end
+        u44 = false
+        u45.Enabled = false
+        disconnectAndClear(u46)
+    end,
+}

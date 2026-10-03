@@ -1,0 +1,280 @@
+-- Path : Players.DyFive_13075.PlayerScripts.PlayerModule.ControlModule.TouchJump
+-- Script path: Players.DyFive_13075.PlayerScripts.PlayerModule.ControlModule.TouchJump
+-- Decompile time: 5.94 ms
+
+local Players = game:GetService("Players")
+local GuiService = game:GetService("GuiService")
+local CommonUtils = script.Parent.Parent:WaitForChild("CommonUtils")
+local UserUpdateTouchJump2 = require(CommonUtils:WaitForChild("FlagUtil")).getUserFlag("UserUpdateTouchJump2")
+local u34 = nil
+local u41 = nil
+if UserUpdateTouchJump2 then
+    u34 = require(CommonUtils:WaitForChild("ConnectionUtil"))
+    u41 = require(CommonUtils:WaitForChild("CharacterUtil"))
+end
+local BaseCharacterController = require(script.Parent:WaitForChild("BaseCharacterController"))
+local u54 = setmetatable({}, BaseCharacterController)
+u54.__index = u54
+
+function u54.new() -- Line: 56
+    -- upvalues: BaseCharacterController (val), u54 (val), UserUpdateTouchJump2 (val), u34 (ref)
+    local v1 = BaseCharacterController.new()
+    local v2 = setmetatable(v1, u54)
+    v2.parentUIFrame = nil
+    v2.jumpButton = nil
+    if not UserUpdateTouchJump2 then
+        v2.characterAddedConn = nil
+        v2.humanoidStateEnabledChangedConn = nil
+        v2.humanoidJumpPowerConn = nil
+        v2.humanoidParentConn = nil
+        v2.jumpPower = 0
+        v2.jumpStateEnabled = true
+        v2.humanoid = nil
+    end
+    v2.externallyEnabled = false
+    v2.isJumping = false
+    if UserUpdateTouchJump2 then
+        v2._active = false
+        v2._connectionUtil = u34.new()
+    end
+    return v2
+end
+
+if UserUpdateTouchJump2 then
+    function u54:_reset() -- Line: 83
+        self.isJumping = false
+        self.touchObject = nil
+        if self.jumpButton then
+            self.jumpButton.ImageRectOffset = Vector2.new(1, 146)
+        end
+    end
+end
+
+function u54:EnableButton(a2) -- Line: 92 -- upvalues: UserUpdateTouchJump2 (val), GuiService (val), Players (val)
+    if UserUpdateTouchJump2 then
+        if a2 == self._active then
+            return
+        end
+        if not a2 then
+            if self.jumpButton then
+                self.jumpButton.Visible = false
+            end
+            self._connectionUtil:disconnect("JUMP_INPUT_ENDED")
+            self._connectionUtil:disconnect("MENU_OPENED")
+        else
+            if not self.jumpButton then
+                self:Create()
+            end
+            self.jumpButton.Visible = true
+            self._connectionUtil:trackConnection("JUMP_INPUT_ENDED", (self.jumpButton.InputEnded:Connect(function(a1) -- Line: 108 -- upvalues: self (val)
+                if a1 == self.touchObject then
+                    self:_reset()
+                end
+            end)))
+            self._connectionUtil:trackConnection("MENU_OPENED", (GuiService.MenuOpened:Connect(function() -- Line: 118 -- upvalues: self (val)
+                if self.touchObject then
+                    self:_reset()
+                end
+            end)))
+        end
+        self:_reset()
+        self._active = a2
+        return
+    end
+    if not a2 then
+        self.jumpButton.Visible = false
+        self.touchObject = nil
+        self.isJumping = false
+        self.jumpButton.ImageRectOffset = Vector2.new(1, 146)
+        return
+    end
+    if not self.jumpButton then
+        self:Create()
+    end
+    local Character = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if Character and self.externallyEnabled and self.externallyEnabled and 0 < Character.JumpPower then
+        self.jumpButton.Visible = true
+        return
+    end
+end
+
+function u54:UpdateEnabled() -- Line: 155 -- upvalues: UserUpdateTouchJump2 (val), u41 (ref)
+    if not UserUpdateTouchJump2 then
+        if 0 < self.jumpPower and self.jumpStateEnabled then
+            self:EnableButton(true)
+            return
+        end
+        self:EnableButton(false)
+        return
+    end
+    local v1 = u41.getChild("Humanoid", "Humanoid")
+    if v1 and self.externallyEnabled and 0 < v1.JumpPower and v1:GetStateEnabled(Enum.HumanoidStateType.Jumping) then
+        self:EnableButton(true)
+        return
+    end
+    self:EnableButton(false)
+end
+
+if UserUpdateTouchJump2 then
+    function u54:_setupConfigurations() -- Line: 173 -- upvalues: u41 (ref)
+        local function update() -- Line: 174 -- upvalues: self (val)
+            self:UpdateEnabled()
+        end
+
+        self._connectionUtil:trackConnection("HUMANOID", (u41.onChild("Humanoid", "Humanoid", function(a1) -- Line: 179 -- upvalues: self (val), update (val)
+            self:UpdateEnabled()
+            self._connectionUtil:trackConnection("HUMANOID_JUMP_POWER", ((a1:GetPropertyChangedSignal("JumpPower")):Connect(update)))
+            self._connectionUtil:trackConnection("HUMANOID_STATE_ENABLED_CHANGED", (a1.StateEnabledChanged:Connect(update)))
+        end)))
+    end
+end
+if not UserUpdateTouchJump2 then
+    function u54.HumanoidChanged(a1, a2) -- Line: 195 -- upvalues: Players (val)
+        local Character = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if Character then
+            if a2 == "JumpPower" then
+                a1.jumpPower = Character.JumpPower
+                a1:UpdateEnabled()
+                return
+            end
+            if a2 == "Parent" and not Character.Parent then
+                a1.humanoidChangeConn:Disconnect()
+            end
+        end
+    end
+
+    function u54:HumanoidStateEnabledChanged(a2, a3) -- Line: 210
+        if a2 == Enum.HumanoidStateType.Jumping then
+            self.jumpStateEnabled = a3
+            self:UpdateEnabled()
+        end
+    end
+
+    function u54:CharacterAdded(a2) -- Line: 217
+        if self.humanoidChangeConn then
+            self.humanoidChangeConn:Disconnect()
+            self.humanoidChangeConn = nil
+        end
+        self.humanoid = a2:FindFirstChildOfClass("Humanoid")
+        while not self.humanoid do
+            a2.ChildAdded:wait()
+            self.humanoid = a2:FindFirstChildOfClass("Humanoid")
+        end
+        self.humanoidJumpPowerConn = (self.humanoid:GetPropertyChangedSignal("JumpPower")):Connect(function() -- Line: 229 -- upvalues: self (val)
+            self.jumpPower = self.humanoid.JumpPower
+            self:UpdateEnabled()
+        end)
+        self.humanoidParentConn = (self.humanoid:GetPropertyChangedSignal("Parent")):Connect(function() -- Line: 234 -- upvalues: self (val)
+            if not self.humanoid.Parent then
+                self.humanoidJumpPowerConn:Disconnect()
+                self.humanoidJumpPowerConn = nil
+                self.humanoidParentConn:Disconnect()
+                self.humanoidParentConn = nil
+            end
+        end)
+        self.humanoidStateEnabledChangedConn = self.humanoid.StateEnabledChanged:Connect(function(a1, a2) -- Line: 243 -- upvalues: self (val)
+            self:HumanoidStateEnabledChanged(a1, a2)
+        end)
+        self.jumpPower = self.humanoid.JumpPower
+        self.jumpStateEnabled = self.humanoid:GetStateEnabled(Enum.HumanoidStateType.Jumping)
+        self:UpdateEnabled()
+    end
+
+    function u54:SetupCharacterAddedFunction() -- Line: 252 -- upvalues: Players (val)
+        self.characterAddedConn = Players.LocalPlayer.CharacterAdded:Connect(function(a1) -- Line: 253 -- upvalues: self (val)
+            self:CharacterAdded(a1)
+        end)
+        if Players.LocalPlayer.Character then
+            self:CharacterAdded(Players.LocalPlayer.Character)
+        end
+    end
+end
+
+function u54.Enable(a1, a2, a3) -- Line: 262 -- upvalues: UserUpdateTouchJump2 (val)
+    if a3 then
+        a1.parentUIFrame = a3
+    end
+    a1.externallyEnabled = a2
+    if not UserUpdateTouchJump2 then
+        a1:EnableButton(a2)
+        return
+    end
+    a1:UpdateEnabled()
+    if a2 then
+        a1:_setupConfigurations()
+        return
+    end
+    a1._connectionUtil:disconnectAll()
+end
+
+function u54:Create() -- Line: 280 -- upvalues: UserUpdateTouchJump2 (val), GuiService (val)
+    if not self.parentUIFrame then
+        return
+    end
+    if self.jumpButton then
+        self.jumpButton:Destroy()
+        self.jumpButton = nil
+    end
+    if self.absoluteSizeChangedConn then
+        self.absoluteSizeChangedConn:Disconnect()
+        self.absoluteSizeChangedConn = nil
+    end
+    self.jumpButton = Instance.new("ImageButton")
+    self.jumpButton.Name = "JumpButton"
+    self.jumpButton.Visible = false
+    self.jumpButton.BackgroundTransparency = 1
+    self.jumpButton.Image = "rbxasset://textures/ui/Input/TouchControlsSheetV2.png"
+    self.jumpButton.ImageRectOffset = Vector2.new(1, 146)
+    self.jumpButton.ImageRectSize = Vector2.new(144, 144)
+
+    local function ResizeJumpButton() -- Line: 303 -- upvalues: self (val)
+        local v1
+        local v2 = if not ((math.min(self.parentUIFrame.AbsoluteSize.x, self.parentUIFrame.AbsoluteSize.y)) <= 500) then 120 else 70
+        self.jumpButton.Size = UDim2.new(0, v2, 0, v2)
+        local jumpButton = self.jumpButton
+        local v3 = v1 and UDim2.new(1, -(v2 * 1.5 - 10), 1, -v2 - 20) or UDim2.new(1, -(v2 * 1.5 - 10), 1, -v2 * 1.75)
+        jumpButton.Position = v3
+    end
+
+    ResizeJumpButton()
+    self.absoluteSizeChangedConn = (self.parentUIFrame:GetPropertyChangedSignal("AbsoluteSize")):Connect(ResizeJumpButton)
+    self.touchObject = nil
+    self.jumpButton.InputBegan:connect(function(a1) -- Line: 317 -- upvalues: self (val)
+        if not self.touchObject
+            and a1.UserInputType == Enum.UserInputType.Touch
+            and a1.UserInputState == Enum.UserInputState.Begin then
+            self.touchObject = a1
+            self.jumpButton.ImageRectOffset = Vector2.new(146, 146)
+            self.isJumping = true
+            return
+        end
+    end)
+    if not UserUpdateTouchJump2 then
+        local function v1() -- Line: 331 -- upvalues: self (val)
+            self.touchObject = nil
+            self.isJumping = false
+            self.jumpButton.ImageRectOffset = Vector2.new(1, 146)
+        end
+
+        self.jumpButton.InputEnded:connect(function(a1) -- Line: 337 -- upvalues: self (val) -- types: a1: userdata
+            if a1 == self.touchObject then
+                self.touchObject = nil
+                self.isJumping = false
+                self.jumpButton.ImageRectOffset = Vector2.new(1, 146)
+            end
+        end)
+        GuiService.MenuOpened:connect(function() -- Line: 343 -- upvalues: self (val)
+            if self.touchObject then
+                self.touchObject = nil
+                self.isJumping = false
+                self.jumpButton.ImageRectOffset = Vector2.new(1, 146)
+            end
+        end)
+        if not self.characterAddedConn then
+            self:SetupCharacterAddedFunction()
+        end
+    end
+    self.jumpButton.Parent = self.parentUIFrame
+end
+
+return u54

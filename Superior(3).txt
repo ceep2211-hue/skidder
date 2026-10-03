@@ -1,0 +1,36 @@
+-- Path : Workspace.Map.Tiles.HighEndHouseTile.House.HighEndhouse.PersonalWeaponCrate.MansionUpgrade.Crates.Personal Weapon Crate.CrateOptions.Superior
+-- Script path: Workspace.Map.Tiles.HighEndHouseTile.House.HighEndhouse.PersonalWeaponCrate.MansionUpgrade.Crates.Personal Weapon Crate.CrateOptions.Superior
+-- Decompile time: 0.63 ms
+
+return {
+    crate_name = script.Name,
+    crate_color_type = "Superior",
+    layout_order = 3,
+    bias = 1.03,
+    items = {
+        {name = "Brick", item_type = "throwable", amount = 5},
+        {name = "Tire Iron", item_type = "melee"},
+        {name = "G3", item_type = "gun"},
+        {name = "Baseball Bat", item_type = "melee"},
+        {name = "Shank", item_type = "melee"},
+        {name = "Fire Cracker", item_type = "throwable", amount = 5},
+        {name = "Hammer", item_type = "melee"},
+        {name = "Jerry Can", item_type = "throwable", amount = 5},
+        {name = "Cinder Block", item_type = "throwable", amount = 5},
+        {name = "Switchblade", item_type = "melee"},
+        {name = "Axe", item_type = "melee"},
+        {name = "Butcher Knife", item_type = "melee"},
+        {name = "Crowbar", item_type = "melee"},
+        {name = "Frying Pan", item_type = "melee"},
+        {name = "Metal Baseball Bat", item_type = "melee"},
+        {name = "Wrench", item_type = "melee"},
+        {name = "Taser", item_type = "melee"},
+        {name = "P226", item_type = "gun"},
+        {name = "Glock", item_type = "gun"},
+        {name = "Sawnoff", item_type = "gun"},
+        {name = "Hunting Rifle", item_type = "gun"},
+        {name = "Uzi", item_type = "gun"},
+        {name = "MP5", item_type = "gun"},
+        {name = "Skorpion", item_type = "gun"},
+    },
+}

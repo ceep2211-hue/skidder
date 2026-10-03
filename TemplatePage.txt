@@ -1,0 +1,37 @@
+-- Path : ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator.Items.TemplatePage
+-- Script path: ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator.Items.TemplatePage
+-- Decompile time: 0.85 ms
+
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local face = require(script.Parent.Parent.CharacterCreatorTypes).all_item_types.face
+local ReplicatedCharacterCreatorItems = game.ReplicatedStorage:WaitForChild("ReplicatedCharacterCreatorItems")
+local Util = require(ReplicatedStorage.Modules.Core.Util)
+require(game.ReplicatedStorage.Modules.Core.Net)
+local u38 = {}
+Util.hook_children(ReplicatedCharacterCreatorItems:WaitForChild("Faces"), function(a1) -- Line: 15 -- upvalues: u38 (val), face (val)
+    table.insert(u38, {
+        item_name = a1.Name,
+        item_type = face,
+        asset_id = a1:GetAttribute("AssetId"),
+        image_id = a1:GetAttribute("ImageId"),
+        price = a1:GetAttribute("Price"),
+    })
+end)
+return {
+    focus_part_name = "Head",
+    page_offset = Vector3.new(0.30000001192092896, 0, 3),
+    page_name = face,
+    faces = u38,
+    items_for_page = u38,
+    run_equipped_sound_effect = function(a1, a2) end,
+    get_equipped_status = function(a1, a2) -- Line: 29 -- upvalues: Char (val) -- types: a2: userdata
+        for i, j in Char.get():GetChildren() do
+            if j:IsA("Accessory") and j.Name == a1.item_name then
+                return true
+            end
+        end
+        return false
+    end,
+    send_equipped_to_server = function(a1, a2) end,
+}

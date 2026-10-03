@@ -1,0 +1,82 @@
+-- Path : Workspace.Vehicles.Stang.Scripts.Client.FX.TireEffects
+-- Script path: Workspace.Vehicles.Stang.Scripts.Client.FX.TireEffects
+-- Decompile time: 3.06 ms
+
+local Size, v1, v2
+local v3 = {}
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local CurrentCamera = game.Workspace.CurrentCamera
+local Constants = require(script.Parent.Parent.Parent.Constants)
+local Utility = require(ReplicatedStorage.Utility)
+local Parent = script.Parent.Parent.Parent.Parent
+local Chassis = Parent.Chassis
+local Motors = Parent.Motors
+local Wheels = Parent.Wheels
+local u32 = {Wheels.FL, Wheels.FR, Wheels.RL, Wheels.RR}
+for i, j in u32 do
+    Size = j.Visuals.Tire.Size
+    v1 = math.min(Size.X, Size.Y, Size.Z)
+    v2 = script.SkidTrail:Clone()
+    v2.Attachment0 = Utility.Instance.new("Attachment", {Name = "SkidTrailAttachment", Parent = j})
+    v2.Attachment1 = Utility.Instance.new("Attachment", {Name = "SkidTrailAttachment", Parent = j})
+    v2.WidthScale = NumberSequence.new(v1)
+    v2.Parent = j
+    script.SmokeEmitter:Clone().Parent = j
+    script.NormalSparks:Clone().Parent = j
+end
+
+local function OnHeartbeat(a1) -- Line: 49
+    -- upvalues: Parent (val), CurrentCamera (val), Chassis (val), u32 (val), Constants (val)
+    local NormalSparks, Size, SkidTrail, SmokeEmitter, WHEEL_IS_GROUNDED, WHEEL_IS_SLIPPING, v1, v2, v3
+    if Parent.Parent == nil then
+        return
+    end
+    local v4 = (Parent:GetPivot().Position - CurrentCamera.CFrame.Position).Magnitude <= 400
+    local v5 = -Chassis.CFrame.UpVector
+    local v6 = nil
+    local v7 = nil
+    for i, j in u32, v6, v7 do
+        Size = j.Visuals.Tire.Size
+        v3 = math.min(Size.X, Size.Y, Size.Z)
+        SkidTrail = j.SkidTrail
+        SmokeEmitter = j.SmokeEmitter
+        NormalSparks = j.NormalSparks
+        v1 = j.Size.Y / 2
+        v2 = v3 / 2
+        SkidTrail.Attachment0.WorldCFrame = (CFrame.new(j.Position)) * Chassis.CFrame.Rotation * CFrame.new(-v2, -v1 + 0.05, 0)
+        SkidTrail.Attachment1.WorldCFrame = (CFrame.new(j.Position)) * Chassis.CFrame.Rotation * CFrame.new(v2, -v1 + 0.05, 0)
+        if not v4 then
+            SkidTrail.Enabled = false
+            SmokeEmitter.Enabled = false
+        else
+            WHEEL_IS_SLIPPING = Constants.WHEEL_IS_SLIPPING
+            if not j:GetAttribute(WHEEL_IS_SLIPPING) or j:GetAttribute("Popped") then
+                SkidTrail.Enabled = false
+                SmokeEmitter.Enabled = false
+            else
+                SkidTrail.Enabled = true
+                SmokeEmitter.Enabled = true
+            end
+        end
+        if not v4 then
+            NormalSparks.Enabled = false
+        else
+            WHEEL_IS_GROUNDED = Constants.WHEEL_IS_GROUNDED
+            if not j:GetAttribute(WHEEL_IS_GROUNDED)
+                or not j:GetAttribute("Popped")
+                or not (5 < j.AssemblyLinearVelocity.Magnitude) then
+                NormalSparks.Enabled = false
+            else
+                NormalSparks.Enabled = true
+            end
+        end
+    end
+end
+
+function v3.Initialize() -- Line: 109 -- upvalues: RunService (val), OnHeartbeat (val)
+    RunService.Heartbeat:Connect(OnHeartbeat)
+end
+
+v3.Initialize()
+return v3

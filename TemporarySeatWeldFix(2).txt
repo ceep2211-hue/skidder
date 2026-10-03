@@ -1,0 +1,71 @@
+-- Path : ReplicatedStorage.Modules.Game.Character.TemporarySeatWeldFix
+-- Script path: ReplicatedStorage.Modules.Game.Character.TemporarySeatWeldFix
+-- Decompile time: 1.56 ms
+
+require(game.ReplicatedStorage.Modules.Core.Char)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local u14 = {FLAG_TEMPORARY_SEAT_WELD_FIX = true}
+
+function u14.initiate() end
+
+function u14.loaded() -- Line: 12 -- upvalues: u14 (val), Util (val)
+    if not u14.FLAG_TEMPORARY_SEAT_WELD_FIX then
+        return
+    end
+
+    local function new_seat_object(a1) -- Line: 15 -- upvalues: Util (upval) -- types: a1: userdata
+        local u1 = nil
+        Util.hook_children(a1, function(a1_2) -- Line: 18 -- upvalues: Util (upval), a1 (val), u1 (ref)
+            if a1_2.Name == "SeatWeld" and a1_2:IsA("Weld") then
+                local u7 = CFrame.new()
+                local u9 = CFrame.new()
+                Util.watch_property(a1_2, "C0", function(a1) -- Line: 24 -- upvalues: u7 (ref)
+                    u7 = a1
+                end)
+                Util.watch_property(a1_2, "C1", function(a1) -- Line: 27 -- upvalues: u9 (ref)
+                    u9 = a1
+                end)
+                local u22 = nil
+                local v1 = a1_2.AncestryChanged:Connect(function() -- Line: 31 -- upvalues: a1_2 (val), u22 (ref), a1 (upval), u1 (upval), u7 (ref), u9 (ref)
+                    if a1_2.Parent then
+                        return
+                    end
+                    u22:Disconnect()
+                    u22 = nil
+                    if a1:GetAttribute("ServerOccupant") == nil then
+                        return
+                    end
+                    local v1 = game.Players:FindFirstChild((a1:GetAttribute("ServerOccupant")))
+                    local Character = v1 and v1.Character and v1.Character.PrimaryPart
+                    if not Character or v1 == game.Players.LocalPlayer then
+                        return
+                    end
+                    if u1 then
+                        u1:Destroy()
+                    end
+                    local Weld = Instance.new("Weld")
+                    u1 = Weld
+                    Weld.Name = "SeatWeld"
+                    Weld.C0 = u7
+                    Weld.C1 = u9
+                    Weld.Part0 = a1
+                    Weld.Part1 = Character
+                    Weld.Parent = a1
+                end)
+            end
+        end)
+        Util.watch_attribute(a1, "ServerOccupant", function(a1) -- Line: 63 -- upvalues: u1 (ref)
+            if a1 == nil and u1 then
+                u1:Destroy()
+            end
+        end)
+    end
+
+    for i, j in {"PassengerSeat", "DriverSeat"} do
+        Util.hook_tag(j, function(a1) -- Line: 75 -- upvalues: new_seat_object (val) -- types: a1: userdata
+            new_seat_object(a1)
+        end)
+    end
+end
+
+return u14

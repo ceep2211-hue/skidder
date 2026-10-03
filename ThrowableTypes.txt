@@ -1,0 +1,13 @@
+-- Path : ReplicatedStorage.Modules.Game.ItemTypes.Throwable.ThrowableTypes
+-- Script path: ReplicatedStorage.Modules.Game.ItemTypes.Throwable.ThrowableTypes
+-- Decompile time: 0.26 ms
+
+require(game.ReplicatedStorage.Modules.Core.Util)
+require(game.ReplicatedStorage.Modules.Core.Char)
+local v1 = {}
+for i, j in script:GetChildren() do
+    if j:IsA("ModuleScript") then
+        v1[j.Name] = require(j).init
+    end
+end
+return v1

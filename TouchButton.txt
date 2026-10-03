@@ -1,0 +1,52 @@
+-- Path : ReplicatedStorage.Modules.Game.TouchButton
+-- Script path: ReplicatedStorage.Modules.Game.TouchButton
+-- Decompile time: 1.92 ms
+
+require(game.ReplicatedStorage.Modules.Core.UI)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local v1 = {}
+local PlayerGui = game.Players.LocalPlayer.PlayerGui
+
+function v1.create_button(a1, a2, a3, a4, a5, a6) -- Line: 12
+    -- upvalues: Util (val), PlayerGui (val)
+    local u10 = script.TouchButtonTemplate:Clone()
+    u10.Name = "TouchButton"
+    u10.Icon.Image = a1
+    u10.Icon.Size = a3
+    Vector2.new(5, 5)
+    local u22 = a2 + (Vector2.new(0, 0))
+    Util.hook_descendants(PlayerGui, function(a1) -- Line: 32 -- upvalues: Util (upval), u10 (val), a4 (val), a5 (val), u22 (ref) -- types: a1: userdata
+        if a1.Name == "JumpButton" then
+            Util.watch_property(a1, "AbsoluteSize", function(a1_2) -- Line: 36 -- upvalues: u10 (upval), a1 (val), a4 (upval), a5 (upval), u22 (upval)
+                u10.Size = UDim2.fromOffset(a1_2.X * 1, a1_2.Y * 1)
+                local UIScale = Instance.new("UIScale")
+                UIScale.Scale = 0.8
+                UIScale.Parent = u10
+                local v1 = Vector2.new(a1_2.X * 1, a1_2.Y * 1)
+                local AbsoluteSize = u10.AbsoluteSize
+                local Position = a1.Position
+                local Offset = a1.Size.X.Offset
+                local Offset_2 = a1.Size.Y.Offset
+                local v2 = if not a4 then UDim2.new(Position.X.Scale, Position.X.Offset - Offset / 2, 0, 0) else UDim2.new(1 - Position.X.Scale, -(Position.X.Offset + Offset / 2), 0, 0)
+                local v3 = if not a5 then UDim2.new(0, 0, Position.Y.Scale, Position.Y.Offset) else UDim2.new(0, 0, 1 - Position.Y.Scale, Position.Y.Offset)
+                u10.Position = v2 + v3 + UDim2.fromOffset(v1.X * u22.X, v1.Y * u22.Y)
+            end)
+        end
+    end)
+    ;(u10:GetAttributeChangedSignal("toggled")):Connect(function() -- Line: 78 -- upvalues: u10 (val)
+        if u10:GetAttribute("toggled") then
+            u10.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
+            return
+        end
+        u10.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    end)
+    u10.Activated:Connect(function() -- Line: 87 -- upvalues: u10 (val)
+        if not u10:GetAttribute("toggleable") then
+            return
+        end
+        u10:SetAttribute("toggled", not (u10:GetAttribute("toggled")))
+    end)
+    return u10
+end
+
+return v1

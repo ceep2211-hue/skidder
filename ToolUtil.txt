@@ -1,0 +1,63 @@
+-- Path : ReplicatedStorage.Modules.Game.ToolUtil
+-- Script path: ReplicatedStorage.Modules.Game.ToolUtil
+-- Decompile time: 1.43 ms
+
+require(game.ReplicatedStorage.Modules.Core.Data)
+require(game.ReplicatedStorage.Modules.Core.Net)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local v1 = {}
+local LocalPlayer = game.Players.LocalPlayer
+local u25 = nil
+
+function disable_ik(a1) -- Line: 9 -- upvalues: u25 (ref), LocalPlayer (val)
+    if a1.Name == "RightHandIKControl" then
+        a1.Enabled = false
+    end
+    if a1.Name == "LeftHandIKControl" then
+        u25 = a1.ChainRoot
+        a1.ChainRoot = LocalPlayer.Character.LeftUpperArm
+    end
+end
+
+function enable_ik(a1) -- Line: 19 -- upvalues: u25 (ref)
+    if a1.Name == "RightHandIKControl" and a1.Target ~= nil then
+        a1.Enabled = true
+    end
+    if a1.Name == "LeftHandIKControl" then
+        a1.ChainRoot = u25
+    end
+end
+
+function v1.override_ik_hold(a1) -- Line: 29 -- upvalues: Util (val), LocalPlayer (val)
+    local u1 = {}
+    local instance = a1.instance
+    instance.Equipped:Connect(function() -- Line: 33 -- upvalues: u1 (ref), Util (upval), LocalPlayer (upval)
+        table.insert(u1, (Util.hook_children(LocalPlayer.Character.Humanoid, disable_ik)))
+        table.insert(u1, (Util.watch_property(LocalPlayer.Character.Humanoid, "SeatPart", function(a1) -- Line: 35 -- upvalues: LocalPlayer (upval)
+            if a1 then
+                for k, n in LocalPlayer.Character.Humanoid:GetChildren() do
+                    disable_ik(n)
+                end
+                return
+            end
+            for i, j in LocalPlayer.Character.Humanoid:GetChildren() do
+                enable_ik(j)
+            end
+        end)))
+    end)
+    instance.Unequipped:Connect(function() -- Line: 48 -- upvalues: LocalPlayer (upval), u1 (ref)
+        for i, j in LocalPlayer.Character.Humanoid:GetChildren() do
+            enable_ik(j)
+        end
+        for k, n in u1 do
+            n:Disconnect()
+        end
+        u1 = {}
+    end)
+end
+
+function v1.initiate() end
+
+function v1.loaded() end
+
+return v1

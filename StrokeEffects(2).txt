@@ -1,0 +1,57 @@
+-- Path : ReplicatedStorage.Modules.Core.UIFX.StrokeEffects
+-- Script path: ReplicatedStorage.Modules.Core.UIFX.StrokeEffects
+-- Decompile time: 1.37 ms
+
+local Ease = require(game.ReplicatedStorage.Modules.Core.Ease)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+require(game.ReplicatedStorage.Modules.Core.Spring)
+local u21 = {}
+
+local function get_scaler(a1) -- Line: 6 -- upvalues: UI (val), u21 (val), Ease (val)
+    local u5 = UI.get(a1)
+    local u8 = u21[u5]
+    if not u8 then
+        u8 = {}
+        u21[u5] = u8
+        u8.scaler = Instance.new("UIScale", u5)
+        local new = Ease.new
+        local v1 = if not u5.Visible then 0 else 1
+        u8.spring = new(1, 5, v1)
+        u8.spring.hook(function(a1) -- Line: 14 -- upvalues: u5 (ref), u8 (ref)
+            if a1 == 0 then
+                u5.Visible = false
+                u8.scaler.Scale = 0
+                return
+            end
+            if not u5.Visible then
+                u5.Visible = true
+            end
+            u8.scaler.Scale = 3 * a1 ^ 2 - 2 * a1 ^ 3
+        end)
+    end
+    return u8
+end
+
+local function error_stroke(a1) -- Line: 29 -- types: a1: userdata
+    local Color = a1.Color
+    if a1:GetAttribute("Animating") then
+        return
+    end
+    a1:SetAttribute("Animating", true)
+    local Enabled = a1.Enabled
+    a1.Enabled = true
+    for i = 1, 3 do
+        a1.Color = Color3.fromRGB(255, 0, 0)
+        task.wait(0.2)
+        a1.Color = Color
+        task.wait(0.2)
+    end
+    a1.Enabled = Enabled
+    a1:SetAttribute("Animating", false)
+end
+
+return {
+    error_effect = function(a1) -- Line: 51 -- upvalues: error_stroke (val)
+        task.spawn(error_stroke, a1)
+    end,
+}
