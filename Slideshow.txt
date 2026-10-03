@@ -1,0 +1,83 @@
+-- Path : ReplicatedStorage.Modules.Game.UI.Slideshow
+-- Script path: ReplicatedStorage.Modules.Game.UI.Slideshow
+-- Decompile time: 2.04 ms
+
+require(game.ReplicatedStorage.Modules.Core.Data)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+require(game.ReplicatedStorage.Modules.Core.Util)
+local UIFX = require(game.ReplicatedStorage.Modules.Core.UIFX)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+require(game.ReplicatedStorage.Modules.Core.Char)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local u49 = {}
+u49.current_slideshow = State.new("")
+u49.current_frame = State.new(1)
+
+function u49.initiate() -- Line: 13 -- upvalues: Net (val), u49 (val)
+    Net.hook("start_tutorial_slideshow", function() -- Line: 14 -- upvalues: u49 (upval)
+        u49.current_slideshow.set("Tutorial")
+    end)
+end
+
+function u49.loaded() -- Line: 19 -- upvalues: UI (val), u49 (val), UIFX (val)
+    local SlideshowHolder = UI.get("SlideshowHolder")
+    SlideshowHolder.Visible = false
+    UI.on_click("SlideshowCloseButton", function() -- Line: 22 -- upvalues: u49 (upval)
+        u49.current_slideshow.set("")
+    end)
+    UI.on_click("ContinueSlideshow", function() -- Line: 26 -- upvalues: u49 (upval)
+        u49.current_frame.update(function(a1) -- Line: 27
+            return a1 + 1
+        end)
+    end)
+    UI.on_click("PreviousSlideshow", function() -- Line: 32 -- upvalues: u49 (upval)
+        u49.current_frame.update(function(a1) -- Line: 33
+            return a1 - 1
+        end)
+    end)
+    UI.on_click("FinishSlideshow", function() -- Line: 38 -- upvalues: u49 (upval)
+        u49.current_slideshow.set("")
+    end)
+
+    local function update_frame(a1) -- Line: 42 -- upvalues: UI (upval), u49 (upval)
+        local v1
+        local v2 = (UI.get("SlideshowFrames")):FindFirstChild((u49.current_slideshow.get()))
+        if v2 == nil then
+            return
+        end
+        local v3 = a1
+        for i, j in v2:GetChildren() do
+            v1 = tonumber(j.Name) == v3
+            j.Visible = v1
+        end
+        local v4 = #v2:GetChildren()
+        local FinishSlideshow = UI.get("FinishSlideshow")
+        FinishSlideshow.Visible = v3 == v4
+        local ContinueSlideshow = UI.get("ContinueSlideshow")
+        ContinueSlideshow.Visible = v3 < v4
+        local PreviousSlideshow = UI.get("PreviousSlideshow")
+        PreviousSlideshow.Visible = v3 > 1
+    end
+
+    u49.current_slideshow.hook(function(a1) -- Line: 55 -- upvalues: UI (upval), UIFX (upval), u49 (upval), update_frame (val)
+        local v1
+        local v2 = a1
+        for i, j in UI.get("SlideshowFrames"):GetChildren() do
+            v1 = j.Name == v2
+            j.Visible = v1
+        end
+        if v2 == "" then
+            UIFX.scale_close("SlideshowHolder")
+            return
+        end
+        if u49.current_frame.get() ~= 1 then
+            u49.current_frame.set(1)
+        else
+            update_frame(1)
+        end
+        UIFX.scale_open("SlideshowHolder")
+    end)
+    u49.current_frame.hook(update_frame)
+end
+
+return u49

@@ -1,0 +1,14 @@
+-- Path : Workspace.Map.Tiles.GunShopTile.PatriotWeapons.Interior.Crates.Ammo Crate.CrateOptions.Shotgun
+-- Script path: Workspace.Map.Tiles.GunShopTile.PatriotWeapons.Interior.Crates.Ammo Crate.CrateOptions.Shotgun
+-- Decompile time: 0.17 ms
+
+return {
+    crate_name = script.Name,
+    crate_color_type = "Elite",
+    layout_order = 3,
+    items = {
+        {name = "Shotgun Ammo", item_type = "ammo", ammo_type = "shotgun", amount = 10},
+        {name = "Shotgun Ammo", item_type = "ammo", ammo_type = "shotgun", amount = 50},
+        {name = "Shotgun Ammo", item_type = "ammo", ammo_type = "shotgun", amount = 100},
+    },
+}

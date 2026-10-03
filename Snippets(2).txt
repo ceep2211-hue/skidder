@@ -1,0 +1,32 @@
+-- Path : ReplicatedStorage.Modules.Core.Snippets
+-- Script path: ReplicatedStorage.Modules.Core.Snippets
+-- Decompile time: 0.52 ms
+
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local v1 = {}
+local u15 = nil
+
+function v1.initiate() -- Line: 8 -- upvalues: u15 (ref)
+    u15 = require(script:FindFirstAncestorWhichIsA("ModuleScript"))
+end
+
+local u17 = {}
+
+function v1.loaded() -- Line: 14 -- upvalues: u17 (val), Util (val), UI (val)
+    local function v1(a1) -- Line: 15 -- upvalues: u17 (upval)
+        if a1.Name == "SnippetClient" and a1:IsA("ModuleScript") and not u17[a1] then
+            u17[a1] = true
+            if require(a1).initiate then
+                require(a1).initiate()
+                return
+            end
+            warn("Snippet needs an initiate function! Did you make a typo?")
+        end
+    end
+
+    Util.hook_tag("SnippetClient", v1)
+    Util.hook_descendants(UI.player_gui, v1, "Playergui")
+end
+
+return v1

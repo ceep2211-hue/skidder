@@ -1,0 +1,58 @@
+-- Path : ReplicatedStorage.Modules.Game.UI.SidebarMenu
+-- Script path: ReplicatedStorage.Modules.Game.UI.SidebarMenu
+-- Decompile time: 1.57 ms
+
+game:GetService("ReplicatedStorage")
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local Spring = require(game.ReplicatedStorage.Modules.Core.Spring)
+require(game.ReplicatedStorage.Modules.Core.Tween)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local Keybinds = require(game.ReplicatedStorage.Modules.Game.Keybinds)
+local u47 = {}
+u47.is_expanded = State.new(false)
+local u51 = {expand_side_menu = "MenuBar", open_inventory_button = "InventoryButton"}
+
+function u47.initiate() end
+
+function u47.loaded() -- Line: 22 -- upvalues: UI (val), Spring (val), Util (val), u47 (val), Keybinds (val), u51 (val)
+    UI.get("SidebarHolder")
+    local u9 = Spring.new(3, 0.95, 0)
+    local SidebarSlider = UI.get("SidebarSlider")
+    local SidebarHolderSlider = UI.get("SidebarHolderSlider")
+    local HiddenSpaceBackground = UI.get("HiddenSpaceBackground")
+    SidebarSlider.Visible = true
+    u9.hook(function(a1) -- Line: 31 -- upvalues: SidebarSlider (val), SidebarHolderSlider (val), HiddenSpaceBackground (val)
+        SidebarSlider.AnchorPoint = Vector2.new(0.41666666666666663 + 0.5833333333333334 * a1, 0.5)
+        SidebarSlider.BackgroundTransparency = 0.2 + 0.8 * (1 - a1)
+        SidebarHolderSlider.AnchorPoint = Vector2.new(a1 ^ 0.5, 0.5)
+        HiddenSpaceBackground.BackgroundTransparency = SidebarSlider.BackgroundTransparency
+    end)
+
+    local function click_menu_bar() -- Line: 41 -- upvalues: UI (upval), u9 (val), Util (upval), u47 (upval)
+        local v1
+        local ClickSound = UI.get("MenuBar").ClickSound
+        ClickSound.PlaybackSpeed = (if not (u9.r == 0) then 0.95 else 1.05) * Util.rand(0.95, 1.05)
+        ClickSound:Play()
+        u9.r = if not v1 then 0 else 1
+        u47.is_expanded.set(v1)
+    end
+
+    UI.on_click("MenuBar", click_menu_bar)
+    Keybinds.hook_action("expand_side_menu", function(a1) -- Line: 53 -- upvalues: click_menu_bar (val)
+        if a1 then
+            click_menu_bar()
+        end
+    end)
+    for i, j in u51 do
+        local SidebarPromptButton = (UI.get(j)).SidebarPromptButton
+        Keybinds.hook_action_icon(i, function(a1) -- Line: 62 -- upvalues: SidebarPromptButton (val) -- types: a1: string?
+            SidebarPromptButton.Visible = not not a1
+            if a1 then
+                SidebarPromptButton.Image = a1
+            end
+        end)
+    end
+end
+
+return u47

@@ -1,0 +1,188 @@
+-- Path : ReplicatedStorage.Modules.Core.State
+-- Script path: ReplicatedStorage.Modules.Core.State
+-- Decompile time: 3.93 ms
+
+local Tbl = require(game.ReplicatedStorage.Modules.Core.Tbl)
+local u7 = {poll = nil, stop_duplicate_hooks_while_refreshing = false}
+
+local function no_yielding_call(a1, ...) -- Line: 21
+    local v1 = coroutine.create(a1)
+    local v2, v3 = coroutine.resume(v1, ...)
+    if not v2 then
+        error("Error in function: " .. tostring(v3), 2)
+    end
+    if coroutine.status(v1) ~= "dead" then
+        error("Function yielded unexpectedly!", 2)
+    end
+    return v3
+end
+
+local function get_dependencies(a1) -- Line: 36 -- upvalues: u7 (val), no_yielding_call (val)
+    local u1 = {}
+
+    function u7.poll(a1) -- Line: 38 -- upvalues: u1 (val)
+        table.insert(u1, a1)
+    end
+
+    local v1 = no_yielding_call(a1)
+    u7.poll = nil
+    return u1, v1
+end
+
+function u7.new(a1) -- Line: 46 -- upvalues: u7 (val), Tbl (val), no_yielding_call (val) -- types: a1: userdata
+    if u7.stop_duplicate_hooks_while_refreshing then
+        local v1 = a1
+        if typeof(v1) == "function" then
+            warn("function duplicate found")
+            print(debug.traceback())
+        end
+    end
+    local u13 = {}
+    local u14 = {}
+    local u15 = {}
+    local u16 = nil
+    u13.hooks = u14
+
+    function u13.get() -- Line: 65 -- upvalues: u7 (upval), u13 (val), u16 (ref), a1 (ref)
+        if u7.poll then
+            u7.poll(u13)
+        end
+        if not u16 then
+            return a1
+        end
+        local v1 = u16()
+        if v1 ~= a1 then
+            u13.set(v1)
+        end
+        return v1
+    end
+
+    function u13.set(a1_2, a2) -- Line: 79 -- upvalues: a1 (ref), u16 (ref), u14 (val), u15 (val)
+        local v1 = a1
+        a1 = if not u16 then a1_2 else u16(v1)
+        if not a2 and a1 == v1 then
+            return
+        end
+        if typeof(a1) == "number" and typeof(v1) == "number" then
+            local v2 = a1 - v1
+            for k, v in next, u14 do
+                task.spawn(v.func, a1, v1, v2)
+            end
+            for k2, i in next, u15 do
+                task.spawn(i.func, v2)
+            end
+            return
+        end
+        for k3, j in next, u14 do
+            task.spawn(j.func, a1, v1)
+        end
+    end
+
+    function u13.update(a1) -- Line: 127 -- upvalues: u13 (val)
+        u13.set(a1(u13.get()))
+    end
+
+    function u13.hook(a1_2) -- Line: 131 -- upvalues: u7 (upval), u13 (val), a1 (ref), Tbl (upval), u14 (val)
+        if u7.stop_duplicate_hooks_while_refreshing then
+            u13.set(a1, true)
+            return
+        end
+        local u8 = {func = a1_2}
+
+        function u8.unhook() -- Line: 139 -- upvalues: Tbl (upval), u14 (upval), u8 (val)
+            Tbl.remove_value(u14, u8)
+            table.clear(u8)
+        end
+
+        table.insert(u14, u8)
+        a1_2(a1, a1)
+        return u8
+    end
+
+    function u13.delta(a1) -- Line: 148 -- upvalues: u15 (val)
+        table.insert(u15, a1)
+    end
+
+    function u13.wait() -- Line: 152 -- upvalues: u7 (upval), u13 (val)
+        return u7.wait(u13)
+    end
+
+    local v2 = a1
+    if typeof(v2) == "function" then
+        u16 = a1
+        local u29 = {}
+
+        function u7.poll(a1) -- Line: 38 -- upvalues: u29 (val)
+            table.insert(u29, a1)
+        end
+
+        local v3 = no_yielding_call(u16)
+        u7.poll = nil
+        for i, j in u29 do
+            j.hook(function(a1) -- Line: 161 -- upvalues: u13 (val)
+                u13.set(a1)
+            end)
+        end
+    end
+    return u13
+end
+
+function u7.watch(a1, a2) -- Line: 170 -- upvalues: u7 (val) -- types: a2: string
+    local v1 = nil
+    local u20 = false
+    local success, result = pcall(function() -- Line: 173 -- upvalues: a1 (val), a2 (val)
+        return a1:GetPropertyChangedSignal(a2)
+    end)
+    if not success then
+        local success_2, result_2 = pcall(function() -- Line: 177 -- upvalues: a1 (val), a2 (val)
+            return a1:GetAttributeChangedSignal(a2)
+        end)
+        result = result_2
+        if success_2 then
+            v1 = a1:GetAttribute(a2)
+            u20 = true
+        end
+    else
+        v1 = a1[a2]
+    end
+    if not success then
+        error("State watch given invalid property or attribute '" .. a2 .. "' for " .. (if not a1 then a1 else a1.Name))
+        return
+    end
+    local u26 = u7.new(v1)
+    result:Connect(function() -- Line: 185 -- upvalues: u26 (val), u20 (ref), a1 (val), a2 (val)
+        u26.set(if not u20 then a1[a2] else a1:GetAttribute(a2))
+    end)
+    return u26
+end
+
+function u7.wait(...) -- Line: 194
+    local u0 = {}
+    u0[1] = ...
+    local BindableEvent = Instance.new("BindableEvent")
+
+    local function fire(...) -- Line: 197 -- upvalues: BindableEvent (val), u0 (val)
+        BindableEvent:Fire(...)
+        for i, j in u0 do
+            j.unhook()
+        end
+        table.clear(u0)
+        BindableEvent:Destroy()
+    end
+
+    for k, v in next, u0 do
+        local u22 = v.get()
+        u0[k] = (v.hook(function(a1) -- Line: 207 -- upvalues: u22 (val), fire (val)
+            if a1 ~= u22 then
+                fire(a1, u22)
+            end
+        end))
+    end
+    return BindableEvent.Event:Wait()
+end
+
+function u7.initiate() end
+
+function u7.loaded() end
+
+return u7

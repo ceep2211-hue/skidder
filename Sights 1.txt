@@ -1,0 +1,27 @@
+-- Path : Workspace.Map.Tiles.GunShopTile.PatriotWeapons.Interior.Crates.Gunsmith Crate.CrateOptions.Sights 1
+-- Script path: Workspace.Map.Tiles.GunShopTile.PatriotWeapons.Interior.Crates.Gunsmith Crate.CrateOptions.Sights 1
+-- Decompile time: 0.39 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local v1 = {}
+require(ReplicatedStorage.Modules.Game.ItemCustomization.ItemCustomizationUI.CustomizationCategories)
+require(ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+v1.crate_name = "Sights"
+v1.crate_color_type = "Rare"
+v1.category = "weapon_optics"
+v1.layout_order = 1
+v1.bias = 1.15
+v1.items = {}
+for i, j in {
+    "Reflex Sight",
+    "Red Dot Sight",
+    "Hybrid Scope",
+    "10x Scope",
+    "ACOG",
+    "Thermal Scope",
+    "Holographic Sight",
+    "Digital Sight",
+} do
+    table.insert(v1.items, {item_type = "cosmetic", name = j})
+end
+return v1

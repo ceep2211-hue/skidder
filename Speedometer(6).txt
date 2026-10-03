@@ -1,0 +1,45 @@
+-- Path : Workspace.Vehicles.Stang.Scripts.Client.Speedometer
+-- Script path: Workspace.Vehicles.Stang.Scripts.Client.Speedometer
+-- Decompile time: 1.26 ms
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local Constants = require(script.Parent.Parent.Constants)
+local Units = require(script.Parent.Parent.Units)
+local PlayerGui = Players.LocalPlayer.PlayerGui
+local Parent = script.Parent.Parent.Parent
+local Chassis = Parent.Chassis
+local Motors = Parent.Motors
+local u37 = false
+local Speedometer = UI.get("Speedometer")
+local u41 = nil
+
+local function update() -- Line: 21 -- upvalues: Speedometer (val), Constants (val), Chassis (val), Units (val)
+    local v1 = (math.min(Speedometer.AbsoluteSize.X, Speedometer.AbsoluteSize.Y)) < Constants.UI_SMALL_SCREEN_THRESHOLD
+    Speedometer.UIScale.Scale = if not v1 then 1 else Constants.UI_SMALL_SCREEN_SCALE
+    local v2 = tostring((math.round((Units.studsPerSecondToMilesPerHour(Chassis.AssemblyLinearVelocity.Magnitude)))))
+    Speedometer.SpeedFrame.SpeedLabel.Text = v2
+end
+
+return {
+    enable = function(a1) -- Line: 37 -- upvalues: u37 (ref), Speedometer (val), u41 (ref), RunService (val), update (val)
+        if u37 then
+            return
+        end
+        u37 = true
+        Speedometer.Visible = true
+        u41 = RunService.Heartbeat:Connect(update)
+    end,
+    disable = function(a1) -- Line: 52 -- upvalues: u37 (ref), u41 (ref), Speedometer (val)
+        if not u37 then
+            return
+        end
+        u37 = false
+        if u41 then
+            u41:Disconnect()
+            u41 = nil
+        end
+        Speedometer.Visible = false
+    end,
+}

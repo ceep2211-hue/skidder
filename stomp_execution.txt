@@ -1,0 +1,20 @@
+-- Path : ReplicatedStorage.Modules.Game.MultiAnimations.MultiPlayerAnimation.Sequences.stomp_execution
+-- Script path: ReplicatedStorage.Modules.Game.MultiAnimations.MultiPlayerAnimation.Sequences.stomp_execution
+-- Decompile time: 0.29 ms
+
+require(script.Parent.Parent.Types)
+return {
+    unequip_items_while_playing = false,
+    camera = {player = "player_a", attach_to = "HumanoidRootPart", object = script.CamPart},
+    audio_track = {sound_id = 136884951958827, volume = 2},
+    sequences = {
+        player_a = {
+            start_teleport = {offset = CFrame.new(0, 0, 0)},
+            animation = {animation_id = 129051867009169, yield_animation = true},
+        },
+        player_b = {
+            start_teleport = {offset = CFrame.new(0, 0, 0)},
+            animation = {animation_id = 126280433637572, yield_animation = true},
+        },
+    },
+}

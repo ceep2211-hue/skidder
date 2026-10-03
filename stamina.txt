@@ -1,0 +1,85 @@
+-- Path : ReplicatedStorage.Modules.Game.Skills.SkillsList.stamina
+-- Script path: ReplicatedStorage.Modules.Game.Skills.SkillsList.stamina
+-- Decompile time: 1.11 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+require(ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local v1 = {
+    {
+        level = 5,
+        name = "stamina1",
+        reward_info = {stamina_capacity_increase = 10},
+        item_info = {name = "Bull Energy", item_type = "consumable", amount = 1},
+        display_reward = {
+            {text = "+{stamina_capacity_increase}% Stamina Capacity Increase"},
+            {image = "rbxassetid://92120615566345", text = "+{amount} Bull Energy"},
+        },
+    },
+    {
+        level = 10,
+        name = "stamina2",
+        reward_info = {stamina_capacity_increase = 5},
+        display_reward = {{text = "+{stamina_capacity_increase}% Stamina Capacity Increase"}},
+    },
+    {
+        level = 15,
+        name = "stamina3",
+        item_info = {name = "Bull Energy", item_type = "consumable", amount = 1},
+        display_reward = {{image = "rbxassetid://92120615566345", text = "+{amount} Bull Energy"}},
+    },
+    {
+        level = 20,
+        name = "stamina4",
+        reward_info = {stamina_capacity_increase = 5},
+        display_reward = {{text = "+{stamina_capacity_increase}% Stamina Capacity Increase"}},
+    },
+    {
+        level = 25,
+        name = "stamina5",
+        item_info = {name = "Bull Energy", item_type = "consumable", amount = 1},
+        display_reward = {{image = "rbxassetid://92120615566345", text = "+{amount} Bull Energy"}},
+    },
+    {
+        level = 30,
+        name = "stamina6",
+        reward_info = {stamina_capacity_increase = 5},
+        display_reward = {{text = "+{stamina_capacity_increase}% Stamina Capacity Increase"}},
+    },
+    {
+        level = 40,
+        name = "stamina7",
+        reward_info = {stamina_regeneration_increase = 5},
+        display_reward = {{text = "+{stamina_regeneration_increase}% Stamina Regeneration Increase"}},
+    },
+    {
+        level = 50,
+        name = "stamina8",
+        item_info = {name = "Bull Energy", item_type = "consumable", amount = 1},
+        display_reward = {{image = "rbxassetid://92120615566345", text = "+{amount} Bull Energy"}},
+    },
+    {
+        level = 60,
+        name = "stamina9",
+        reward_info = {stamina_capacity_increase = 5},
+        display_reward = {{text = "+{stamina_capacity_increase}% Stamina Capacity Increase"}},
+    },
+    {
+        level = 70,
+        name = "stamina10",
+        item_info = {name = "Bull Energy", item_type = "consumable", amount = 1},
+        display_reward = {{image = "rbxassetid://92120615566345", text = "+{amount} Bull Energy"}},
+    },
+    {
+        level = 70,
+        name = "stamina11",
+        reward_info = {stamina_regeneration_increase = 5},
+        display_reward = {{text = "+{stamina_regeneration_increase}% Stamina Regeneration Increase"}},
+    },
+}
+table.insert(v1, {
+    level = 30,
+    name = "stamina_energy_shot_unlock",
+    display_name = "Energy Shot",
+    display_reward = {{text = "Unlocks the Energy Shot which can be purchased at the Basketball Court Seller"}},
+})
+return v1

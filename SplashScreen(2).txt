@@ -1,0 +1,441 @@
+-- Path : ReplicatedStorage.Modules.Game.SplashScreen
+-- Script path: ReplicatedStorage.Modules.Game.SplashScreen
+-- Decompile time: 14.50 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local BlockSpinSubscriptionClient = require(ReplicatedStorage.Modules.Game.Store.BlockSpinSubscriptionClient)
+require(game.ReplicatedStorage.Modules.Core.Music)
+require(game.ReplicatedStorage.Modules.Core.Util)
+local Keybinds = require(game.ReplicatedStorage.Modules.Game.Keybinds)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local ReplicatedStorage_2 = game:GetService("ReplicatedStorage")
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local Tween = require(game.ReplicatedStorage.Modules.Core.Tween)
+local Timer = require(game.ReplicatedStorage.Modules.Core.Timer)
+local Audio = require(game.ReplicatedStorage.Modules.Core.Audio)
+local Data = require(game.ReplicatedStorage.Modules.Core.Data)
+local Slideshow = require(game.ReplicatedStorage.Modules.Game.UI.Slideshow)
+local Updates = require(ReplicatedStorage_2.Modules.Game.GameInfo.Updates)
+local Util = require(ReplicatedStorage_2.Modules.Core.Util)
+local RunService = game:GetService("RunService")
+local TransitionUI = require(ReplicatedStorage_2.Modules.Game.UI.TransitionUI)
+local PolicyService = game:GetService("PolicyService")
+local VoiceChatService = game:GetService("VoiceChatService")
+local FlagManager = require(game.ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local NotificationsUI = require(game.ReplicatedStorage.Modules.Game.UI.NotificationsUI)
+local XPFormula = require(game.ReplicatedStorage.Modules.Game.Skills.XPFormula)
+local TeleportService = game:GetService("TeleportService")
+local PlaceInfo = require(game.ReplicatedStorage.Modules.Game.GameInfo.PlaceInfo)
+local MarketplaceService = game:GetService("MarketplaceService")
+require(ReplicatedStorage_2.Modules.Game.Store.StoreData)
+require(ReplicatedStorage_2.Modules.Game.Store.StoreUI)
+local TeleportingUI = require(ReplicatedStorage_2.Modules.Game.UI.TeleportingUI)
+local ServerSelectorUI = require(ReplicatedStorage_2.Modules.Game.UI.ServerSelectorUI)
+local LocalPlayer = game.Players.LocalPlayer
+local u202 = {}
+u202.in_loading_screen = State.new(true)
+u202.server_button = State.new(nil)
+u202.update_log_expanded = State.new(false)
+u202.FLAG_VOICE_CHAT_ONLY_SERVERS_ENABLED = FlagManager.FLAG_VOICE_CHAT_ONLY_SERVERS_ENABLED
+u202.FLAG_PRO_SERVERS_ENABLED = FlagManager.FLAG_PRO_SERVERS_ENABLED
+u202.FLAG_BLOCKSPIN_PLUS_SERVERS_ENABLED = FlagManager.FLAG_BLOCKSPIN_PLUS_SERVERS_ENABLED
+
+function u202.initiate() end
+
+local u216 = nil
+local u217 = nil
+local u218 = nil
+local CFrameValue = Instance.new("CFrameValue")
+local CFrameValue_2 = Instance.new("CFrameValue")
+
+local function add_updates() -- Line: 56 -- upvalues: Updates (val), UI (val)
+    local v1, v2, v3
+    local v4 = #Updates.updates
+    for i = 1, v4 do
+        v1 = Updates.updates[i]
+        if v1.content ~= nil then
+            v2 = UI.get("LogTemplate"):Clone()
+            v2.Visible = true
+            v2:SetAttribute("stamp", v1.stamp)
+            v2.Parent = UI.get("LogTemplate").Parent
+            v2.Content.Text = v1.content
+            v3 = math.floor((os.difftime(os.time(), v1.stamp)) / 86400)
+            if v3 < 1 then
+                v2.Date.Text = "Today"
+            elseif v3 < 2 then
+                v2.Date.Text = "Yesterday"
+            elseif not (v3 < 7) then
+                v2.Date.Text = os.date("%d %B %Y", v1.stamp)
+            else
+                v2.Date.Text = ("%* days ago"):format(v3)
+            end
+        end
+    end
+end
+
+local function animate_in(a1, a2, a3) -- Line: 79 -- upvalues: Util (val)
+    a1.Size = UDim2.new(2.5, 0, 2.5, 0)
+    a1.ImageTransparency = 1
+    local v1 = TweenInfo.new(1, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+    local v2 = TweenInfo.new(0.25, Enum.EasingStyle.Linear)
+    Util.tween(a1, v1, {Size = UDim2.new(1, 0, 1, 0)})
+    Util.tween(a1, v2, {ImageTransparency = 0})
+    task.wait(1)
+    Util.tween(a2, v2, {ImageTransparency = 0})
+    local v3 = next
+    local Children, Children_2 = a1:GetChildren()
+    for k, v in v3, Children, Children_2 do
+        Util.tween(v, v2, {ImageTransparency = 0})
+    end
+    v3 = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 0, false, 0)
+    local v4 = nil
+    local v5 = nil
+    for i, j in a3, v4, v5 do
+        Util.tween(j, v3, {ImageTransparency = 0})
+        if j:FindFirstChild("Logo") then
+            Util.tween(j:WaitForChild("TextLabel"), v3, {ImageTransparency = 0})
+        end
+        Util.tween(j:WaitForChild("TextLabel"), v3, {TextTransparency = 0})
+        Util.tween((j:WaitForChild("TextLabel")):WaitForChild("UIStroke"), v3, {Transparency = 0})
+    end
+end
+
+function u202.loaded() -- Line: 108
+    -- upvalues: UI (val), u202 (val), Net (val), PlaceInfo (val), TeleportingUI (val), VoiceChatService (val)
+    -- upvalues: LocalPlayer (val), XPFormula (val), Data (val), BlockSpinSubscriptionClient (val)
+    -- upvalues: MarketplaceService (val), NotificationsUI (val), ServerSelectorUI (val), Util (val), TransitionUI (val)
+    -- upvalues: Audio (val), Tween (val), Slideshow (val), Char (val), Keybinds (val), animate_in (val)
+    -- upvalues: TeleportService (val), u216 (ref), RunService (val), CFrameValue (val), CFrameValue_2 (val), u217 (ref)
+    -- upvalues: u218 (ref), Timer (val), Updates (val), PolicyService (val), add_updates (val)
+    local SplashScreenGui = UI.get("SplashScreenGui")
+    SplashScreenGui.Enabled = true
+    u202.in_loading_screen.set(true)
+    SplashScreenGui:WaitForChild("Frame")
+    local Logo = UI.get("SplashScreenLogoHolder"):WaitForChild("Logo")
+    local PlayButton = UI.get("PlayButton")
+    local MainServersButton = UI.get("MainServersButton")
+    local VoiceChatServersButton = UI.get("VoiceChatServersButton")
+    local ProServersButton = UI.get("ProServersButton")
+    local BlockSpinPlusServersButton = UI.get("BlockSpinPlusServersButton")
+    local EditAvatarButton = UI.get("EditAvatarButton")
+    local UpdateLog = UI.get("UpdateLog")
+    local UpdateLogButton = UI.get("UpdateLogButton")
+
+    local function setup_teleport_button(a1) -- Line: 125
+        a1.Visible = false
+    end
+
+    MainServersButton.Visible = false
+    VoiceChatServersButton.Visible = false
+    ProServersButton.Visible = false
+    BlockSpinPlusServersButton.Visible = false
+    UpdateLogButton.ImageTransparency = 1
+    UpdateLogButton.Visible = true
+
+    local function on_server_button_clicked(a1, a2) -- Line: 138 -- upvalues: u202 (upval), Net (upval)
+        u202.server_button.set(a1)
+        Net.send("teleport_to_place", a2)
+    end
+
+    if PlaceInfo.is_pro_place() or PlaceInfo.is_vc_place() then
+        print("NOT MAIN SERVER!")
+        MainServersButton.Visible = true
+        UI.on_click(MainServersButton, function() -- Line: 146
+            -- upvalues: TeleportingUI (upval), MainServersButton (val), PlaceInfo (upval), u202 (upval), Net (upval)
+            if TeleportingUI.teleporting_to_server.get() then
+                return
+            end
+            local v1 = if not PlaceInfo.is_dev_place() then "main" else "dev"
+            u202.server_button.set(MainServersButton)
+            Net.send("teleport_to_place", v1)
+        end)
+    elseif not PlaceInfo.is_blockspin_plus_place() then
+        if u202.FLAG_VOICE_CHAT_ONLY_SERVERS_ENABLED then
+            local v1 = false
+            local success, result = pcall(function() -- Line: 154 -- upvalues: VoiceChatService (upval), LocalPlayer (upval)
+                return VoiceChatService:IsVoiceEnabledForUserIdAsync(LocalPlayer.UserId)
+            end)
+            if success then
+                v1 = result
+            end
+            if not v1 then
+                VoiceChatServersButton.Visible = false
+            else
+                VoiceChatServersButton.Visible = true
+                UI.on_click(VoiceChatServersButton, function() -- Line: 163
+                    -- upvalues: TeleportingUI (upval), VoiceChatServersButton (val), PlaceInfo (upval), u202 (upval)
+                    -- upvalues: Net (upval)
+                    if TeleportingUI.teleporting_to_server.get() then
+                        return
+                    end
+                    local v1 = if not PlaceInfo.is_dev_place() then "main_vc" else "dev_vc"
+                    u202.server_button.set(VoiceChatServersButton)
+                    Net.send("teleport_to_place", v1)
+                end)
+            end
+        end
+        if u202.FLAG_PRO_SERVERS_ENABLED then
+            local function on_xp_ready(a1) -- Line: 174
+                -- upvalues: XPFormula (upval), Data (upval), PlaceInfo (upval), ProServersButton (val)
+                local v1 = XPFormula.xp_to_level(Data.xp.total_level)
+                if PlaceInfo.pro_servers_min_level <= v1 then
+                    ProServersButton.Visible = true
+                    return
+                end
+                ProServersButton.Visible = false
+            end
+
+            if not Data.xp then
+                Data.hook("xp", function(a1) -- Line: 185 -- upvalues: XPFormula (upval), Data (upval), PlaceInfo (upval), ProServersButton (val)
+                    local v1 = XPFormula.xp_to_level(Data.xp.total_level)
+                    if PlaceInfo.pro_servers_min_level <= v1 then
+                        ProServersButton.Visible = true
+                        return
+                    end
+                    ProServersButton.Visible = false
+                end)
+            else
+                local xp = Data.xp
+                local v2 = XPFormula.xp_to_level(Data.xp.total_level)
+                if not (PlaceInfo.pro_servers_min_level <= v2) then
+                    ProServersButton.Visible = false
+                else
+                    ProServersButton.Visible = true
+                end
+            end
+            UI.on_click(ProServersButton, function() -- Line: 190
+                -- upvalues: ProServersButton (val), TeleportingUI (upval), PlaceInfo (upval), u202 (upval), Net (upval)
+                if not ProServersButton.Visible or TeleportingUI.teleporting_to_server.get() then
+                    return
+                end
+                local v1 = if not PlaceInfo.is_dev_place() then "main_pro" else "dev_pro"
+                u202.server_button.set(ProServersButton)
+                Net.send("teleport_to_place", v1)
+            end)
+        end
+        if u202.FLAG_BLOCKSPIN_PLUS_SERVERS_ENABLED then
+            BlockSpinPlusServersButton.Visible = true
+            UI.on_click(BlockSpinPlusServersButton, function() -- Line: 202
+                -- upvalues: LocalPlayer (upval), BlockSpinSubscriptionClient (upval), MarketplaceService (upval)
+                -- upvalues: NotificationsUI (upval), TeleportingUI (upval), ServerSelectorUI (upval)
+                if LocalPlayer:GetAttribute("IsSubscribed") then
+                    if TeleportingUI.teleporting_to_server.get() then
+                        return
+                    end
+                    ServerSelectorUI.open()
+                    return
+                end
+                local v1 = BlockSpinSubscriptionClient.get_preferred_subscription()
+                if v1.can_purchase then
+                    MarketplaceService:PromptSubscriptionPurchase(LocalPlayer, v1.subscription_id)
+                    return
+                end
+                NotificationsUI.show_notification(nil, v1.error_message)
+            end)
+        end
+    else
+        print("NOT MAIN SERVER!")
+        MainServersButton.Visible = true
+        UI.on_click(MainServersButton, function() -- Line: 146
+            -- upvalues: TeleportingUI (upval), MainServersButton (val), PlaceInfo (upval), u202 (upval), Net (upval)
+            if TeleportingUI.teleporting_to_server.get() then
+                return
+            end
+            local v1 = if not PlaceInfo.is_dev_place() then "main" else "dev"
+            u202.server_button.set(MainServersButton)
+            Net.send("teleport_to_place", v1)
+        end)
+    end
+    u202.update_log_expanded.hook(function(a1) -- Line: 221 -- upvalues: Util (upval), UpdateLog (val)
+        local v1 = TweenInfo.new(0.6, Enum.EasingStyle.Cubic, Enum.EasingDirection.InOut)
+        Util.tween(UpdateLog, v1, {Size = UDim2.new(0.25, 0, if not a1 then 0 else 0.67, 0)})
+    end)
+    UI.on_click(UpdateLogButton, function() -- Line: 226 -- upvalues: u202 (upval)
+        u202.update_log_expanded.update(function(a1) -- Line: 227
+            return not a1
+        end)
+    end)
+    local u162 = false
+    local Sound = Instance.new("Sound")
+    Sound.SoundId = "rbxassetid://113169105768074"
+    Sound.Looped = true
+    Sound.Volume = 0.5
+    Sound.PlaybackRegionsEnabled = true
+    Sound.PlaybackRegion = NumberRange.new(23, 200)
+    Sound.Parent = game.SoundService
+    if workspace:GetAttribute("MuteSplashMusic") then
+        Sound.Volume = 0
+    end
+    local u182 = nil
+
+    local function on_click_play_button() -- Line: 250
+        -- upvalues: u162 (ref), TransitionUI (upval), LocalPlayer (upval), u202 (upval), TeleportingUI (upval)
+        -- upvalues: SplashScreenGui (val), Audio (upval), Sound (val), Tween (upval), Data (upval), Slideshow (upval)
+        -- upvalues: Char (upval), u182 (ref)
+        if u162
+            or TransitionUI.enabled.get()
+            or LocalPlayer.PlayerGui:FindFirstChild("LoadingScreen")
+            or not u202.in_loading_screen.get()
+            or TeleportingUI.teleporting_to_server.get() then
+            return
+        end
+        u162 = true
+        local Frame = SplashScreenGui:WaitForChild("Frame")
+        task.spawn(Audio.ease, Sound, 0, 2)
+        Tween.play(Frame.Backdrop, TweenInfo.new(0.5), {BackgroundTransparency = 0}).Completed:Wait()
+        if not Data.has_seen_tutorial then
+            Slideshow.current_slideshow.set("Tutorial")
+            Slideshow.current_slideshow.wait()
+        end
+        task.spawn(TransitionUI.conditional_transition, 0, 1)
+        task.spawn(function() -- Line: 270 -- upvalues: Char (upval), SplashScreenGui (upval), TransitionUI (upval)
+            Char.get()
+            SplashScreenGui:Destroy()
+            TransitionUI.conditional_enabled.set(false)
+        end)
+        task.wait(0.5)
+        if u182 then
+            u182.unhook()
+        end
+        u202.in_loading_screen.set(false)
+    end
+
+    local function gamepad_button_cleanup() -- Line: 285 -- upvalues: u182 (ref)
+        if u182 then
+            u182.unhook()
+        end
+    end
+
+    local function gamepad_button_listen() -- Line: 291
+        -- upvalues: u182 (ref), Keybinds (upval), on_click_play_button (val)
+        if u182 then
+            u182.unhook()
+        end
+        u182 = Keybinds.hook_action("button_confirm", function(a1) -- Line: 295 -- upvalues: on_click_play_button (upval)
+            if a1 then
+                on_click_play_button()
+            end
+        end)
+    end
+
+    local v3 = LocalPlayer
+    Util.watch_attribute(v3, "SplashScreenAvatarIsSeparateButton", function(a1) -- Line: 302 -- upvalues: EditAvatarButton (val)
+        EditAvatarButton.Visible = not not a1
+    end)
+    UI.on_click(EditAvatarButton, function() -- Line: 306 -- upvalues: on_click_play_button (val)
+        on_click_play_button()
+    end)
+    UI.on_click(PlayButton, function() -- Line: 310 -- upvalues: LocalPlayer (upval), on_click_play_button (val)
+        if LocalPlayer:GetAttribute("SplashScreenAvatarIsSeparateButton") then
+            game.Workspace:SetAttribute("SkipCreator", true)
+        end
+        on_click_play_button()
+    end)
+    Keybinds.hook_action_icon("button_confirm", function(a1) -- Line: 317
+        -- upvalues: UI (upval), u202 (upval), u182 (ref), Keybinds (upval), on_click_play_button (val)
+        UI.get("PlayPromptButton").Visible = a1
+        if a1 then
+            UI.get("PlayPromptButton").Image = a1
+        end
+        if u202.in_loading_screen.get() then
+            if u182 then
+                u182.unhook()
+            end
+            u182 = Keybinds.hook_action("button_confirm", function(a1) -- Line: 295 -- upvalues: on_click_play_button (upval)
+                if a1 then
+                    on_click_play_button()
+                end
+            end)
+        end
+    end)
+    u202.in_loading_screen.hook(function(a1, a2) -- Line: 328
+        -- upvalues: Net (upval), u182 (ref), Keybinds (upval), on_click_play_button (val), Sound (val)
+        -- upvalues: animate_in (upval), Logo (val), PlayButton (val), UpdateLogButton (val), TeleportService (upval)
+        -- upvalues: NotificationsUI (upval), u216 (upval), RunService (upval), CFrameValue (upval)
+        -- upvalues: CFrameValue_2 (upval), u217 (upval), u218 (upval), Timer (upval), Tween (upval)
+        -- upvalues: ServerSelectorUI (upval)
+        local u6 = Net.get("loading_screen_camera_part", a1)
+        if not a1 then
+            if u216 ~= nil then
+                u216:Disconnect()
+                u216 = nil
+                u217.stop()
+                u218.stop()
+            end
+            game.Lighting.SplashScreenDepthOfField:Destroy()
+            workspace.CurrentCamera.FieldOfView = 70
+            if u182 then
+                u182.unhook()
+            end
+            ServerSelectorUI.close()
+            return
+        end
+        if u182 then
+            u182.unhook()
+        end
+        u182 = Keybinds.hook_action("button_confirm", function(a1) -- Line: 295 -- upvalues: on_click_play_button (upval)
+            if a1 then
+                on_click_play_button()
+            end
+        end)
+        Sound:Play()
+        local LoadingScreenCameraPart = workspace:WaitForChild("LoadingScreenCameraPart")
+        local Attribute = LoadingScreenCameraPart:GetAttribute("CameraFOV")
+        local v1 = LoadingScreenCameraPart:WaitForChild("SplashScreenDepthOfField"):Clone()
+        v1.Parent = game.Lighting
+        task.spawn(function() -- Line: 341
+            -- upvalues: animate_in (upval), Logo (upval), PlayButton (upval), UpdateLogButton (upval)
+            -- upvalues: TeleportService (upval), NotificationsUI (upval)
+            task.wait(1)
+            animate_in(Logo, PlayButton, {UpdateLogButton})
+            local LocalPlayerTeleportData = TeleportService:GetLocalPlayerTeleportData()
+            if LocalPlayerTeleportData and LocalPlayerTeleportData.teleport_reason then
+                NotificationsUI.show_notification("", LocalPlayerTeleportData.teleport_reason)
+            end
+        end)
+        if u216 == nil then
+            u216 = RunService.RenderStepped:Connect(function() -- Line: 359 -- upvalues: Attribute (val), u6 (val), CFrameValue (upval), CFrameValue_2 (upval)
+                workspace.CurrentCamera.FieldOfView = Attribute
+                local CurrentCamera = workspace.CurrentCamera
+                CurrentCamera.CFrame = u6:Lerp(u6 * CFrameValue.Value * CFrameValue_2.Value, 0.3)
+            end)
+        end
+        if u217 ~= nil then
+            u217.start()
+            u218.start()
+            return
+        end
+        u217 = Timer.new(2, function() -- Line: 368 -- upvalues: Tween (upval), CFrameValue (upval)
+            Tween.play(CFrameValue, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                Value = CFrame.Angles(math.rad((math.random(-2, 2))), math.rad((math.random(-2, 2))), 0),
+            })
+        end)
+        u218 = Timer.new(3, function() -- Line: 371 -- upvalues: Tween (upval), CFrameValue_2 (upval)
+            Tween.play(CFrameValue_2, TweenInfo.new(3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                Value = CFrame.Angles(math.rad((math.random(-2, 2))), math.rad((math.random(-2, 2))), 0),
+            })
+        end)
+    end)
+    u202.server_button.hook(function(a1) -- Line: 392 -- upvalues: TeleportingUI (upval)
+        TeleportingUI.active_teleport_button.set(a1)
+    end)
+    local VersionNumber = UI.get("VersionNumber")
+    VersionNumber.Text = "Version: " .. Updates.version
+    local success_2, result_2 = pcall(function() -- Line: 399 -- upvalues: PolicyService (upval), LocalPlayer (upval)
+        return PolicyService:GetPolicyInfoForPlayerAsync(LocalPlayer)
+    end)
+    if not success_2 or not table.find(result_2.AllowedExternalLinkReferences, "Discord") then
+        local CommunityServerLink_3 = UI.get("CommunityServerLink")
+        CommunityServerLink_3.Visible = false
+    else
+        local CommunityServerLink = UI.get("CommunityServerLink")
+        CommunityServerLink.Text = "<b>Discord: </b>discord.gg/blockspin"
+        local CommunityServerLink_2 = UI.get("CommunityServerLink")
+        CommunityServerLink_2.Visible = true
+    end
+    add_updates()
+end
+
+return u202

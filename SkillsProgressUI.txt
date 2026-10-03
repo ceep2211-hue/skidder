@@ -1,0 +1,341 @@
+-- Path : ReplicatedStorage.Modules.Game.Skills.SkillsProgressUI
+-- Script path: ReplicatedStorage.Modules.Game.Skills.SkillsProgressUI
+-- Decompile time: 10.00 ms
+
+local Tween = require(game.ReplicatedStorage.Modules.Core.Tween)
+local Data = require(game.ReplicatedStorage.Modules.Core.Data)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+require(game.ReplicatedStorage.Modules.Core.UIFX)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local SubMenuBackground = require(game.ReplicatedStorage.Modules.Game.UI.SubMenuBackground)
+local SkillsList = require(game.ReplicatedStorage.Modules.Game.Skills.SkillsList)
+local XPFormula = require(game.ReplicatedStorage.Modules.Game.Skills.XPFormula)
+local UIFX = require(ReplicatedStorage.Modules.Core.UIFX)
+local u69 = {}
+u69.enabled = State.new(false)
+u69.current_skill = State.new("")
+u69.is_in_tweening_process = false
+local u77 = nil
+local u78 = {}
+
+local function get_xp_for_skill(a1) -- Line: 24 -- upvalues: Data (val)
+    for i, j in Data.xp do
+        if i == a1 then
+            return j
+        end
+    end
+    return 0
+end
+
+local u80 = {}
+
+local function has_claimed_skill(a1, a2) -- Line: 37 -- upvalues: u80 (val) -- types: a1: string, a2: string
+    local v1 = a1 .. a2
+    if u80[v1] then
+        return true
+    end
+    u80[v1] = true
+    return false
+end
+
+function get_middle_scrolling_frame_for_target(a1, a2) -- Line: 48 -- types: a1: userdata, a2: userdata
+    local AbsoluteSize = a1.AbsoluteSize
+    local AbsolutePosition = a1.AbsolutePosition
+    local AbsoluteSize_2 = a2.AbsoluteSize
+    return a1.CanvasPosition.X + ((a2.AbsolutePosition - AbsolutePosition).X - AbsoluteSize.X / 2) + AbsoluteSize_2.X / 2
+end
+
+local function focus_on_target(a1, a2) -- Line: 66 -- upvalues: Tween (val) -- types: a1: userdata, a2: userdata
+    task.delay(0.2, function() -- Line: 67 -- upvalues: a2 (val), a1 (val), Tween (upval)
+        local v1 = a2.AbsolutePosition.X - a1.AbsolutePosition.X + a2.AbsoluteSize.X / 2 - a1.AbsoluteSize.X / 2
+        v1 = get_middle_scrolling_frame_for_target(a1, a2)
+        if v1 < a1.CanvasPosition.X then
+            return
+        end
+        Tween.play(a1, TweenInfo.new(1), {CanvasPosition = Vector2.new(v1, 0)})
+    end)
+end
+
+function u69.update() -- Line: 82
+    -- upvalues: SkillsList (val), u69 (val), UI (val), Data (val), XPFormula (val), u80 (val), Tween (val), UIFX (val)
+    local v1
+    local v2 = SkillsList.list[u69.current_skill.get()]
+    if not v2 then
+        return
+    end
+    local v3 = u69.current_skill.get() .. "ProgressScrollingFrame"
+    local u21 = UI.get("SkillProgressHolder"):FindFirstChild(v3)
+    local u22 = true
+    local u23 = 1
+
+    local function fill_card(a1, a2) -- Line: 96
+        local v1
+        local SkillCardRewards = a2.SkillCard.SkillCardRewards
+        local SkillCardRewardTemplate = a2.SkillCard.SkillCardRewards.SkillCardRewardTemplate
+        a2.SkillCard.Top.LevelToUnlock.Text = a1.level
+        local display_reward = a1.display_reward
+        local v2 = nil
+        local v3 = nil
+        local v4, v5 = a1, a2
+        for i, j in display_reward, v2, v3 do
+            v1 = SkillCardRewards:FindFirstChild("Reward" .. i)
+            if not v1 then
+                v1 = SkillCardRewardTemplate:Clone()
+                v1.Visible = true
+                v1.Name = "Reward" .. i
+                v1.Parent = SkillCardRewards
+            end
+            v1.RewardIcon.Visible = j.image
+            if not j.image then
+                v1.RewardText.Size = UDim2.fromScale(1, 1)
+            else
+                v1.RewardIcon.Image = j.image
+            end
+            v1.RewardText.Text = j.text
+        end
+        v5.LayoutOrder = v4.level
+    end
+
+    local function tween_progress_bar(a1, a2) -- Line: 127
+        -- upvalues: u69 (upval), Data (upval), XPFormula (upval), u80 (upval), u21 (val), Tween (upval), u22 (ref)
+        -- upvalues: u23 (ref), UIFX (upval)
+        local level, u122, u60, v1, v2, v3, v4, v5, v6
+        local SkillCardRewards = a2.SkillCard.SkillCardRewards
+        local SkillCardRewardTemplate = a2.SkillCard.SkillCardRewards.SkillCardRewardTemplate
+        local SkillProgressBar = a2.SkillProgressBorder.AllProgressBar.SkillProgressBar
+        local PulsatingBar = a2.SkillProgressBorder.AllProgressBar.PulsatingBar
+        local v7 = u69.current_skill.get()
+        local v8 = nil
+        local v9 = nil
+        for i, j in Data.xp, v8, v9 do
+            if i == v7 then
+                v5 = j
+                v8 = false
+                v9 = "not_started"
+                if a1.level <= (XPFormula.xp_to_level(v5)) then
+                    v4 = u69.current_skill.get() .. a1.name
+                    if not u80[v4] then
+                        u80[v4] = true
+                        v1 = false
+                    else
+                        v1 = true
+                    end
+                    if not v1 then
+                        v8 = true
+                    end
+                    v6 = 1
+                    v9 = "unlocked"
+                    u60 = u21
+                    task.delay(0.2, function() -- Line: 67 -- upvalues: a2 (val), u60 (val), Tween (upval)
+                        local v1 = a2.AbsolutePosition.X - u60.AbsolutePosition.X + a2.AbsoluteSize.X / 2 - u60.AbsoluteSize.X / 2
+                        v1 = get_middle_scrolling_frame_for_target(u60, a2)
+                        if v1 < u60.CanvasPosition.X then
+                            return
+                        end
+                        Tween.play(u60, TweenInfo.new(1), {CanvasPosition = Vector2.new(v1, 0)})
+                    end)
+                elseif not u22 then
+                    v6 = 0
+                else
+                    v1 = u23
+                    level = a1.level
+                    v3 = XPFormula.level_to_xp(v1)
+                    v4 = XPFormula.level_to_xp(level)
+                    v6 = (v5 - v3) / (v4 - v3)
+                    u22 = false
+                    v8 = true
+                    v9 = "progressing"
+                end
+                if not v8 then
+                    SkillProgressBar.Size = UDim2.fromScale(v6, 1)
+                else
+                    v2 = math.clamp(math.abs(v6 - SkillProgressBar.Size.X.Scale), 0.1, 2)
+                    Tween.play(SkillProgressBar, TweenInfo.new(v2), {Size = UDim2.fromScale(v6, 1)})
+                    task.wait(v2)
+                    u122 = u21
+                    task.delay(0.2, function() -- Line: 67 -- upvalues: a2 (val), u122 (val), Tween (upval)
+                        local v1 = a2.AbsolutePosition.X - u122.AbsolutePosition.X + a2.AbsoluteSize.X / 2 - u122.AbsoluteSize.X / 2
+                        v1 = get_middle_scrolling_frame_for_target(u122, a2)
+                        if v1 < u122.CanvasPosition.X then
+                            return
+                        end
+                        Tween.play(u122, TweenInfo.new(1), {CanvasPosition = Vector2.new(v1, 0)})
+                    end)
+                end
+                if v9 ~= "progressing" then
+                    UIFX.remove_sine_wave(PulsatingBar)
+                else
+                    Tween.play(PulsatingBar, TweenInfo.new(0.2), {
+                        Size = UDim2.fromScale(1 - SkillProgressBar.Size.X.Scale, 1),
+                    })
+                    task.delay(0.2, function() -- Line: 198 -- upvalues: UIFX (upval), PulsatingBar (val)
+                        UIFX.sine_wave(PulsatingBar, 0.5, 1, 5)
+                    end)
+                end
+                a2.SkillCard.UnlockedOutline.Visible = not (v9 ~= "unlocked")
+                u23 = a1.level
+                return
+            end
+        end
+        v8 = false
+        v9 = "not_started"
+        if a1.level <= (XPFormula.xp_to_level(0)) then
+            v4 = u69.current_skill.get() .. a1.name
+            if not u80[v4] then
+                u80[v4] = true
+                v1 = false
+            else
+                v1 = true
+            end
+            if not v1 then
+                v8 = true
+            end
+            v6 = 1
+            v9 = "unlocked"
+            u60 = u21
+            task.delay(0.2, function() -- Line: 67 -- upvalues: a2 (val), u60 (val), Tween (upval)
+                local v1 = a2.AbsolutePosition.X - u60.AbsolutePosition.X + a2.AbsoluteSize.X / 2 - u60.AbsoluteSize.X / 2
+                v1 = get_middle_scrolling_frame_for_target(u60, a2)
+                if v1 < u60.CanvasPosition.X then
+                    return
+                end
+                Tween.play(u60, TweenInfo.new(1), {CanvasPosition = Vector2.new(v1, 0)})
+            end)
+        elseif not u22 then
+            v6 = 0
+        else
+            v1 = u23
+            level = a1.level
+            v3 = XPFormula.level_to_xp(v1)
+            v4 = XPFormula.level_to_xp(level)
+            v6 = (v5 - v3) / (v4 - v3)
+            u22 = false
+            v8 = true
+            v9 = "progressing"
+        end
+        if not v8 then
+            SkillProgressBar.Size = UDim2.fromScale(v6, 1)
+        else
+            v2 = math.clamp(math.abs(v6 - SkillProgressBar.Size.X.Scale), 0.1, 2)
+            Tween.play(SkillProgressBar, TweenInfo.new(v2), {Size = UDim2.fromScale(v6, 1)})
+            task.wait(v2)
+            u122 = u21
+            task.delay(0.2, function() -- Line: 67 -- upvalues: a2 (val), u122 (val), Tween (upval)
+                local v1 = a2.AbsolutePosition.X - u122.AbsolutePosition.X + a2.AbsoluteSize.X / 2 - u122.AbsoluteSize.X / 2
+                v1 = get_middle_scrolling_frame_for_target(u122, a2)
+                if v1 < u122.CanvasPosition.X then
+                    return
+                end
+                Tween.play(u122, TweenInfo.new(1), {CanvasPosition = Vector2.new(v1, 0)})
+            end)
+        end
+        if v9 ~= "progressing" then
+            UIFX.remove_sine_wave(PulsatingBar)
+        else
+            Tween.play(PulsatingBar, TweenInfo.new(0.2), {Size = UDim2.fromScale(1 - SkillProgressBar.Size.X.Scale, 1)})
+            task.delay(0.2, function() -- Line: 198 -- upvalues: UIFX (upval), PulsatingBar (val)
+                UIFX.sine_wave(PulsatingBar, 0.5, 1, 5)
+            end)
+        end
+        a2.SkillCard.UnlockedOutline.Visible = not (v9 ~= "unlocked")
+        u23 = a1.level
+    end
+
+    local v4 = table.clone(v2)
+    table.sort(v4, function(a1, a2) -- Line: 211
+        return a1.level < a2.level
+    end)
+    for i, j in v4 do
+        v1 = u21:FindFirstChild(j.name)
+        if v1 then
+            fill_card(j, v1)
+        end
+    end
+    if not u69.is_in_tweening_process then
+        u69.is_in_tweening_process = true
+        for k, n in v4 do
+            v1 = u21:FindFirstChild(n.name)
+            if v1 then
+                tween_progress_bar(n, v1)
+            end
+        end
+        u69.is_in_tweening_process = false
+    end
+end
+
+function u69.show(a1) -- Line: 242
+    -- upvalues: SkillsList (val), u69 (val), u78 (val), UI (val), u77 (ref)
+    local v1
+    local v2 = SkillsList.list[a1]
+    u69.enabled.set(true)
+    for i, j in u78 do
+        j.Visible = false
+    end
+    local v3 = SkillsList.skill_icons[a1]
+    local Title = UI.get("SkillProgressHolder").Title
+    Title.Text = SkillsList.names[a1] .. " Skill"
+    if not v3 then
+        local SkillImage_2 = UI.get("SkillImage")
+        SkillImage_2.Visible = false
+        Title.Size = UDim2.fromScale(0.94, 0.2)
+    else
+        UI.get("SkillImage").Image = v3
+        local SkillImage = UI.get("SkillImage")
+        SkillImage.Visible = true
+        Title.Size = UDim2.fromScale(0.7, 0.2)
+    end
+    local v4 = a1 .. "ProgressScrollingFrame"
+    local v5 = UI.get("SkillProgressHolder"):FindFirstChild(v4)
+    if not v5 then
+        v5 = UI.get("SkillProgressScrollingFrame"):Clone()
+        v5.Name = v4
+        v5.Parent = UI.get("SkillProgressHolder")
+        table.insert(u78, v5)
+    end
+    v5.Visible = true
+    u69.current_skill.set(a1)
+    for k, n in v2 do
+        if not v5:FindFirstChild(n.name) then
+            v1 = u77:Clone()
+            v1.Name = n.name
+            v1.Parent = v5
+        end
+    end
+    u69.update()
+end
+
+function u69.initiate() end
+
+function u69.loaded() -- Line: 293
+    -- upvalues: UI (val), u77 (ref), UIFX (val), u69 (val), SubMenuBackground (val), Data (val)
+    local SkillProgress = UI.get("SkillProgress")
+    local SkillProgressHolder = UI.get("SkillProgressHolder")
+    u77 = UI.get("SkillUnlockTemplate")
+    u77.Parent = script
+    UIFX.set_close(SkillProgressHolder)
+    u69.enabled.hook(function(a1, a2) -- Line: 302
+        -- upvalues: SubMenuBackground (upval), u69 (upval), SkillProgress (val), UIFX (upval)
+        -- upvalues: SkillProgressHolder (val)
+        if a1 == a2 or not SubMenuBackground.can_open() then
+            return
+        end
+        if a1 then
+            SubMenuBackground.open(u69.enabled, SkillProgress)
+            UIFX.scale_open(SkillProgressHolder)
+            return
+        end
+        SubMenuBackground.close()
+        UIFX.scale_close(SkillProgressHolder)
+    end)
+    UI.on_click("SkillProgressCloseButton", function() -- Line: 319 -- upvalues: u69 (upval)
+        u69.enabled.set(false)
+    end)
+    Data.hook("xp", function() -- Line: 323 -- upvalues: u69 (upval)
+        if u69.enabled.get() then
+            u69.update()
+        end
+    end)
+end
+
+return u69

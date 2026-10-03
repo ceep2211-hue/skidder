@@ -1,0 +1,52 @@
+-- Path : ReplicatedStorage.Modules.Game.StockTimesUtil
+-- Script path: ReplicatedStorage.Modules.Game.StockTimesUtil
+-- Decompile time: 1.10 ms
+
+local v1 = {}
+local u1 = {
+    {productId = 3305228865, skip_length = {lower = 0, upper = 300}},
+    {productId = 3305229003, skip_length = {lower = 300, upper = 1800}},
+    {productId = 3305229112, skip_length = {lower = 1800, upper = 3600}},
+    {productId = 3305229260, skip_length = {lower = 3600, upper = 21600}},
+    {productId = 3305229442, skip_length = {lower = 21600, upper = 86400}},
+    {productId = 3311837035, skip_length = {lower = 86400, upper = 604800}},
+}
+v1.skip_products = u1
+
+function v1.get_product_for_length(a1) -- Line: 19 -- upvalues: u1 (val) -- types: a1: number
+    if a1 < 0 then
+        warn("length is less than 0? getting smallest dev product")
+        return u1[1].productId
+    end
+    for i, j in u1 do
+        if j.skip_length.lower <= a1 and a1 <= j.skip_length.upper then
+            return j.productId
+        end
+    end
+    warn("probably exceeded 24 hours, getting largest dev product")
+    return u1[#u1].productId
+end
+
+function v1.on_redeem_product(a1, a2, a3) -- Line: 34 -- upvalues: u1 (val) -- types: a2: string, a3: number
+    local v1 = nil
+    for i, j in u1 do
+        if j.productId == a3 then
+            v1 = j
+            break
+        end
+    end
+    if v1 == nil then
+        warn("could not find skip product info for the dev product with ID:", a3)
+        return false
+    end
+    if a1.stock_times[a2] == nil then
+        return print("issue")
+    end
+    local v2 = a1.stock_times[a2]
+    v2.earliest_stamp = v2.earliest_stamp - v1.skip_length.upper
+    a1.force_update("stock_times")
+    print((("successfuly restocked %*"):format(a2)))
+    return true
+end
+
+return v1

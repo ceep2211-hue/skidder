@@ -1,0 +1,38 @@
+-- Path : ReplicatedStorage.Modules.Game.Effects.Sparks
+-- Script path: ReplicatedStorage.Modules.Game.Effects.Sparks
+-- Decompile time: 0.85 ms
+
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local u14 = {}
+
+function u14.car_hit(a1, a2, a3) -- Line: 5 -- upvalues: Util (val)
+    local Attachment = Instance.new("Attachment")
+    Attachment.Parent = game.Workspace.Terrain
+    Attachment.WorldCFrame = (CFrame.lookAt(a1 + a2 * 0.01, a1 + a2)) * CFrame.Angles(0.0017453292519943296, 0, 0)
+    task.delay(5, function() -- Line: 9 -- upvalues: Attachment (val)
+        Attachment:Destroy()
+    end)
+    local v1 = script.MetalParticles.MiniSparks:Clone()
+    v1.Parent = Attachment
+    local v2 = script.MetalParticles.NormalSparks:Clone()
+    v2.Parent = Attachment
+    local v3 = if not a3 then math.random(1, 2) else math.random(3, 4)
+    local u56 = script.MetalParticles["metal" .. v3]:Clone()
+    u56.PlaybackSpeed = Util.rand(0.95, 1.05)
+    u56.Parent = Attachment
+    u56:Play()
+    u56.Ended:Connect(function() -- Line: 26 -- upvalues: u56 (val)
+        u56:Destroy()
+    end)
+    v1:Emit(10)
+    v2:Emit(15)
+end
+
+function u14.initiate() -- Line: 35 -- upvalues: Net (val), u14 (val)
+    Net.hook("car_hit", u14.car_hit)
+end
+
+function u14.loaded() end
+
+return u14

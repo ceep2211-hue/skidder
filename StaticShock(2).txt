@@ -1,0 +1,49 @@
+-- Path : ReplicatedStorage.Modules.Game.Effects.StaticShock
+-- Script path: ReplicatedStorage.Modules.Game.Effects.StaticShock
+-- Decompile time: 1.00 ms
+
+require(game.ReplicatedStorage.Modules.Core.Util)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+require(game.ReplicatedStorage.Modules.Core.Char)
+require(game.ReplicatedStorage.Modules.Core.Timer)
+local u28 = {}
+
+function u28.static_shock(a1) -- Line: 7 -- types: a1: userdata
+    local v1
+    for i, j in script.Particles:GetChildren() do
+        local u70 = j:Clone()
+        u70.Parent = a1
+        game.Debris:AddItem(u70, 2)
+        u70.Enabled = true
+        task.delay(0.5, function() -- Line: 13 -- upvalues: u70 (val)
+            u70.Enabled = false
+        end)
+    end
+    for k, n in script.Sounds:GetChildren() do
+        v1 = n:Clone()
+        v1.Parent = a1
+        game.Debris:AddItem(v1, 2)
+        v1:Play()
+    end
+    local Humanoid = a1.Parent:FindFirstChild("Humanoid")
+    if Humanoid then
+        local Animator = Humanoid:FindFirstChild("Animator")
+        if Animator then
+            local Animation = Instance.new("Animation")
+            Animation.AnimationId = "rbxassetid://110814340516690"
+            local u46 = Animator:LoadAnimation(Animation)
+            u46:Play()
+            task.delay(1, function() -- Line: 33 -- upvalues: u46 (val)
+                u46:Stop()
+            end)
+        end
+    end
+end
+
+function u28.initiate() -- Line: 40 -- upvalues: Net (val), u28 (val)
+    Net.hook("static_shock", u28.static_shock)
+end
+
+function u28.loaded() end
+
+return u28

@@ -1,0 +1,364 @@
+-- Path : ReplicatedStorage.Modules.Game.Jobs.SteakhouseCook
+-- Script path: ReplicatedStorage.Modules.Game.Jobs.SteakhouseCook
+-- Decompile time: 9.75 ms
+
+local Audio = require(game.ReplicatedStorage.Modules.Core.Audio)
+local Spring = require(game.ReplicatedStorage.Modules.Core.Spring)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+require(game.ReplicatedStorage.Modules.Core.UI)
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local JobUtil = require(game.ReplicatedStorage.Modules.Game.Jobs.JobUtil)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local JobData = require(ReplicatedStorage.Modules.Game.Jobs.JobData)
+local JobApplicationBeacon = require(game.ReplicatedStorage.Modules.Game.Jobs.JobApplicationBeacon)
+local ProgressBar = require(game.ReplicatedStorage.Modules.Game.UI.ProgressBar)
+require(game.ReplicatedStorage.Modules.Core.Timer)
+local ItemUtils = require(game.ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+local LocalPlayer = game.Players.LocalPlayer
+local u109 = {}
+local cook_steak_length = JobData.job_info.steakhouse_cook.cook_steak_length
+local FoodModels = script.FoodModels
+u109.grill_class = StatefulObject.new_class(function() -- Line: 24 -- upvalues: State (val)
+    return {
+        user_id_assigned = State.new(0),
+        placed_food_name = State.new(""),
+        total_cook_time = State.new(0),
+        perfect_cook_time = State.new(0),
+        perfect_cook_length = State.new(0),
+        cooked_status = State.new(""),
+        placed_skillet_name = State.new(""),
+    }
+end, "SteakGrill")
+u109.fridge_class = StatefulObject.new_class(function() -- Line: 36
+    return {}
+end, "SteakFridge")
+local u123 = nil
+local u126 = State.new(false)
+
+function u109.initiate() end
+
+local function is_player_holding_cooking_tool() -- Line: 50 -- upvalues: Char (val), LocalPlayer (val)
+    local v1 = Char.get_tool(LocalPlayer)
+    if v1 and v1:GetAttribute("IsCookable") then
+        return true
+    end
+end
+
+function u109.loaded() -- Line: 57
+    -- upvalues: State (val), u109 (val), Char (val), Net (val), Util (val), ProgressBar (val), Spring (val)
+    -- upvalues: LocalPlayer (val), u126 (val), u123 (ref), JobUtil (val), FoodModels (val), ItemUtils (val)
+    -- upvalues: JobApplicationBeacon (val), Audio (val)
+    local u0 = false
+    local u4 = State.new(nil)
+
+    local function get_random_grill() -- Line: 62 -- upvalues: u109 (upval)
+        local v1 = {}
+        for i, j in u109.grill_class.objects do
+            if j.states.user_id_assigned.get() == 0 then
+                table.insert(v1, j)
+            end
+        end
+        if #v1 > 0 then
+            return v1[math.random(1, #v1)]
+        end
+    end
+
+    State.new(function() -- Line: 74 -- upvalues: Char (upval), Net (upval), u109 (upval), u4 (val)
+        local v1 = Char.held_tool.get()
+        if not v1 or not v1:GetAttribute("IsCookable") then
+            u4.set(nil)
+            return
+        end
+        local get_random_free_grill = Net.get("get_random_free_grill")
+        if get_random_free_grill then
+            get_random_free_grill = u109.grill_class.get(get_random_free_grill)
+        end
+        print((("free grill retrieved from server: %*"):format(get_random_free_grill)))
+        u4.set(get_random_free_grill)
+    end)
+    Char.current_hum.hook(function(a1) -- Line: 92 -- upvalues: Util (upval), u0 (ref), ProgressBar (upval)
+        if a1 then
+            Util.watch_attribute(a1, "IsDead", function(a1) -- Line: 94 -- upvalues: u0 (upval), ProgressBar (upval)
+                if a1 and u0 then
+                    ProgressBar.bar_enabled.set(false)
+                end
+            end)
+        end
+    end)
+    u109.grill_class.hook(function(a1) -- Line: 102
+        -- upvalues: Spring (upval), u0 (ref), ProgressBar (upval), LocalPlayer (upval), Net (upval), Char (upval)
+        -- upvalues: u4 (val), u126 (upval), u109 (upval), u123 (upval), JobUtil (upval), FoodModels (upval)
+        -- upvalues: ItemUtils (upval), JobApplicationBeacon (upval), Audio (upval)
+        local instance = a1.instance
+        local GrillArea = a1.get("GrillArea")
+        local SmokeEmitter = a1.get("SmokeEmitter")
+        local SmokeSound = a1.get("SmokeSound")
+        local Volume = SmokeSound.Volume
+        local u12 = nil
+        local u13 = nil
+        local u14 = nil
+        local u20 = Spring.new(0.6, 0.8, 0)
+        local u25 = Instance.new("Sound", game.SoundService)
+        u25.SoundId = "rbxassetid://124079918861058"
+        u25.Volume = 0.7
+        u25.Looped = true
+
+        local function get_cooking_status() end
+
+        local function cooking_function() -- Line: 123
+            -- upvalues: u0 (upval), u25 (val), ProgressBar (upval), a1 (val), LocalPlayer (upval), u13 (ref)
+            -- upvalues: Net (upval), instance (val)
+            u0 = true
+            u25:Play()
+            os.clock()
+            warn("Start cooking")
+            ProgressBar.start_bar(a1.states.total_cook_time.get(), a1.states.perfect_cook_time.get(), a1.states.perfect_cook_length.get())
+            local u28 = nil
+            u28 = task.spawn(function() -- Line: 139 -- upvalues: a1 (upval), ProgressBar (upval), u28 (ref)
+                task.wait(a1.states.total_cook_time.get() + 10)
+                if ProgressBar.bar_enabled.get() then
+                    ProgressBar.bar_enabled.set(false)
+                end
+                u28 = nil
+            end)
+            ProgressBar.bar_enabled.wait()
+            if u28 then
+                task.cancel(u28)
+            end
+            u25:Stop()
+            local v1 = ProgressBar.get_status_from_ui()
+            if LocalPlayer:GetAttribute("Job") ~= "steakhouse_cook" then
+                v1 = "Over"
+            end
+            u0 = false
+            if u13 then
+                u13:Destroy()
+            end
+            Net.send("finish_grilling_2", instance, v1)
+            warn("Sent finished grilling")
+        end
+
+        return function() -- Line: 172
+            -- upvalues: GrillArea (val), LocalPlayer (upval), Char (upval), u4 (upval), a1 (val), Net (upval)
+            -- upvalues: instance (val), u126 (upval), u109 (upval), u12 (ref), u123 (upval), JobUtil (upval), u13 (ref)
+            -- upvalues: FoodModels (upval), u14 (ref), ItemUtils (upval), u20 (val), JobApplicationBeacon (upval)
+            -- upvalues: cooking_function (val), u0 (upval), ProgressBar (upval), SmokeSound (val), Volume (val)
+            -- upvalues: SmokeEmitter (val), u25 (val), Audio (upval)
+            GrillArea.Touched:Connect(function(a1_2) -- Line: 173
+                -- upvalues: LocalPlayer (upval), Char (upval), u4 (upval), a1 (upval), Net (upval), instance (upval)
+                if not LocalPlayer.Character then
+                    return
+                end
+                if a1_2.Parent == LocalPlayer.Character then
+                    local v1 = Char.get_tool(LocalPlayer)
+                    if (if not v1 then nil else if not v1:GetAttribute("IsCookable") then nil else true)
+                        and u4.get() == a1 then
+                        Net.send("start_grilling_2", instance)
+                    end
+                end
+            end)
+            a1.states.user_id_assigned.hook(function(a1_2) -- Line: 182 -- upvalues: u126 (upval), u4 (upval), a1 (upval), Net (upval), u109 (upval)
+                local get_random_free_grill
+                if not u126.get() or u4.get() ~= nil then
+                    if u4.get() == a1 and a1_2 ~= 0 then
+                        get_random_free_grill = Net.get("get_random_free_grill")
+                        if get_random_free_grill then
+                            get_random_free_grill = u109.grill_class.get(get_random_free_grill)
+                        end
+                        u4.set(get_random_free_grill)
+                    end
+                elseif a1_2 == 0 or u4.get() == a1 and a1_2 ~= 0 then
+                    get_random_free_grill = Net.get("get_random_free_grill")
+                    if get_random_free_grill then
+                        get_random_free_grill = u109.grill_class.get(get_random_free_grill)
+                    end
+                    u4.set(get_random_free_grill)
+                end
+            end)
+            u4.hook(function(a1_2) -- Line: 194
+                -- upvalues: u12 (upval), a1 (upval), u123 (upval), GrillArea (upval), JobUtil (upval), Char (upval)
+                if u12 then
+                    u12:Destroy()
+                end
+                if a1_2 ~= a1 then
+                    if a1_2 == nil and u123 then
+                        u123:Destroy()
+                        u123 = nil
+                    end
+                    return
+                end
+                if u123 then
+                    u123:Destroy()
+                    u123 = nil
+                end
+                local v1 = GrillArea.Position - Vector3.new(0, GrillArea.Size.Y / 2, 0)
+                u12 = JobUtil.place_beacon(v1, true)
+                u123 = JobUtil.create_arrow(Char.get_hrp(), u12:FindFirstChildWhichIsA("BasePart"))
+            end)
+            a1.states.placed_food_name.hook(function(a1_2) -- Line: 216 -- upvalues: u13 (upval), FoodModels (upval), instance (upval), a1 (upval), u14 (upval)
+                if a1_2 == "" then
+                    if u13 then
+                        u13:Destroy()
+                        u13 = nil
+                    end
+                    return
+                end
+                u13 = FoodModels:FindFirstChild(a1_2).Undercooked:Clone()
+                u13.Parent = instance
+                u13:PivotTo((instance:FindFirstChild("GrillAttachment", true)).WorldCFrame)
+                a1.states.cooked_status.set("Undercooked")
+                if not u14 then
+                    return
+                end
+                u13:PivotTo((u13:GetPivot()) * (CFrame.new(0, 0.2, 0)))
+            end)
+            a1.states.placed_skillet_name.hook(function(a1) -- Line: 233 -- upvalues: u14 (upval), ItemUtils (upval), instance (upval), u13 (upval)
+                if a1 == "" then
+                    if u14 then
+                        u14:Destroy()
+                        u14 = nil
+                    end
+                    return
+                end
+                u14 = ItemUtils.get_item_instance(a1):Clone()
+                u14.Parent = instance
+                u14:PivotTo((instance:FindFirstChild("GrillAttachment", true)).WorldCFrame * (CFrame.new(0, 0.2, 0)))
+                if not u13 then
+                    return
+                end
+                u13:PivotTo((u13:GetPivot()) * (CFrame.new(0, 0.2, 0)))
+            end)
+            a1.states.user_id_assigned.hook(function(a1, a2) -- Line: 250
+                -- upvalues: u20 (upval), LocalPlayer (upval), JobApplicationBeacon (upval), cooking_function (upval)
+                -- upvalues: u13 (upval), u0 (upval), ProgressBar (upval)
+                local v1
+                local v2 = if not (a1 ~= 0) then 0 else 1
+                u20.r = v2
+                if a1 == LocalPlayer.UserId then
+                    JobApplicationBeacon.lock_job_application.set(true)
+                elseif a2 == LocalPlayer.UserId and a1 ~= LocalPlayer.UserId then
+                    JobApplicationBeacon.lock_job_application.set(false)
+                end
+                if v1 then
+                    if a1 ~= LocalPlayer.UserId then
+                        return
+                    end
+                    cooking_function()
+                    return
+                end
+                if u13 then
+                    u13:Destroy()
+                end
+                if a2 == LocalPlayer.UserId and u0 then
+                    ProgressBar.bar_enabled.set(false)
+                end
+            end)
+            u20.hook(function(a1) -- Line: 277 -- upvalues: SmokeSound (upval), Volume (upval), SmokeEmitter (upval)
+                SmokeSound.Volume = a1 * Volume
+                SmokeEmitter.Rate = a1 * 5
+            end)
+            a1.states.cooked_status.hook(function(a1_2) -- Line: 282
+                -- upvalues: a1 (upval), u13 (upval), FoodModels (upval), LocalPlayer (upval), u25 (upval)
+                -- upvalues: Audio (upval)
+                if a1.states.user_id_assigned.get() ~= 0 and u13 ~= nil then
+                    local v1
+                    if a1_2 == "Overcooked" then
+                        local SmokeEmitter = u13:FindFirstChild("SmokeEmitter", true)
+                        local Flames = u13:FindFirstChild("Flames", true)
+                        if SmokeEmitter then
+                            SmokeEmitter.Enabled = true
+                        end
+                        if Flames then
+                            Flames.Enabled = true
+                        end
+                    end
+                    for i, j in u13:GetChildren() do
+                        if j:IsA("BasePart") then
+                            v1 = FoodModels:FindFirstChild((a1.states.placed_food_name.get()))[a1_2]
+                            j.Color = v1[j.Name].Color
+                        end
+                    end
+                    if a1.states.user_id_assigned.get() == LocalPlayer.UserId and a1_2 == "Cooked" then
+                        u25:Stop()
+                        Audio.play(97858619492909, 0.17)
+                    end
+                    return
+                end
+            end)
+        end
+    end)
+    u109.fridge_class.hook(function(a1) -- Line: 320 -- upvalues: Util (upval), LocalPlayer (upval), u126 (upval), Spring (upval)
+        local u5 = Util.wait_for_descendant_which_is_a(a1.instance, "ProximityPrompt")
+        local DoorLeft = a1.get("DoorLeft")
+        local DoorRight = a1.get("DoorRight")
+        local Pivot = DoorLeft:GetPivot()
+        local Pivot_2 = DoorRight:GetPivot()
+        local v1 = LocalPlayer
+        Util.watch_attribute(v1, "Job", function(a1) -- Line: 329 -- upvalues: u126 (upval)
+            u126.set(a1 == "steakhouse_cook")
+        end)
+        local u29 = Spring.new(1, 0.8, 0)
+        u126.hook(function(a1) -- Line: 336 -- upvalues: u5 (val), u29 (val)
+            u5.Enabled = a1
+            if not a1 then
+                u29.r = 0
+            end
+        end)
+        u5.PromptShown:Connect(function() -- Line: 343 -- upvalues: u126 (upval), u29 (val)
+            if not u126.get() then
+                return
+            end
+            u29.r = 1
+        end)
+        u5.PromptHidden:Connect(function() -- Line: 348 -- upvalues: u126 (upval), u29 (val)
+            if not u126.get() then
+                return
+            end
+            u29.r = 0
+        end)
+        return function() -- Line: 353
+            -- upvalues: u5 (val), LocalPlayer (upval), u29 (val), DoorLeft (val), Pivot (val), DoorRight (val)
+            -- upvalues: Pivot_2 (val)
+            u5.Enabled = LocalPlayer:GetAttribute("Job") == "steakhouse_cook"
+            u29.hook(function(a1) -- Line: 356 -- upvalues: DoorLeft (upval), Pivot (upval), DoorRight (upval), Pivot_2 (upval)
+                local v1 = math.max(a1, 0)
+                DoorLeft:PivotTo(Pivot * (CFrame.fromEulerAngles(0, v1 * -2.0943951023931953, 0)))
+                DoorRight:PivotTo(Pivot_2 * (CFrame.fromEulerAngles(0, v1 * 2.0943951023931953, 0)))
+            end)
+        end
+    end)
+    local u25 = false
+    local v1 = LocalPlayer
+    Util.watch_attribute(v1, "Job", function(a1) -- Line: 371
+        -- upvalues: u25 (ref), u109 (upval), u123 (upval), JobUtil (upval), Char (upval), ProgressBar (upval), u0 (ref)
+        if a1 ~= "steakhouse_cook" then
+            if u123 then
+                u123:Destroy()
+                u123 = nil
+            end
+            if ProgressBar.bar_enabled.get() and u0 then
+                ProgressBar.force_end_bar()
+            end
+            return
+        end
+        if u25 then
+            return
+        end
+        u25 = true
+        local v1 = nil
+        for i, j in u109.fridge_class.objects do
+            v1 = i:FindFirstChildWhichIsA("Attachment", true)
+            break
+        end
+        if u123 then
+            u123:Destroy()
+            u123 = nil
+        end
+        u123 = JobUtil.create_arrow(Char.get_hrp(), v1)
+    end)
+end
+
+return u109

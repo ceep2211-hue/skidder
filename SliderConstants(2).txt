@@ -1,0 +1,30 @@
+-- Path : ReplicatedStorage.Modules.Game.Minigames.SliderConstants
+-- Script path: ReplicatedStorage.Modules.Game.Minigames.SliderConstants
+-- Decompile time: 0.50 ms
+
+local u0 = {NEEDLE_SPEED_RATE = 0.65, LENIENCE = 0.05, START_TARGET_SIZE = 0.12, SERVER_EPSILON = 0.005}
+
+function u0.needle_at(a1) -- Line: 37 -- upvalues: u0 (val) -- types: a1: number
+    local v1 = a1 * u0.NEEDLE_SPEED_RATE % 2
+    if v1 > 1 then
+        v1 = 2 - v1
+    end
+    return v1
+end
+
+function u0.target_size(a1, a2, a3) -- Line: 46 -- upvalues: u0 (val) -- types: a1: number, a2: number, a3: number
+    return u0.START_TARGET_SIZE * a2 ^ (a1 - 1) * (a3 / 100 + 1)
+end
+
+function u0.is_hit(a1, a2, a3, a4) -- Line: 51
+    -- upvalues: u0 (val)
+    local v1 = a3 / 2 + u0.LENIENCE + (a4 or 0)
+    local v2 = false
+    if a2 - v1 <= a1 then
+        v2 = a1 <= a2 + v1
+    end
+    return v2
+end
+
+u0.PROTOCOL_VERSION = 1
+return u0

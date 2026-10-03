@@ -1,0 +1,54 @@
+-- Path : ReplicatedStorage.Modules.Game.ShotDeterminism
+-- Script path: ReplicatedStorage.Modules.Game.ShotDeterminism
+-- Decompile time: 1.82 ms
+
+local u0 = {BULLET_MAX_RANGE = 500, BULLET_ACCURACY_INTERVAL = 50}
+
+local function mix(a1, a2) -- Line: 35 -- types: a1: number, a2: number
+    local v1 = bit32.band(a1, 4294967295)
+    return (bit32.band(bit32.bxor(v1, bit32.band(a2, 4294967295) + 2654435769 + bit32.lshift(v1, 6) + (bit32.rshift(v1, 2))), 4294967295))
+end
+
+function u0.derive_seed(a1, a2, a3) -- Line: 52 -- types: a1: number, a2: number, a3: number
+    local v1 = bit32.band(math.floor(a1), 4294967295)
+    local v2 = math.floor(a2)
+    local v3 = bit32.band(v1, 4294967295)
+    local v4 = bit32.band(bit32.bxor(v3, bit32.band(v2, 4294967295) + 2654435769 + bit32.lshift(v3, 6) + (bit32.rshift(v3, 2))), 4294967295)
+    v2 = math.floor(a3)
+    v3 = bit32.band(v4, 4294967295)
+    v3 = bit32.band(
+        bit32.band(bit32.bxor(v3, bit32.band(v2, 4294967295) + 2654435769 + bit32.lshift(v3, 6) + (bit32.rshift(v3, 2))), 4294967295),
+        2147483647
+    )
+    if v3 == 0 then
+        v3 = 1
+    end
+    return v3
+end
+
+function u0.calculate_direction(a1, a2, a3) -- Line: 74
+    -- upvalues: u0 (val)
+    local v1 = Random.new(a3)
+    local v2 = 1 - a2
+    local BULLET_ACCURACY_INTERVAL = u0.BULLET_ACCURACY_INTERVAL
+    local v3 = v1:NextNumber(-BULLET_ACCURACY_INTERVAL, BULLET_ACCURACY_INTERVAL)
+    local v4 = v1:NextNumber(-BULLET_ACCURACY_INTERVAL, BULLET_ACCURACY_INTERVAL)
+    local v5 = v1:NextNumber(-BULLET_ACCURACY_INTERVAL, BULLET_ACCURACY_INTERVAL)
+    return (a1 * u0.BULLET_MAX_RANGE + Vector3.new(v3 * v2, v4 * v2, v5 * v2)).Unit
+end
+
+function u0.direction_for(a1, a2, a3, a4, a5) -- Line: 92
+    -- upvalues: u0 (val)
+    return u0.calculate_direction(a1, a2, (u0.derive_seed(a3, a4, a5)))
+end
+
+function u0.max_deviation_angle(a1) -- Line: 111 -- upvalues: u0 (val) -- types: a1: number
+    local v1 = u0.BULLET_ACCURACY_INTERVAL * (math.clamp(1 - a1, 0, 1)) * 1.7320508075688772
+    local BULLET_MAX_RANGE = u0.BULLET_MAX_RANGE
+    if BULLET_MAX_RANGE <= v1 then
+        return 3.141592653589793
+    end
+    return (math.atan2(v1, BULLET_MAX_RANGE - v1))
+end
+
+return u0

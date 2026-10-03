@@ -1,0 +1,260 @@
+-- Path : ReplicatedStorage.Modules.Game.Skills.SkillsUI
+-- Script path: ReplicatedStorage.Modules.Game.Skills.SkillsUI
+-- Decompile time: 7.67 ms
+
+require(game.ReplicatedStorage.Modules.Core.Char)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local Tween = require(game.ReplicatedStorage.Modules.Core.Tween)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = game:GetService("Players").LocalPlayer
+local Data = require(game.ReplicatedStorage.Modules.Core.Data)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local UIFX = require(game.ReplicatedStorage.Modules.Core.UIFX)
+local XPFormula = require(game.ReplicatedStorage.Modules.Game.Skills.XPFormula)
+local SkillsProgressUI = require(game.ReplicatedStorage.Modules.Game.Skills.SkillsProgressUI)
+local SubMenuBackground = require(ReplicatedStorage.Modules.Game.UI.SubMenuBackground)
+local SkillsList = require(game.ReplicatedStorage.Modules.Game.Skills.SkillsList)
+require(game.ReplicatedStorage.Modules.Game.Jobs.JobData)
+local DisplayNotification = require(ReplicatedStorage.Modules.Game.UI.DisplayNotification)
+local NotificationsUI = require(ReplicatedStorage.Modules.Game.UI.NotificationsUI)
+local Viewport = require(ReplicatedStorage.Modules.Game.UI.Viewport)
+local u123 = {USE_VIEWPORT_FOR_PLAYER_CARD = true}
+u123.enabled = State.new(false)
+local u128 = {}
+
+local function get_xp_for_skill(a1) -- Line: 30 -- upvalues: Data (val) -- types: a1: string
+    for i, j in Data.xp do
+        if i == a1 then
+            return j
+        end
+    end
+    return 0
+end
+
+local function update_skill_menu_layout_order() -- Line: 40
+    -- upvalues: LocalPlayer (val), UI (val), u128 (val), Data (val), SkillsList (val)
+    local v1
+    local Attribute = LocalPlayer:GetAttribute("Job")
+    local PlayerCard = UI.get("PlayerCard")
+    PlayerCard.LayoutOrder = (-1 / 0)
+    local v2 = nil
+    local v3 = nil
+    for i, j in u128, v2, v3 do
+        for k, n in Data.xp do
+            if k == i then
+                v1 = n
+                if not SkillsList.is_job_related_to_skill(i, Attribute) then
+                    j.CurrentSkillOutline.Visible = false
+                    j.LayoutOrder = -v1
+                else
+                    j.CurrentSkillOutline.Visible = true
+                    j.LayoutOrder = (-1 / 0)
+                end
+                break
+            end
+        end
+        if not SkillsList.is_job_related_to_skill(i, Attribute) then
+            j.CurrentSkillOutline.Visible = false
+            j.LayoutOrder = -0
+        else
+            j.CurrentSkillOutline.Visible = true
+            j.LayoutOrder = (-1 / 0)
+        end
+    end
+end
+
+local function update_skill_menu_info() -- Line: 57
+    -- upvalues: SkillsList (val), Data (val), XPFormula (val), u128 (val), UI (val), SkillsProgressUI (val)
+    -- upvalues: Tween (val), update_skill_menu_layout_order (val)
+    local CompletionBar, v1, v2, v3, v4, v5, v6, v7, v8
+    local v9 = nil
+    local v10 = nil
+    for i, j in SkillsList.list, v9, v10 do
+        v4 = SkillsList.names[i]
+        v7 = nil
+        v8 = nil
+        for k, n in Data.xp, v7, v8 do
+            if k == i then
+                v6 = XPFormula.xp_to_level(n)
+                v7 = XPFormula.level_to_xp(v6)
+                v8 = XPFormula.level_to_xp(v6 + 1)
+                v1 = (v5 - v7) / (v8 - v7)
+                v2 = u128[i]
+                if not v2 then
+                    v2 = UI.get("SkillOptionTemplate"):Clone()
+                    v2.Visible = true
+                    v2.SkillOptionImage.Image = SkillsList.skill_icons[i] or "rbxasset://textures/ui/GuiImagePlaceholder.png"
+                    v2.Parent = UI.get("SkillsScrollingFrame")
+                    u128[i] = v2
+                    if i ~= "total_level" then
+                        UI.on_click(v2, function() -- Line: 77 -- upvalues: SkillsProgressUI (upval), i (val)
+                            SkillsProgressUI.show(i)
+                        end)
+                    else
+                        v2.Visible = false
+                    end
+                end
+                v2.SkillTitle.Text = ("%*: %*"):format(v4, v6)
+                v2.PaddingFrame.XPBar.SkillBarAmount.Text = ("%* XP / %* XP"):format(v5 - v7, v8 - v7)
+                v3 = v1 * 0.813
+                CompletionBar = v2.PaddingFrame.XPBar.CompletionBar
+                if v3 < CompletionBar.Size.X.Scale then
+                    CompletionBar.Size = UDim2.fromScale(0, 1)
+                end
+                Tween.play(CompletionBar, TweenInfo.new(0.2), {Size = UDim2.fromScale(v3, 1)})
+                break
+            end
+        end
+        v6 = XPFormula.xp_to_level(0)
+        v7 = XPFormula.level_to_xp(v6)
+        v8 = XPFormula.level_to_xp(v6 + 1)
+        v1 = (v5 - v7) / (v8 - v7)
+        v2 = u128[i]
+        if not v2 then
+            v2 = UI.get("SkillOptionTemplate"):Clone()
+            v2.Visible = true
+            v2.SkillOptionImage.Image = SkillsList.skill_icons[i] or "rbxasset://textures/ui/GuiImagePlaceholder.png"
+            v2.Parent = UI.get("SkillsScrollingFrame")
+            u128[i] = v2
+            if i ~= "total_level" then
+                UI.on_click(v2, function() -- Line: 77 -- upvalues: SkillsProgressUI (upval), i (val)
+                    SkillsProgressUI.show(i)
+                end)
+            else
+                v2.Visible = false
+            end
+        end
+        v2.SkillTitle.Text = ("%*: %*"):format(v4, v6)
+        v2.PaddingFrame.XPBar.SkillBarAmount.Text = ("%* XP / %* XP"):format(v5 - v7, v8 - v7)
+        v3 = v1 * 0.813
+        CompletionBar = v2.PaddingFrame.XPBar.CompletionBar
+        if v3 < CompletionBar.Size.X.Scale then
+            CompletionBar.Size = UDim2.fromScale(0, 1)
+        end
+        Tween.play(CompletionBar, TweenInfo.new(0.2), {Size = UDim2.fromScale(v3, 1)})
+    end
+    update_skill_menu_layout_order()
+end
+
+local function update_total_level() -- Line: 109
+    -- upvalues: Data (val), XPFormula (val), UI (val), Tween (val), u123 (val)
+    local total_level = Data.xp.total_level
+    local v1 = XPFormula.xp_to_level(total_level)
+    local XPBar = UI.get("SkillsScrollingFrame").PlayerCard.PaddingFrame.XPBar
+    local CompletionBar = XPBar.CompletionBar
+    local v2 = XPFormula.level_to_xp(v1)
+    local v3 = XPFormula.level_to_xp(v1 + 1)
+    local v4 = (total_level - v2) / (v3 - v2)
+    if v4 < CompletionBar.Size.X.Scale then
+        CompletionBar.Size = UDim2.fromScale(0, 1)
+    end
+    Tween.play(CompletionBar, TweenInfo.new(0.2), {Size = UDim2.fromScale(v4, 1)})
+    local SkillPlayerName = UI.get("SkillPlayerName")
+    SkillPlayerName.Text = "Total Level: " .. v1
+    XPBar.SkillBarAmount.Text = ("%* XP / %* XP"):format(total_level - v2, v3 - v2)
+    if u123.USE_VIEWPORT_FOR_PLAYER_CARD then
+        UI.get("ViewportSkillLevelCard").TextLabel.Text = tostring(v1)
+        return
+    end
+    UI.get("ImageSkillLevelCard").TextLabel.Text = tostring(v1)
+end
+
+local function init_player_card() -- Line: 141
+    -- upvalues: UI (val), Util (val), LocalPlayer (val), SkillsList (val), SkillsProgressUI (val), Data (val)
+    -- upvalues: update_total_level (val), u123 (val), Viewport (val)
+    local PlayerCard = UI.get("PlayerCard")
+    Util.watch_attribute(LocalPlayer, "Job", function(a1) -- Line: 144 -- upvalues: UI (upval), SkillsList (upval)
+        if a1 and a1 ~= "" then
+            local SkillJobTitle
+            for i, j in SkillsList.skills_relevant_job do
+                if table.find(j, a1) then
+                    SkillJobTitle = UI.get("SkillJobTitle")
+                    SkillJobTitle.Text = SkillsList.names[i]
+                    return
+                end
+            end
+            return
+        end
+        local SkillJobTitle_2 = UI.get("SkillJobTitle")
+        SkillJobTitle_2.Text = "Unemployed"
+    end)
+    UI.on_click(PlayerCard, function() -- Line: 158 -- upvalues: SkillsProgressUI (upval)
+        SkillsProgressUI.show("total_level")
+    end)
+    Data.hook("xp", update_total_level)
+    local SkillPlayerViewport = UI.get("SkillPlayerViewport")
+    local SkillPlayerImage = UI.get("SkillPlayerImage")
+    SkillPlayerViewport.Visible = u123.USE_VIEWPORT_FOR_PLAYER_CARD
+    SkillPlayerImage.Visible = not u123.USE_VIEWPORT_FOR_PLAYER_CARD
+    if u123.USE_VIEWPORT_FOR_PLAYER_CARD then
+        Viewport.new(SkillPlayerViewport, u123.enabled)
+        return
+    end
+    local SkillPlayerImage_2 = UI.get("SkillPlayerImage")
+    SkillPlayerImage_2.Image = Util.get_headshot(LocalPlayer.UserId)
+end
+
+function u123.initiate() end
+
+function u123.loaded() -- Line: 182
+    -- upvalues: UI (val), Net (val), NotificationsUI (val), DisplayNotification (val), u123 (val)
+    -- upvalues: SubMenuBackground (val), UIFX (val), SkillsProgressUI (val), update_skill_menu_layout_order (val)
+    -- upvalues: Util (val), LocalPlayer (val), Data (val), update_skill_menu_info (val), update_total_level (val)
+    -- upvalues: init_player_card (val)
+    local SkillsHolder = UI.get("SkillsHolder")
+    SkillsHolder.Visible = false
+    local SkillOptionTemplate = UI.get("SkillOptionTemplate")
+    SkillOptionTemplate.Visible = false
+    Net.hook("player_unlocked_skill", function(a1, a2) -- Line: 188
+        -- upvalues: UI (upval), NotificationsUI (upval), DisplayNotification (upval), u123 (upval)
+        if not a2 then
+            a2 = "a new skill reward"
+        end
+        local Image = if a1 ~= "none" then a1 else UI.get("SkillsHolder").Title.ImageLabel.Image
+        local v1 = "You unlocked " .. a2
+        NotificationsUI.show_notification(Image, v1)
+        DisplayNotification.add_notification(UI.get("SkillsButton"), u123.enabled, true)
+    end)
+    u123.enabled.hook(function(a1, a2) -- Line: 211
+        -- upvalues: SubMenuBackground (upval), u123 (upval), UI (upval), UIFX (upval), SkillsHolder (val)
+        if a1 == a2 or not SubMenuBackground.can_open() then
+            return
+        end
+        if a1 then
+            SubMenuBackground.open(u123.enabled, UI.get("Skills"))
+            UIFX.scale_open(SkillsHolder)
+            return
+        end
+        SubMenuBackground.close()
+        UIFX.scale_close(SkillsHolder)
+    end)
+    SkillsProgressUI.enabled.hook(function(a1, a2) -- Line: 224 -- upvalues: u123 (upval)
+        if a1 == a2 then
+            return
+        end
+        if a2 then
+            task.defer(function() -- Line: 229 -- upvalues: u123 (upval)
+                u123.enabled.set(true)
+            end)
+        end
+    end)
+    UI.on_click("SkillsButton", function() -- Line: 235 -- upvalues: u123 (upval)
+        u123.enabled.update(function(a1) -- Line: 236
+            return not a1
+        end)
+    end)
+    UI.on_click("SkillsCloseButton", function() -- Line: 241 -- upvalues: u123 (upval)
+        u123.enabled.set(false)
+    end)
+    update_skill_menu_layout_order()
+    Util.watch_attribute(LocalPlayer, "Job", update_skill_menu_layout_order)
+    Data.hook("xp", function() -- Line: 248 -- upvalues: update_skill_menu_info (upval), update_total_level (upval)
+        update_skill_menu_info()
+        update_total_level()
+    end)
+    init_player_card()
+end
+
+return u123

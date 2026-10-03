@@ -1,0 +1,498 @@
+-- Path : ReplicatedStorage.Modules.Game.Store.StoreData
+-- Script path: ReplicatedStorage.Modules.Game.Store.StoreData
+-- Decompile time: 5.23 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local GangDataTypes = require(ReplicatedStorage.Modules.Game.Gangs.GangDataTypes)
+local v1 = {}
+local BlockSpinSubscriptionData = require(ReplicatedStorage.Modules.Game.Store.BlockSpinSubscriptionData)
+v1.BLOCK_SPIN_PLUS_SUBSCRIPTION_ID = BlockSpinSubscriptionData.BLOCK_SPIN_PLUS_SUBSCRIPTION_ID
+v1.LEGACY_BLOCK_SPIN_PLUS_SUBSCRIPTION_ID = BlockSpinSubscriptionData.LEGACY_BLOCK_SPIN_PLUS_SUBSCRIPTION_ID
+v1.ROBUX_BLOCK_SPIN_PLUS_SUBSCRIPTION_ID = BlockSpinSubscriptionData.ROBUX_BLOCK_SPIN_PLUS_SUBSCRIPTION_ID
+v1.LEGACY_ROBUX_BLOCK_SPIN_PLUS_SUBSCRIPTION_ID = BlockSpinSubscriptionData.LEGACY_ROBUX_BLOCK_SPIN_PLUS_SUBSCRIPTION_ID
+v1.LIMITED_TIME_HOUR_ROTATION = 1
+v1.CREATE_GANG_PRODUCT_ID = 3230264054
+v1.EXTRA_GANG_SLOT_PRODUCT_ID = 3236636719
+v1.SKIP_CRATE_ANIMATION_PRODUCT_ID = 3469425274
+v1.EXTRA_SAFE_SLOTS = {3237360319, 3237360368, 3237360409, 3237360453, 3237360493}
+v1.EXTRA_INVENTORY_SLOTS = {3587478177}
+v1.SLOTS_INCREASE_BY = {SAFE = 3, INVENTORY = 1}
+v1.list = {
+    {
+        warning_symbol = true,
+        display_on_packs_page = false,
+        purchase_sku = "Limited Offer",
+        title_label = "Limited Offer",
+        description_label = "Grab this weapon while it lasts!",
+        info_type = Enum.InfoType.Product,
+        limited_time_purchase = {
+            enabled = true,
+            length = 3600 * v1.LIMITED_TIME_HOUR_ROTATION,
+            product_ids = {
+                AK47 = 2705526713,
+                ["Hunting Rifle"] = 2837778318,
+                RPG = 2837778369,
+                Remington = 2837778436,
+            },
+            items = {
+                {name = "AK47", item_type = "gun", amount = 1},
+                {name = "Hunting Rifle", item_type = "gun", amount = 1},
+                {name = "RPG", item_type = "gun", amount = 1},
+                {name = "Remington", item_type = "gun", amount = 1},
+            },
+        },
+    },
+    {
+        product_id = 2705527434,
+        purchase_sku = "Tactical Pack",
+        display_on_packs_page = true,
+        info_type = Enum.InfoType.Product,
+        items = {
+            {name = "AK47", item_type = "gun", amount = 1},
+            {name = "Rifle Ammo", item_type = "ammo", ammo_type = "rifle", amount = 90},
+        },
+    },
+    {
+        product_id = 2705527908,
+        purchase_sku = "Criminal Mastermind Pack",
+        display_on_packs_page = true,
+        info_type = Enum.InfoType.Product,
+        items = {
+            {name = "Glock", item_type = "gun", amount = 1},
+            {name = "Pistol Ammo", item_type = "ammo", ammo_type = "pistol", amount = 30},
+        },
+    },
+    {
+        product_id = 3323397826,
+        purchase_sku = "P226 Pack",
+        display_on_packs_page = false,
+        info_type = Enum.InfoType.Product,
+        items = {
+            {name = "P226", item_type = "gun", amount = 1},
+            {name = "Pistol Ammo", item_type = "ammo", ammo_type = "pistol", amount = 30},
+        },
+    },
+    {
+        product_id = 3471468481,
+        title_label = "Passive Mode",
+        description_label = "info",
+        purchase_sku = "passive_mode_regular_var",
+        booster_name = "passive_mode",
+        is_booster = true,
+        display_on_packs_page = false,
+        info_type = Enum.InfoType.Product,
+        display_rewards = {
+            {
+                name = "Passive Mode",
+                image = "rbxassetid://114286790575033",
+                description = "No one can kill you for 15 minutes",
+            },
+        },
+    },
+    {
+        product_id = 3471472844,
+        title_label = "Passive Mode",
+        description_label = "info",
+        purchase_sku = "passive_mode_revenge_var",
+        is_a_revenge_pack = true,
+        booster_name = "passive_mode",
+        is_booster = true,
+        display_on_packs_page = false,
+        info_type = Enum.InfoType.Product,
+        display_rewards = {
+            {
+                name = "Passive Mode",
+                image = "rbxassetid://114286790575033",
+                description = "No one can kill you for 15 minutes",
+            },
+        },
+    },
+    {
+        product_id = 3231770108,
+        title_label = "Revenge Pack",
+        description_label = "info",
+        purchase_sku = "Revenge Pack",
+        is_a_revenge_pack = true,
+        display_on_packs_page = false,
+        info_type = Enum.InfoType.Product,
+        items = {
+            {name = "G3", item_type = "gun", amount = 1},
+            {name = "Pistol Ammo", item_type = "ammo", ammo_type = "pistol", amount = 30},
+        },
+    },
+    {
+        product_id = 3236019039,
+        title_label = "Revenge Pack",
+        description_label = "info",
+        purchase_sku = "Revenge Pack 2",
+        is_a_revenge_pack = true,
+        display_on_packs_page = false,
+        info_type = Enum.InfoType.Product,
+        items = {
+            {name = "Glock", item_type = "gun", amount = 1},
+            {name = "Pistol Ammo", item_type = "ammo", ammo_type = "pistol", amount = 30},
+        },
+    },
+    {
+        product_id = 3236019800,
+        title_label = "Revenge Pack",
+        description_label = "info",
+        purchase_sku = "Revenge Pack 3",
+        is_a_revenge_pack = true,
+        display_on_packs_page = false,
+        info_type = Enum.InfoType.Product,
+        items = {
+            {name = "Sawnoff", item_type = "gun", amount = 1},
+            {name = "Shotgun Ammo", item_type = "ammo", ammo_type = "shotgun", amount = 20},
+        },
+    },
+    {
+        product_id = 2816592208,
+        title_label = "Home Defence Pack",
+        description_label = "Baseball Bat, 25 Mugs, 25 Glasses",
+        purchase_sku = "Home Defence Pack",
+        display_on_packs_page = true,
+        info_type = Enum.InfoType.Product,
+        items = {
+            {name = "Baseball Bat", item_type = "melee", amount = 1},
+            {name = "Glass", item_type = "throwable", amount = 25},
+            {name = "Mug", item_type = "throwable", amount = 25},
+        },
+    },
+    {
+        product_id = 2816592259,
+        title_label = "Medical Pack",
+        description_label = "10 Bandages, 5 Blood Bags, 3 Energy Shots, and 1 Emergency Care Kit",
+        purchase_sku = "Medical Pack",
+        display_on_packs_page = true,
+        info_type = Enum.InfoType.Product,
+        items = {
+            {name = "Bandage", item_type = "consumable", amount = 10},
+            {name = "Blood Bag", item_type = "consumable", amount = 5},
+            {name = "Energy Shot", item_type = "consumable", amount = 3},
+            {name = "Emergency Care Kit", item_type = "consumable", amount = 1},
+        },
+    },
+    {
+        product_id = 2705542935,
+        purchase_sku = "RPG Pack",
+        display_on_packs_page = true,
+        info_type = Enum.InfoType.Product,
+        items = {
+            {name = "RPG", item_type = "gun", amount = 1},
+            {name = "Rocket", item_type = "ammo", ammo_type = "rocket", amount = 10},
+        },
+    },
+    {
+        product_id = 3472082082,
+        purchase_sku = "Firework Launcher",
+        display_on_packs_page = true,
+        info_type = Enum.InfoType.Product,
+        items = {
+            {name = "Firework Launcher", item_type = "gun", amount = 1},
+            {name = "Firework", item_type = "ammo", ammo_type = "firework", amount = 30},
+        },
+    },
+    {
+        product_id = 3472183457,
+        purchase_sku = "ChristmasLowRiderPack",
+        display_on_packs_page = true,
+        info_type = Enum.InfoType.Product,
+        items = {
+            {name = "Low Rider", item_type = "car", amount = 1},
+            {name = "Candycane", item_type = "cosmetic", amount = 1},
+        },
+    },
+    {
+        product_id = 3471510455,
+        description_label = "$300",
+        purchase_sku = "Tiny Money",
+        info_type = Enum.InfoType.Product,
+        items = {{item_type = "money", amount = 300}},
+    },
+    {
+        product_id = 3231652682,
+        description_label = "$900",
+        purchase_sku = "Small Money",
+        info_type = Enum.InfoType.Product,
+        items = {{item_type = "money", amount = 900}},
+    },
+    {
+        product_id = 2701716806,
+        description_label = "$3,000",
+        purchase_sku = "Hustler Money",
+        info_type = Enum.InfoType.Product,
+        items = {{item_type = "money", amount = 3000}},
+    },
+    {
+        product_id = 2705521816,
+        description_label = "$12,000",
+        purchase_sku = "Great Money",
+        info_type = Enum.InfoType.Product,
+        items = {{item_type = "money", amount = 12000}},
+    },
+    {
+        product_id = 2705521959,
+        description_label = "$50,000",
+        purchase_sku = "Boss Money",
+        info_type = Enum.InfoType.Product,
+        items = {{item_type = "money", amount = 50000}},
+    },
+    {
+        product_id = 2705522020,
+        description_label = "$200,000",
+        purchase_sku = "Rich Money",
+        info_type = Enum.InfoType.Product,
+        items = {{item_type = "money", amount = 200000}},
+    },
+    {
+        product_id = 3323300600,
+        purchase_sku = "Supreme Money",
+        info_type = Enum.InfoType.Product,
+        items = {{item_type = "money", amount = 1000000}},
+    },
+    {
+        purchase_sku = "BlockSpinPlus",
+        product_id = v1.BLOCK_SPIN_PLUS_SUBSCRIPTION_ID,
+        info_type = Enum.InfoType.Subscription,
+    },
+    {
+        purchase_sku = "BlockSpinPlusRobux",
+        product_id = v1.ROBUX_BLOCK_SPIN_PLUS_SUBSCRIPTION_ID,
+        info_type = Enum.InfoType.Subscription,
+    },
+    {
+        product_id = 3322493722,
+        purchase_sku = "body_armor",
+        is_booster = true,
+        booster_name = "body_armor",
+        info_type = Enum.InfoType.Product,
+        display_rewards = {
+            {
+                name = "Body Armor",
+                image = "rbxassetid://115102350258817",
+                description = "Take 25% less damage, lasts until you die",
+            },
+        },
+    },
+    {
+        product_id = 3322494629,
+        purchase_sku = "quick_revive",
+        is_booster = true,
+        booster_name = "quick_revive",
+        info_type = Enum.InfoType.Product,
+        display_rewards = {
+            {
+                name = "Quick Revive",
+                image = "rbxassetid://73406606385927",
+                description = "Health boost when downed, lasts 15 minutes",
+            },
+        },
+    },
+    {
+        product_id = 3323292189,
+        purchase_sku = "Brainrot Slap",
+        display_on_packs_page = true,
+        info_type = Enum.InfoType.Product,
+        items = {{name = "Brainrot Slap", item_type = "melee", amount = 1}},
+    },
+    {
+        product_id = 3323293587,
+        purchase_sku = "Rifle Ammo Boost",
+        display_on_packs_page = true,
+        info_type = Enum.InfoType.Product,
+        items = {{name = "Rifle Ammo", item_type = "ammo", ammo_type = "rifle", amount = 90}},
+    },
+    {
+        product_id = 3323293516,
+        purchase_sku = "Pistol Ammo Boost",
+        display_on_packs_page = true,
+        info_type = Enum.InfoType.Product,
+        items = {{name = "Pistol Ammo", item_type = "ammo", ammo_type = "pistol", amount = 60}},
+    },
+    {
+        product_id = 3323302819,
+        purchase_sku = "x5 Blood Bag",
+        display_on_packs_page = true,
+        info_type = Enum.InfoType.Product,
+        items = {{name = "Blood Bag", item_type = "consumable", amount = 5}},
+    },
+    {
+        product_id = 3323331990,
+        purchase_sku = "x10 Grenade",
+        display_on_packs_page = true,
+        info_type = Enum.InfoType.Product,
+        items = {{name = "Grenade", item_type = "throwable", amount = 10}},
+    },
+    {
+        product_id = 3323331854,
+        purchase_sku = "x5 Molotov",
+        display_on_packs_page = true,
+        info_type = Enum.InfoType.Product,
+        items = {{name = "Molotov", item_type = "throwable", amount = 5}},
+    },
+    {
+        product_id = 3323331735,
+        purchase_sku = "Sledge Hammer",
+        display_on_packs_page = true,
+        info_type = Enum.InfoType.Product,
+        items = {{name = "Sledge Hammer", item_type = "melee", amount = 1}},
+    },
+    {
+        product_id = 3323343088,
+        purchase_sku = "MP5 Pack",
+        display_on_packs_page = true,
+        info_type = Enum.InfoType.Product,
+        items = {
+            {name = "MP5", item_type = "gun", amount = 1},
+            {name = "Pistol Ammo", item_type = "ammo", ammo_type = "pistol", amount = 60},
+        },
+    },
+    {
+        product_id = 3323344434,
+        purchase_sku = "Dirt Bike",
+        display_on_packs_page = true,
+        info_type = Enum.InfoType.Product,
+        items = {{name = "DirtBike", item_type = "bike", amount = 1}},
+    },
+    {
+        product_id = 3323376992,
+        purchase_sku = "Mazede",
+        display_on_packs_page = true,
+        info_type = Enum.InfoType.Product,
+        items = {{name = "Mazede", item_type = "car", amount = 1}},
+    },
+    {
+        product_id = 3323408870,
+        purchase_sku = "Stang",
+        display_on_packs_page = true,
+        info_type = Enum.InfoType.Product,
+        items = {{name = "Stang", item_type = "car", amount = 1}},
+    },
+    {
+        product_id = 3350184689,
+        purchase_sku = "Rezvani",
+        display_on_packs_page = true,
+        info_type = Enum.InfoType.Product,
+        items = {{name = "Rezvani", item_type = "car", amount = 1}},
+    },
+    {
+        product_id = 3353379558,
+        purchase_sku = "ShotgunAmmo",
+        display_on_packs_page = true,
+        info_type = Enum.InfoType.Product,
+        items = {{name = "Shotgun Ammo", item_type = "ammo", ammo_type = "shotgun", amount = 20}},
+    },
+    {
+        product_id = 3321648851,
+        purchase_sku = "Mansion",
+        display_on_packs_page = true,
+        info_type = Enum.InfoType.Product,
+        display_rewards = {{name = "Mansion", image = "rbxassetid://70461271482408"}},
+        one_time_purchase = {
+            has = function(a1) -- Line: 863
+                return not not a1.mansion_bought
+            end,
+        },
+    },
+    {
+        product_id = 3575233636,
+        purchase_sku = "MansionUpgradeBasement",
+        is_mansion_upgrade = true,
+        info_type = Enum.InfoType.Product,
+        display_rewards = {{name = "Mansion Upgrade: Basement", image = "rbxassetid://94571596362076"}},
+        one_time_purchase = {
+            has = function(a1) -- Line: 883
+                local mansion_upgrades = a1.mansion_upgrades or {}
+                return not not mansion_upgrades.MansionUpgradeBasement
+            end,
+        },
+        is_locked = function(a1) -- Line: 888
+            return not a1.mansion_bought, "You must own the mansion to buy this"
+        end,
+    },
+    {
+        product_id = 3575729042,
+        purchase_sku = "MansionUpgradePersonalPawnShop",
+        is_mansion_upgrade = true,
+        info_type = Enum.InfoType.Product,
+        display_rewards = {{name = "Mansion Upgrade: Personal Pawn Shop", image = "rbxassetid://85545849517457"}},
+        one_time_purchase = {
+            has = function(a1) -- Line: 907
+                local mansion_upgrades = a1.mansion_upgrades or {}
+                return not not mansion_upgrades.MansionUpgradePersonalPawnShop
+            end,
+        },
+        is_locked = function(a1) -- Line: 912
+            local mansion_bought = a1.mansion_bought
+            local mansion_upgrades = a1.mansion_upgrades or {}
+            return not mansion_upgrades.MansionUpgradeBasement or not mansion_bought, "You must own the basement for the mansion to buy this"
+        end,
+    },
+    {
+        product_id = 3575277430,
+        purchase_sku = "MansionUpgradePersonalWeaponCrate",
+        is_mansion_upgrade = true,
+        info_type = Enum.InfoType.Product,
+        display_rewards = {{name = "Mansion Upgrade: Personal Weapon Crate", image = "rbxassetid://75863932498172"}},
+        one_time_purchase = {
+            has = function(a1) -- Line: 933
+                local mansion_upgrades = a1.mansion_upgrades or {}
+                return not not mansion_upgrades.MansionUpgradePersonalWeaponCrate
+            end,
+        },
+        is_locked = function(a1) -- Line: 938
+            local mansion_bought = a1.mansion_bought
+            local mansion_upgrades = a1.mansion_upgrades or {}
+            return not mansion_upgrades.MansionUpgradeBasement or not mansion_bought, "You must own the basement for the mansion to buy this"
+        end,
+    },
+    {
+        product_id = 3575219815,
+        purchase_sku = "Humvee",
+        display_on_packs_page = true,
+        info_type = Enum.InfoType.Product,
+        items = {{name = "Humvee", item_type = "car", amount = 1}},
+        is_locked = function(a1) -- Line: 962
+            return not a1.mansion_bought, "You must own the mansion to buy this"
+        end,
+    },
+    {
+        purchase_sku = "Gang",
+        product_id = v1.CREATE_GANG_PRODUCT_ID,
+        info_type = Enum.InfoType.Product,
+        display_rewards = {{name = "Crew", image = "rbxassetid://118904023077820"}},
+        one_time_purchase = {
+            has = function(a1) -- Line: 981
+                return not not a1.can_create_gang
+            end,
+        },
+    },
+    {
+        purchase_sku = "Gang Slot",
+        product_id = v1.EXTRA_GANG_SLOT_PRODUCT_ID,
+        info_type = Enum.InfoType.Product,
+        display_rewards = {{name = "+1 Crew Slot", image = "rbxassetid://118904023077820"}},
+        check_can_purchase = function(a1) -- Line: 998 -- upvalues: GangDataTypes (val)
+            if not a1.can_create_gang then
+                return false, "You need to buy a crew first"
+            end
+            if GangDataTypes.MAX_EXTRA_GANG_SLOTS <= a1.extra_gang_slots then
+                return false, "You already have the maximum crew slots"
+            end
+            return true
+        end,
+    },
+    {
+        purchase_sku = "Skip Crate Animation",
+        product_id = v1.SKIP_CRATE_ANIMATION_PRODUCT_ID,
+        info_type = Enum.InfoType.Product,
+        display_rewards = {{name = "Skip Crate Roll", image = "rbxassetid://79113301395907"}},
+        one_time_purchase = {
+            has = function(a1) -- Line: 1022
+                return not not a1.can_skip_crate_animation
+            end,
+        },
+    },
+}
+return v1

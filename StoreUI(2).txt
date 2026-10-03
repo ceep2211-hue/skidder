@@ -1,0 +1,1075 @@
+-- Path : ReplicatedStorage.Modules.Game.Store.StoreUI
+-- Script path: ReplicatedStorage.Modules.Game.Store.StoreUI
+-- Decompile time: 29.45 ms
+
+local update_policies
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local BlockSpinSubscriptionClient = require(ReplicatedStorage.Modules.Game.Store.BlockSpinSubscriptionClient)
+game:GetService("ServerStorage")
+local Signal = require(game.ReplicatedStorage.Modules.Core.Signal)
+local Data = require(game.ReplicatedStorage.Modules.Core.Data)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local ReplicatedStorage_2 = game:GetService("ReplicatedStorage")
+local u49 = {}
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local UIFX = require(game.ReplicatedStorage.Modules.Core.UIFX)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local Audio = require(game.ReplicatedStorage.Modules.Core.Audio)
+require(ReplicatedStorage_2.Modules.Core.UIFX.Scrolling)
+local SubMenuBackground = require(ReplicatedStorage_2.Modules.Game.UI.SubMenuBackground)
+local PolicyService = game:GetService("PolicyService")
+local Players = game:GetService("Players")
+local CollectionService = game:GetService("CollectionService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local AwardUI = require(game.ReplicatedStorage.Modules.Game.UI.AwardUI)
+local StoreData = require(game.ReplicatedStorage.Modules.Game.Store.StoreData)
+local CycleItems = require(game.ReplicatedStorage.Modules.Game.Store.CycleItems)
+local InfoPromptUI = require(ReplicatedStorage_2.Modules.Game.UI.InfoPromptUI)
+local FlagManager = require(ReplicatedStorage_2.Modules.Game.GameInfo.FlagManager)
+local SelectPlayerUI = require(ReplicatedStorage_2.Modules.Game.UI.SelectPlayerUI)
+local ItemUtils = require(ReplicatedStorage_2.Modules.Game.Inventory.ItemUtils)
+local NotificationsUI = require(ReplicatedStorage_2.Modules.Game.UI.NotificationsUI)
+local RewardsToString = require(ReplicatedStorage_2.Modules.Game.Store.RewardsToString)
+local LocalPlayer = Players.LocalPlayer
+local u171 = {GROUP_PRODUCT_FRAME = "GroupProducts", PRODUCT_FRAME = "ProductFrame"}
+u49.TAGS = u171
+local u172 = {
+    PURCHASE_SKU = "PurchaseSku",
+    RESTRICTED_BY_PAID_RNG = "RestrictedByPaidRandomItem",
+    PAID_RNG_ALTERNATIVE = "IsPaidRandomItemAlternative",
+    REPLACE_WITH = "ReplaceWith",
+    HIDE_WHEN_SUBSCRIPTION_UNAVAILABLE = "HideWhenSubscriptionUnavailable",
+    HIDE_WHEN_GIFTING = "HideWhenGifting",
+}
+u49.ATTRIBUTES = u172
+local u173 = {}
+u173.PURCHASE = Color3.fromRGB(85, 255, 0)
+u173.GIFT = Color3.fromRGB(193, 108, 191)
+u49.enabled = State.new(false)
+u49.is_gift_mode = State.new(false)
+u49.focus_on = State.new("none")
+u49.policy_are_paid_random_items_restricted = State.new(false)
+u49.policy_subscriptions_can_be_purchased = State.new(false)
+u49.FLAG_CAN_GIFT_PRODUCTS = FlagManager.FLAG_CAN_GIFT_PRODUCTS
+u49.prompt_open = State.new(false)
+u49.prompt_open_product_id = State.new(-1)
+u49.prompt_open_purchase_sku = State.new("")
+u49.is_subscribed = State.watch(LocalPlayer, "IsSubscribed")
+u49.gifting_to = State.watch(LocalPlayer, "GiftingTo")
+u49.preferred_subscription_sku = State.new(BlockSpinSubscriptionClient.NO_SUBSCRIPTION_SKU_VALUE)
+local u221 = Signal.new()
+State.new(function() -- Line: 76 -- upvalues: u49 (val)
+    return not u49.is_gift_mode.get()
+end)
+
+local function get_item_icon(a1) -- Line: 81 -- upvalues: ItemUtils (val) -- types: a1: string
+    return ItemUtils.get_item_icon(a1).image_id
+end
+
+local function format_seconds_to_minutes(a1) -- Line: 85 -- types: a1: number
+    return string.format("%02d:%02d", math.floor(a1 / 60), a1 % 60)
+end
+
+function u49.get_store_info_for_purchase_sku(a1) -- Line: 91 -- upvalues: StoreData (val) -- types: a1: string
+    for i, j in StoreData.list do
+        if j.purchase_sku == a1 then
+            return j
+        end
+    end
+end
+
+local function get_group_products_for_product_frame(a1) -- Line: 100
+    -- upvalues: LocalPlayer (val), u171 (val)
+    local Parent = a1.Parent
+    while true do
+        if not Parent:IsDescendantOf(LocalPlayer.PlayerGui) or Parent:HasTag(u171.GROUP_PRODUCT_FRAME) then
+            break
+        end
+        Parent = Parent.Parent
+    end
+    return Parent
+end
+
+function update_policies() -- Line: 111
+    -- upvalues: PolicyService (val), LocalPlayer (val), u49 (val), update_policies (val)
+    local success, result = pcall(function() -- Line: 112 -- upvalues: PolicyService (upval), LocalPlayer (upval)
+        return PolicyService:GetPolicyInfoForPlayerAsync(LocalPlayer)
+    end)
+    if not success then
+        u49.policy_are_paid_random_items_restricted.set(true)
+        u49.policy_subscriptions_can_be_purchased.set(true)
+        task.delay(2, function() -- Line: 119 -- upvalues: update_policies (upval)
+            update_policies()
+        end)
+        return
+    end
+    if not result.ArePaidRandomItemsRestricted then
+        u49.policy_are_paid_random_items_restricted.set(false)
+    else
+        u49.policy_are_paid_random_items_restricted.set(true)
+    end
+    if result.IsEligibleToPurchaseSubscription then
+        u49.policy_subscriptions_can_be_purchased.set(true)
+        return
+    end
+    u49.policy_subscriptions_can_be_purchased.set(false)
+end
+
+local function get_product_frame_for_purchase_sku(a1) -- Line: 136
+    -- upvalues: CollectionService (val), u171 (val), u172 (val)
+    for i, j in CollectionService:GetTagged(u171.PRODUCT_FRAME) do
+        if (tostring(((j:FindFirstChild("PurchaseButton", true)):GetAttribute(u172.PURCHASE_SKU)))) == tostring(a1) then
+            return j
+        end
+    end
+end
+
+local function get_price(a1, a2) -- Line: 146 -- upvalues: MarketplaceService (val) -- types: a1: number
+    if a2 ~= Enum.InfoType.Subscription then
+        local success_2, result_2 = pcall(function() -- Line: 162 -- upvalues: MarketplaceService (upval), a1 (val), a2 (val)
+            return MarketplaceService:GetProductInfo(a1, a2)
+        end)
+        if success_2 and result_2 and result_2.PriceInRobux then
+            return true, (tostring(result_2.PriceInRobux))
+        end
+        return false, ""
+    end
+    local success, result = pcall(function() -- Line: 148 -- upvalues: MarketplaceService (upval), a1 (val)
+        return MarketplaceService:GetSubscriptionProductInfoAsync(a1)
+    end)
+    if success and result then
+        if result.PriceInRobux and 0 < result.PriceInRobux then
+            return true, (tostring(result.PriceInRobux))
+        end
+        if result.DisplayPrice then
+            return true, (tostring(result.DisplayPrice))
+        end
+    end
+    return false, ""
+end
+
+local function update_button_ownership(a1, a2) -- Line: 172 -- upvalues: u49 (val), Data (val)
+    local product_id = a1.product_id
+    local PriceLabel = a2:FindFirstChild("PriceLabel", true)
+    local PriceSymbolLabel = a2:FindFirstChild("PriceSymbolLabel", true)
+    local OwnedLabel = a2:FindFirstChild("OwnedLabel", true)
+    local LockFrame = a2.Parent:FindFirstChild("LockFrame", true)
+    local v1 = u49.is_gift_mode.get()
+    if PriceLabel and not OwnedLabel then
+        OwnedLabel = PriceLabel:Clone()
+        OwnedLabel.Name = "OwnedLabel"
+        OwnedLabel.Text = "Owned"
+        OwnedLabel.Parent = PriceLabel.Parent
+    end
+    if OwnedLabel then
+        OwnedLabel.Visible = false
+    end
+    local v2 = a1.is_locked and a1.is_locked(Data) or false
+    if LockFrame then
+        LockFrame.Visible = v2 and not v1
+    end
+    if a1.one_time_purchase then
+        if a1.one_time_purchase.has(Data) and not v1 then
+            if PriceLabel then
+                PriceLabel.Visible = false
+                OwnedLabel.Visible = true
+            end
+            if PriceSymbolLabel then
+                PriceSymbolLabel.Visible = false
+            end
+            return
+        end
+        if PriceLabel then
+            PriceLabel.Visible = true
+        end
+        if PriceSymbolLabel then
+            PriceSymbolLabel.Visible = true
+        end
+    end
+end
+
+local function update_button_price(a1, a2, a3) -- Line: 224 -- upvalues: get_price (val), update_button_ownership (val)
+    local product_id = a1.product_id
+    local PriceLabel = a2:FindFirstChild("PriceLabel", true)
+    a2:FindFirstChild("OwnedLabel", true)
+    local PriceSymbolLabel = a2:FindFirstChild("PriceSymbolLabel", true)
+    task.spawn(function() -- Line: 230
+        -- upvalues: get_price (upval), product_id (val), a3 (val), PriceLabel (val), PriceSymbolLabel (val)
+        -- upvalues: update_button_ownership (upval), a1 (val), a2 (val)
+        local v1, v2
+        for i = 1, 5 do
+            v1, v2 = get_price(product_id, a3)
+            if v1 then
+                if PriceLabel then
+                    PriceLabel.Text = v2
+                    PriceLabel.Visible = true
+                end
+                if PriceSymbolLabel then
+                    PriceSymbolLabel.Visible = true
+                end
+                update_button_ownership(a1, a2)
+                return
+            end
+            task.wait(1)
+        end
+        if PriceLabel then
+            PriceLabel.Text = "Error"
+        end
+        if PriceSymbolLabel then
+            PriceSymbolLabel.Visible = false
+        end
+        update_button_ownership(a1, a2)
+    end)
+end
+
+local function turn_off_gifting() -- Line: 262 -- upvalues: u49 (val), Net (val)
+    if u49.gifting_to.get() == 0 or Net.get("set_gifting_products", nil) then
+        u49.is_gift_mode.set(false)
+        return true
+    end
+    print("Failed to turn off gifting")
+    return false
+end
+
+u49.turn_off_gifting = turn_off_gifting
+
+function u49.is_product_frame_compliant(a1) -- Line: 280 -- upvalues: u49 (val), u172 (val) -- types: a1: userdata
+    local v1 = u49.policy_are_paid_random_items_restricted.get()
+    if a1:GetAttribute("DefaultVisibility") == nil then
+        return
+    end
+    if a1:GetAttribute(u172.PAID_RNG_ALTERNATIVE) then
+        return v1
+    end
+    if a1:GetAttribute(u172.RESTRICTED_BY_PAID_RNG) then
+        return not v1
+    end
+    return true
+end
+
+function u49.external_prompt_product_purchase(a1, a2) -- Line: 295
+    -- upvalues: u49 (val), turn_off_gifting (val), Net (val), MarketplaceService (val), LocalPlayer (val)
+    if u49.prompt_open.get() then
+        return
+    end
+    if not turn_off_gifting() then
+        print("Failed to turn off gifting")
+        return
+    end
+    if u49.enabled.get() then
+        u49.enabled.set(false)
+    end
+    u49.is_gift_mode.set(false)
+    Net.send("set_purchase_location", a2)
+    MarketplaceService:PromptProductPurchase(LocalPlayer, a1)
+    u49.prompt_open.set(true)
+end
+
+function u49.init_pages() -- Line: 316
+    -- upvalues: UI (val), StoreData (val), get_product_frame_for_purchase_sku (val)
+    -- upvalues: get_group_products_for_product_frame (val), u172 (val)
+    local u7 = {UI.get("StoreHomePage")}
+    local u13 = {UI.get("StoreHomeButton")}
+
+    local function set_active_page(a1, a2) -- Line: 328
+        -- upvalues: u7 (ref), u13 (ref)
+        for i, j in u7 do
+            if j ~= a2 then
+                j.Visible = false
+            else
+                j.Visible = true
+            end
+        end
+        for k, n in u13 do
+            if n ~= a1 then
+                n.Position = UDim2.fromScale(n.Position.X.Scale, 0.05)
+            else
+                n.Position = UDim2.fromScale(n.Position.X.Scale, 0.02)
+            end
+        end
+    end
+
+    local function new_page(a1, a2) -- Line: 347
+        -- upvalues: StoreData (upval), get_product_frame_for_purchase_sku (upval)
+        -- upvalues: get_group_products_for_product_frame (upval), u172 (upval), UI (upval), set_active_page (val)
+        if a2.Name == "StorePacksPage" then
+            local v1, v2, v3
+            local v4 = nil
+            local v5 = nil
+            for i, j in StoreData.list, v4, v5 do
+                if j.display_on_packs_page then
+                    v1 = get_product_frame_for_purchase_sku(j.purchase_sku)
+                    v2 = v1 and get_group_products_for_product_frame(v1)
+                    if v2 then
+                        v3 = v2:Clone()
+                        v3:SetAttribute(u172.PAID_RNG_ALTERNATIVE, false)
+                        v3.Visible = true
+                        v3:SetAttribute("DefaultVisibility", true)
+                        v3.Parent = UI.get("StorePacksPage")
+                    end
+                end
+            end
+        end
+        UI.on_click(a1, function() -- Line: 366 -- upvalues: set_active_page (upval), a1 (val), a2 (val)
+            set_active_page(a1, a2)
+        end)
+        if a1.Name == "StoreHomeButton" then
+            set_active_page(a1, a2)
+        end
+    end
+
+    local v1 = #u7
+    for i = 1, v1 do
+        new_page(u13[i], u7[i])
+    end
+end
+
+function u49.not_enough_money(a1) -- Line: 381 -- upvalues: UIFX (val), UI (val), u49 (val), Data (val), StoreData (val)
+    UIFX.error_effect(UI.get("TopRightHud").Holder.Frame.UIStroke)
+    if not u49.policy_are_paid_random_items_restricted.get() then
+        local v1
+        local product_id = nil
+        local amount = (1 / 0)
+        local v2 = a1 - Data.money.hand
+        for i, j in StoreData.list do
+            if j.items and #j.items == 1 then
+                v1 = j.items[1]
+                if v1 and v1.item_type == "money" and v2 <= v1.amount and v1.amount <= amount then
+                    product_id = j.product_id
+                    amount = v1.amount
+                end
+            end
+        end
+        if product_id then
+            u49.external_prompt_product_purchase(product_id, "InsufficentCash")
+        end
+    end
+end
+
+function u49.initiate() -- Line: 415
+    -- upvalues: Net (val), u49 (val), RewardsToString (val), NotificationsUI (val), u221 (val), ItemUtils (val)
+    -- upvalues: AwardUI (val)
+    Net.hook("not_enough_money", function(a1) -- Line: 417 -- upvalues: u49 (upval)
+        u49.not_enough_money(a1)
+    end)
+    Net.hook("received_gift", function(a1, a2, a3) -- Line: 422
+        -- upvalues: RewardsToString (upval), NotificationsUI (upval), u221 (upval)
+        if not a3 then
+            return
+        end
+        local Name = a1.Name
+        if Name ~= a1.DisplayName then
+            Name = Name .. " (" .. a1.DisplayName .. ")"
+        end
+        local v1 = RewardsToString.rewards_to_string(a3)
+        NotificationsUI.show_notification("", Name .. " has gifted you " .. tostring(v1))
+        u221:Fire()
+    end)
+    Net.hook("sent_gift", function(a1, a2, a3) -- Line: 443 -- upvalues: NotificationsUI (upval), u221 (upval) -- types: a1: userdata, a2: boolean
+        local Name = a1.Name
+        if Name ~= a1.DisplayName then
+            Name = Name .. " (" .. a1.DisplayName .. ")"
+        end
+        NotificationsUI.show_notification("", Name .. " has received your gift!")
+        u221:Fire()
+    end)
+    Net.hook("purchase_finalised", function(a1, a2, a3) -- Line: 457
+        -- upvalues: u49 (upval), ItemUtils (upval), AwardUI (upval), Net (upval), u221 (upval)
+        if not a2 then
+            return
+        end
+        if a3 then
+            if u49.prompt_open.get() then
+                u49.prompt_open.wait()
+            end
+            u49.enabled.set(false)
+            for i, j in a3 do
+                if j.item_type == "money" then
+                    j.name = "Money"
+                    j.image = "rbxassetid://106880354532086"
+                elseif j.item_type ~= nil then
+                    j.image = ItemUtils.get_item_icon(j.name).image_id
+                end
+            end
+            AwardUI.award_items(a3)
+            AwardUI.animating_awards.wait()
+        end
+        Net.send("client_reward_sequence_finished")
+        u221:Fire()
+    end)
+end
+
+function u49.update_preferred_subscription() -- Line: 489 -- upvalues: BlockSpinSubscriptionClient (val), u49 (val)
+    u49.preferred_subscription_sku.set((BlockSpinSubscriptionClient.get_preferred_subscription()).purchase_sku)
+end
+
+function u49.loaded() -- Line: 495
+    -- upvalues: UI (val), UIFX (val), u49 (val), SubMenuBackground (val), update_policies (val), Audio (val), Net (val)
+    -- upvalues: Util (val), u171 (val), u172 (val), StoreData (val), MarketplaceService (val), LocalPlayer (val)
+    -- upvalues: InfoPromptUI (val), Data (val), Players (val), SelectPlayerUI (val), NotificationsUI (val)
+    -- upvalues: CycleItems (val), ItemUtils (val), update_button_price (val), State (val)
+    -- upvalues: BlockSpinSubscriptionClient (val), u173 (val), u221 (val), update_button_ownership (val)
+    -- upvalues: turn_off_gifting (val)
+    local Store = UI.get("Store")
+    local StoreHolder = UI.get("StoreHolder")
+    local Volume = StoreHolder.StoreSound.Volume
+    local u10 = {}
+    UIFX.set_close(StoreHolder)
+    u49.init_pages()
+    u49.enabled.hook(function(a1, a2) -- Line: 507
+        -- upvalues: SubMenuBackground (upval), u49 (upval), Store (val), update_policies (upval), UIFX (upval)
+        -- upvalues: StoreHolder (val), Audio (upval), Volume (val), u10 (ref), Net (upval)
+        if a1 == a2 or not SubMenuBackground.can_open() then
+            return
+        end
+        if not a1 then
+            SubMenuBackground.close()
+            UIFX.scale_close(StoreHolder)
+            u49.focus_on.set("none")
+            task.spawn(function() -- Line: 529 -- upvalues: Audio (upval), StoreHolder (upval)
+                Audio.ease(StoreHolder.StoreSound, 0, 2)
+            end)
+            return
+        end
+        SubMenuBackground.open(u49.enabled, Store)
+        update_policies()
+        UIFX.scale_open(StoreHolder)
+        task.spawn(function() -- Line: 516 -- upvalues: Audio (upval), StoreHolder (upval), Volume (upval)
+            Audio.ease(StoreHolder.StoreSound, Volume, 2)
+        end)
+        u10 = Net.get("can_purchase_products")
+        Net.send("set_purchase_location", "Store")
+        u49.update_preferred_subscription()
+    end)
+    u49.is_gift_mode.hook(function(a1, a2) -- Line: 537 -- upvalues: UI (upval)
+        UI.get("GiftButton").Gifting.Visible = a1
+        UI.get("GiftButton").Purchasing.Visible = not a1
+        UI.get("GiftButton").GiftGradient.Enabled = a1
+        UI.get("GiftButton").PurchaseGradient.Enabled = not a1
+    end)
+    UI.on_click("StoreButton", function() -- Line: 547 -- upvalues: u49 (upval)
+        u49.enabled.update(function(a1) -- Line: 548
+            return not a1
+        end)
+    end)
+    UI.on_click("StoreCloseButton", function() -- Line: 553 -- upvalues: u49 (upval)
+        u49.enabled.set(false)
+    end)
+    Util.hook_tag(u171.GROUP_PRODUCT_FRAME, function(a1) -- Line: 557
+        if not a1:GetAttribute("DefaultVisibility") then
+            a1:SetAttribute("DefaultVisibility", a1.Visible)
+        end
+    end)
+    Util.hook_tag(u171.PRODUCT_FRAME, function(a1) -- Line: 563
+        -- upvalues: u172 (upval), StoreData (upval), MarketplaceService (upval), LocalPlayer (upval), u49 (upval)
+        -- upvalues: InfoPromptUI (upval), Data (upval), u10 (ref), Net (upval), Players (upval), SelectPlayerUI (upval)
+        -- upvalues: NotificationsUI (upval), CycleItems (upval), ItemUtils (upval), update_button_price (upval)
+        -- upvalues: State (upval), UI (upval), BlockSpinSubscriptionClient (upval), u173 (upval), u171 (upval)
+        -- upvalues: u221 (upval), update_button_ownership (upval)
+        local Warning, description_label, info_type, limited_timer_start, on_click, product_id, prompt, prompt_error, title_label, u22, v1
+        local PurchaseButton = a1:FindFirstChild("PurchaseButton", true)
+        local Attribute = PurchaseButton:GetAttribute(u172.PURCHASE_SKU)
+        for i, j in StoreData.list do
+            if j.purchase_sku == Attribute then
+                u22 = j
+                product_id = nil
+                info_type = u22
+                if info_type then
+                    info_type = u22.info_type
+                end
+
+                function prompt() -- Line: 570
+                    -- upvalues: info_type (val), MarketplaceService (upval), LocalPlayer (upval), product_id (ref)
+                    if info_type == Enum.InfoType.GamePass then
+                        MarketplaceService:PromptGamePassPurchase(LocalPlayer, product_id)
+                        return
+                    end
+                    if info_type == Enum.InfoType.Subscription then
+                        MarketplaceService:PromptSubscriptionPurchase(LocalPlayer, product_id)
+                        return
+                    end
+                    if info_type == Enum.InfoType.Product then
+                        MarketplaceService:PromptProductPurchase(LocalPlayer, product_id)
+                    end
+                end
+
+                function prompt_error(...) -- Line: 580 -- upvalues: u49 (upval), InfoPromptUI (upval)
+                    u49.enabled.set(false)
+                    InfoPromptUI.prompt_info(...)
+                    u49.enabled.set(true)
+                end
+
+                function on_click() -- Line: 586
+                    -- upvalues: u49 (upval), u22 (val), Data (upval), prompt_error (val), u10 (upval), Net (upval)
+                    -- upvalues: Attribute (val), product_id (ref), info_type (val), Players (upval)
+                    -- upvalues: SelectPlayerUI (upval), NotificationsUI (upval), prompt (val)
+                    local v1
+                    if not u49.is_gift_mode.get() then
+                        local v2
+                        if u22.one_time_purchase and u22.one_time_purchase.has(Data) then
+                            prompt_error("Error", "You already own this product")
+                            return
+                        end
+                        if u22.is_locked then
+                            v1, v2 = u22.is_locked(Data)
+                            if v1 then
+                                prompt_error("Error", v2)
+                                return
+                            end
+                        end
+                        if u22.check_can_purchase then
+                            v1, v2 = u22.check_can_purchase(Data)
+                            if not v1 then
+                                prompt_error("Error", v2)
+                                return
+                            end
+                        end
+                        if #u10 == 0 then
+                            u10 = Net.get("can_purchase_products")
+                        end
+                        if not table.find(u10, Attribute) then
+                            prompt_error("No space", "You do not have enough room in your inventory for this product")
+                            return
+                        end
+                    end
+                    u49.prompt_open_purchase_sku.set(Attribute)
+                    u49.prompt_open_product_id.set(product_id)
+                    if info_type ~= Enum.InfoType.Product and u49.is_gift_mode.get() then
+                        warn("Could not purchase: gifting can not be used on this product")
+                        return
+                    end
+                    u49.prompt_open.set(true)
+                    if not u49.is_gift_mode.get() then
+                        prompt()
+                        return
+                    end
+                    v1 = {}
+                    for i, j in Players:GetPlayers() do
+                        if j:GetAttribute("level") then
+                            table.insert(v1, j)
+                        end
+                    end
+                    SelectPlayerUI.select_player(v1, 1, function(a1) -- Line: 638
+                        -- upvalues: Net (upval), Attribute (upval), NotificationsUI (upval), u49 (upval)
+                        -- upvalues: prompt (upval)
+                        local u16 = a1
+                        if u16 then
+                            u16 = a1[1]
+                        end
+                        if u16 then
+                            local v1, v2 = Net.get("set_gifting_products", u16, Attribute)
+                            if v1 then
+                                print("Chose giftee: ", u16)
+                            else
+                                if v2 then
+                                    NotificationsUI.show_notification(nil, v2)
+                                end
+                                u16 = nil
+                            end
+                        end
+                        task.defer(function() -- Line: 654 -- upvalues: u49 (upval), u16 (ref), prompt (upval)
+                            u49.enabled.set(true)
+                            if not u16 then
+                                u49.prompt_open.set(false)
+                                return
+                            end
+                            prompt()
+                        end)
+                    end)
+                end
+
+                function limited_timer_start() -- Line: 672
+                    -- upvalues: a1 (val), CycleItems (upval), Attribute (val), u22 (val), u49 (upval)
+                    -- upvalues: ItemUtils (upval), product_id (ref), update_button_price (upval), PurchaseButton (val)
+                    -- upvalues: info_type (val)
+                    task.spawn(function() -- Line: 674
+                        -- upvalues: a1 (upval), CycleItems (upval), Attribute (upval), u22 (upval), u49 (upval)
+                        -- upvalues: ItemUtils (upval), product_id (upval), update_button_price (upval)
+                        -- upvalues: PurchaseButton (upval), info_type (upval)
+                        local DescriptionLabel, DescriptionLabel_2, ItemImage, TitleLabel, name, v1, v2
+                        local v3 = nil
+                        while task.wait(1) do
+                            if not a1.Parent then
+                                break
+                            end
+                            v1 = CycleItems.get_time_left(Attribute)
+                            v2 = CycleItems.get_reward_items(Attribute)
+                            if v1 < 0 or u22.limited_time_purchase.length < v1 then
+                                a1.Visible = false
+                            end
+                            a1.Visible = true
+                            if not u49.prompt_open.get() or u49.prompt_open_purchase_sku.get() ~= Attribute then
+                                TitleLabel = a1:FindFirstChild("TitleLabel", true)
+                                TitleLabel.Text = v2[1].name
+                                DescriptionLabel_2 = a1:FindFirstChild("DescriptionLabel", true)
+                                DescriptionLabel_2.Text = ("Time Remaining: %*"):format((string.format("%02d:%02d", math.floor(v1 / 60), v1 % 60)))
+                                ItemImage = a1:FindFirstChild("ItemImage", true)
+                                name = v2[1].name
+                                ItemImage.Image = ItemUtils.get_item_icon(name).image_id
+                                product_id = CycleItems.get_product_id(Attribute)
+                                if v2 ~= v3 then
+                                    update_button_price(u22, PurchaseButton, info_type)
+                                end
+                            else
+                                DescriptionLabel = a1:FindFirstChild("DescriptionLabel", true)
+                                DescriptionLabel.Text = "Purchasing.."
+                            end
+                        end
+                    end)
+                end
+
+                if not u22 then
+                    warn("No product info for ", Attribute, a1)
+                    return
+                end
+                if u22.title_label and a1:FindFirstChild("TitleLabel", true) then
+                    title_label = u22.title_label
+                    a1:FindFirstChild("TitleLabel", true).Text = title_label
+                end
+                if u22.description_label and a1:FindFirstChild("DescriptionLabel", true) then
+                    description_label = u22.description_label
+                    a1:FindFirstChild("DescriptionLabel", true).Text = description_label
+                end
+                Warning = a1:FindFirstChild("Warning", true)
+                if Warning then
+                    Warning.Visible = u22.warning_symbol or false
+                end
+                if not u22.limited_time_purchase or not u22.limited_time_purchase.enabled then
+                    product_id = u22.product_id
+                    update_button_price(u22, PurchaseButton, info_type)
+                else
+                    task.spawn(function() -- Line: 674
+                        -- upvalues: a1 (val), CycleItems (upval), Attribute (val), u22 (val), u49 (upval)
+                        -- upvalues: ItemUtils (upval), product_id (ref), update_button_price (upval)
+                        -- upvalues: PurchaseButton (val), info_type (val)
+                        local DescriptionLabel, DescriptionLabel_2, ItemImage, TitleLabel, name, v1, v2
+                        local v3 = nil
+                        while task.wait(1) do
+                            if not a1.Parent then
+                                break
+                            end
+                            v1 = CycleItems.get_time_left(Attribute)
+                            v2 = CycleItems.get_reward_items(Attribute)
+                            if v1 < 0 or u22.limited_time_purchase.length < v1 then
+                                a1.Visible = false
+                            end
+                            a1.Visible = true
+                            if not u49.prompt_open.get() or u49.prompt_open_purchase_sku.get() ~= Attribute then
+                                TitleLabel = a1:FindFirstChild("TitleLabel", true)
+                                TitleLabel.Text = v2[1].name
+                                DescriptionLabel_2 = a1:FindFirstChild("DescriptionLabel", true)
+                                DescriptionLabel_2.Text = ("Time Remaining: %*"):format((string.format("%02d:%02d", math.floor(v1 / 60), v1 % 60)))
+                                ItemImage = a1:FindFirstChild("ItemImage", true)
+                                name = v2[1].name
+                                ItemImage.Image = ItemUtils.get_item_icon(name).image_id
+                                product_id = CycleItems.get_product_id(Attribute)
+                                if v2 ~= v3 then
+                                    update_button_price(u22, PurchaseButton, info_type)
+                                end
+                            else
+                                DescriptionLabel = a1:FindFirstChild("DescriptionLabel", true)
+                                DescriptionLabel.Text = "Purchasing.."
+                            end
+                        end
+                    end)
+                end
+                if u22.info_type == Enum.InfoType.Subscription then
+                    State.new(function() -- Line: 748 -- upvalues: u49 (upval), a1 (val), UI (upval), Attribute (val), PurchaseButton (val)
+                        local v1 = u49.is_subscribed.get()
+                        local v2 = u49.preferred_subscription_sku.get()
+                        local CaseGui = UI.get("CaseGui")
+                        a1:FindFirstChild("SubscribedText").Visible = v1
+                        local CantSubscribeText = a1:FindFirstChild("CantSubscribeText")
+                        CantSubscribeText.Visible = v2 ~= Attribute
+                        local v3 = false
+                        if v2 == Attribute then
+                            v3 = not v1
+                        end
+                        PurchaseButton.Visible = v3
+                    end)
+                end
+                ;(State.new(function() -- Line: 763
+                    -- upvalues: u49 (upval), a1 (val), u172 (upval), u22 (val), Attribute (val)
+                    -- upvalues: BlockSpinSubscriptionClient (upval), UI (upval)
+                    local v1 = u49.is_gift_mode.get()
+                    u49.policy_subscriptions_can_be_purchased.get()
+                    local v2 = u49.policy_are_paid_random_items_restricted.get()
+                    a1:GetAttribute(u172.HIDE_WHEN_SUBSCRIPTION_UNAVAILABLE)
+                    local Attribute_3 = a1:GetAttribute(u172.PAID_RNG_ALTERNATIVE)
+                    local Attribute_4 = a1:GetAttribute(u172.HIDE_WHEN_GIFTING)
+                    local Attribute_5 = a1:GetAttribute(u172.RESTRICTED_BY_PAID_RNG)
+                    local v3 = u49.preferred_subscription_sku.get()
+                    if v2 and Attribute_5 then
+                        return false
+                    end
+                    if v1 and Attribute_4 then
+                        return false
+                    end
+                    if u22.info_type ~= Enum.InfoType.Subscription then
+                        if Attribute_3 then
+                            if v2 then
+                                return true
+                            end
+                            return false
+                        end
+                        return true
+                    end
+                    if v3 == Attribute then
+                        return true
+                    end
+                    if v3 ~= BlockSpinSubscriptionClient.NO_SUBSCRIPTION_SKU_VALUE then
+                        return false
+                    end
+                    if a1 == UI.get("MainSubscription") then
+                        return true
+                    end
+                    return false
+                end)).hook(function(a1_2) -- Line: 809 -- upvalues: a1 (val)
+                    a1.Visible = a1_2
+                end)
+                if u22.info_type == Enum.InfoType.Product and u49.FLAG_CAN_GIFT_PRODUCTS then
+                    u49.is_gift_mode.hook(function(a1, a2) -- Line: 816 -- upvalues: PurchaseButton (val), u173 (upval)
+                        if a1 == a2 then
+                            return
+                        end
+                        local GIFT = a1 and u173.GIFT or u173.PURCHASE
+                        PurchaseButton.ImageColor3 = GIFT
+                    end)
+                end
+                v1 = PurchaseButton:FindFirstAncestorWhichIsA("GuiButton")
+                if PurchaseButton.Parent:IsA("Frame") and PurchaseButton.Parent:HasTag(u171.PRODUCT_FRAME) then
+                    v1 = PurchaseButton
+                end
+                if v1 == nil then
+                    return
+                end
+                u221:Connect(function() -- Line: 834 -- upvalues: update_button_ownership (upval), u22 (val), PurchaseButton (val)
+                    update_button_ownership(u22, PurchaseButton)
+                end)
+                u49.is_gift_mode.hook(function() -- Line: 839 -- upvalues: update_button_ownership (upval), u22 (val), PurchaseButton (val)
+                    update_button_ownership(u22, PurchaseButton)
+                end)
+                u49.enabled.hook(function() -- Line: 844 -- upvalues: update_button_ownership (upval), u22 (val), PurchaseButton (val)
+                    update_button_ownership(u22, PurchaseButton)
+                end)
+                UI.on_click(v1, on_click)
+                return
+            end
+        end
+        u22 = nil
+        product_id = nil
+        info_type = u22
+        if info_type then
+            info_type = u22.info_type
+        end
+
+        function prompt() -- Line: 570
+            -- upvalues: info_type (val), MarketplaceService (upval), LocalPlayer (upval), product_id (ref)
+            if info_type == Enum.InfoType.GamePass then
+                MarketplaceService:PromptGamePassPurchase(LocalPlayer, product_id)
+                return
+            end
+            if info_type == Enum.InfoType.Subscription then
+                MarketplaceService:PromptSubscriptionPurchase(LocalPlayer, product_id)
+                return
+            end
+            if info_type == Enum.InfoType.Product then
+                MarketplaceService:PromptProductPurchase(LocalPlayer, product_id)
+            end
+        end
+
+        function prompt_error(...) -- Line: 580 -- upvalues: u49 (upval), InfoPromptUI (upval)
+            u49.enabled.set(false)
+            InfoPromptUI.prompt_info(...)
+            u49.enabled.set(true)
+        end
+
+        function on_click() -- Line: 586
+            -- upvalues: u49 (upval), u22 (val), Data (upval), prompt_error (val), u10 (upval), Net (upval)
+            -- upvalues: Attribute (val), product_id (ref), info_type (val), Players (upval), SelectPlayerUI (upval)
+            -- upvalues: NotificationsUI (upval), prompt (val)
+            local v1
+            if not u49.is_gift_mode.get() then
+                local v2
+                if u22.one_time_purchase and u22.one_time_purchase.has(Data) then
+                    prompt_error("Error", "You already own this product")
+                    return
+                end
+                if u22.is_locked then
+                    v1, v2 = u22.is_locked(Data)
+                    if v1 then
+                        prompt_error("Error", v2)
+                        return
+                    end
+                end
+                if u22.check_can_purchase then
+                    v1, v2 = u22.check_can_purchase(Data)
+                    if not v1 then
+                        prompt_error("Error", v2)
+                        return
+                    end
+                end
+                if #u10 == 0 then
+                    u10 = Net.get("can_purchase_products")
+                end
+                if not table.find(u10, Attribute) then
+                    prompt_error("No space", "You do not have enough room in your inventory for this product")
+                    return
+                end
+            end
+            u49.prompt_open_purchase_sku.set(Attribute)
+            u49.prompt_open_product_id.set(product_id)
+            if info_type ~= Enum.InfoType.Product and u49.is_gift_mode.get() then
+                warn("Could not purchase: gifting can not be used on this product")
+                return
+            end
+            u49.prompt_open.set(true)
+            if not u49.is_gift_mode.get() then
+                prompt()
+                return
+            end
+            v1 = {}
+            for i, j in Players:GetPlayers() do
+                if j:GetAttribute("level") then
+                    table.insert(v1, j)
+                end
+            end
+            SelectPlayerUI.select_player(v1, 1, function(a1) -- Line: 638
+                -- upvalues: Net (upval), Attribute (upval), NotificationsUI (upval), u49 (upval), prompt (upval)
+                local u16 = a1
+                if u16 then
+                    u16 = a1[1]
+                end
+                if u16 then
+                    local v1, v2 = Net.get("set_gifting_products", u16, Attribute)
+                    if v1 then
+                        print("Chose giftee: ", u16)
+                    else
+                        if v2 then
+                            NotificationsUI.show_notification(nil, v2)
+                        end
+                        u16 = nil
+                    end
+                end
+                task.defer(function() -- Line: 654 -- upvalues: u49 (upval), u16 (ref), prompt (upval)
+                    u49.enabled.set(true)
+                    if not u16 then
+                        u49.prompt_open.set(false)
+                        return
+                    end
+                    prompt()
+                end)
+            end)
+        end
+
+        function limited_timer_start() -- Line: 672
+            -- upvalues: a1 (val), CycleItems (upval), Attribute (val), u22 (val), u49 (upval), ItemUtils (upval)
+            -- upvalues: product_id (ref), update_button_price (upval), PurchaseButton (val), info_type (val)
+            task.spawn(function() -- Line: 674
+                -- upvalues: a1 (upval), CycleItems (upval), Attribute (upval), u22 (upval), u49 (upval)
+                -- upvalues: ItemUtils (upval), product_id (upval), update_button_price (upval), PurchaseButton (upval)
+                -- upvalues: info_type (upval)
+                local DescriptionLabel, DescriptionLabel_2, ItemImage, TitleLabel, name, v1, v2
+                local v3 = nil
+                while task.wait(1) do
+                    if not a1.Parent then
+                        break
+                    end
+                    v1 = CycleItems.get_time_left(Attribute)
+                    v2 = CycleItems.get_reward_items(Attribute)
+                    if v1 < 0 or u22.limited_time_purchase.length < v1 then
+                        a1.Visible = false
+                    end
+                    a1.Visible = true
+                    if not u49.prompt_open.get() or u49.prompt_open_purchase_sku.get() ~= Attribute then
+                        TitleLabel = a1:FindFirstChild("TitleLabel", true)
+                        TitleLabel.Text = v2[1].name
+                        DescriptionLabel_2 = a1:FindFirstChild("DescriptionLabel", true)
+                        DescriptionLabel_2.Text = ("Time Remaining: %*"):format((string.format("%02d:%02d", math.floor(v1 / 60), v1 % 60)))
+                        ItemImage = a1:FindFirstChild("ItemImage", true)
+                        name = v2[1].name
+                        ItemImage.Image = ItemUtils.get_item_icon(name).image_id
+                        product_id = CycleItems.get_product_id(Attribute)
+                        if v2 ~= v3 then
+                            update_button_price(u22, PurchaseButton, info_type)
+                        end
+                    else
+                        DescriptionLabel = a1:FindFirstChild("DescriptionLabel", true)
+                        DescriptionLabel.Text = "Purchasing.."
+                    end
+                end
+            end)
+        end
+
+        if not u22 then
+            warn("No product info for ", Attribute, a1)
+            return
+        end
+        if u22.title_label and a1:FindFirstChild("TitleLabel", true) then
+            title_label = u22.title_label
+            a1:FindFirstChild("TitleLabel", true).Text = title_label
+        end
+        if u22.description_label and a1:FindFirstChild("DescriptionLabel", true) then
+            description_label = u22.description_label
+            a1:FindFirstChild("DescriptionLabel", true).Text = description_label
+        end
+        Warning = a1:FindFirstChild("Warning", true)
+        if Warning then
+            Warning.Visible = u22.warning_symbol or false
+        end
+        if not u22.limited_time_purchase or not u22.limited_time_purchase.enabled then
+            product_id = u22.product_id
+            update_button_price(u22, PurchaseButton, info_type)
+        else
+            task.spawn(function() -- Line: 674
+                -- upvalues: a1 (val), CycleItems (upval), Attribute (val), u22 (val), u49 (upval), ItemUtils (upval)
+                -- upvalues: product_id (ref), update_button_price (upval), PurchaseButton (val), info_type (val)
+                local DescriptionLabel, DescriptionLabel_2, ItemImage, TitleLabel, name, v1, v2
+                local v3 = nil
+                while task.wait(1) do
+                    if not a1.Parent then
+                        break
+                    end
+                    v1 = CycleItems.get_time_left(Attribute)
+                    v2 = CycleItems.get_reward_items(Attribute)
+                    if v1 < 0 or u22.limited_time_purchase.length < v1 then
+                        a1.Visible = false
+                    end
+                    a1.Visible = true
+                    if not u49.prompt_open.get() or u49.prompt_open_purchase_sku.get() ~= Attribute then
+                        TitleLabel = a1:FindFirstChild("TitleLabel", true)
+                        TitleLabel.Text = v2[1].name
+                        DescriptionLabel_2 = a1:FindFirstChild("DescriptionLabel", true)
+                        DescriptionLabel_2.Text = ("Time Remaining: %*"):format((string.format("%02d:%02d", math.floor(v1 / 60), v1 % 60)))
+                        ItemImage = a1:FindFirstChild("ItemImage", true)
+                        name = v2[1].name
+                        ItemImage.Image = ItemUtils.get_item_icon(name).image_id
+                        product_id = CycleItems.get_product_id(Attribute)
+                        if v2 ~= v3 then
+                            update_button_price(u22, PurchaseButton, info_type)
+                        end
+                    else
+                        DescriptionLabel = a1:FindFirstChild("DescriptionLabel", true)
+                        DescriptionLabel.Text = "Purchasing.."
+                    end
+                end
+            end)
+        end
+        if u22.info_type == Enum.InfoType.Subscription then
+            State.new(function() -- Line: 748 -- upvalues: u49 (upval), a1 (val), UI (upval), Attribute (val), PurchaseButton (val)
+                local v1 = u49.is_subscribed.get()
+                local v2 = u49.preferred_subscription_sku.get()
+                local CaseGui = UI.get("CaseGui")
+                a1:FindFirstChild("SubscribedText").Visible = v1
+                local CantSubscribeText = a1:FindFirstChild("CantSubscribeText")
+                CantSubscribeText.Visible = v2 ~= Attribute
+                local v3 = false
+                if v2 == Attribute then
+                    v3 = not v1
+                end
+                PurchaseButton.Visible = v3
+            end)
+        end
+        ;(State.new(function() -- Line: 763
+            -- upvalues: u49 (upval), a1 (val), u172 (upval), u22 (val), Attribute (val)
+            -- upvalues: BlockSpinSubscriptionClient (upval), UI (upval)
+            local v1 = u49.is_gift_mode.get()
+            u49.policy_subscriptions_can_be_purchased.get()
+            local v2 = u49.policy_are_paid_random_items_restricted.get()
+            a1:GetAttribute(u172.HIDE_WHEN_SUBSCRIPTION_UNAVAILABLE)
+            local Attribute_3 = a1:GetAttribute(u172.PAID_RNG_ALTERNATIVE)
+            local Attribute_4 = a1:GetAttribute(u172.HIDE_WHEN_GIFTING)
+            local Attribute_5 = a1:GetAttribute(u172.RESTRICTED_BY_PAID_RNG)
+            local v3 = u49.preferred_subscription_sku.get()
+            if v2 and Attribute_5 then
+                return false
+            end
+            if v1 and Attribute_4 then
+                return false
+            end
+            if u22.info_type ~= Enum.InfoType.Subscription then
+                if Attribute_3 then
+                    if v2 then
+                        return true
+                    end
+                    return false
+                end
+                return true
+            end
+            if v3 == Attribute then
+                return true
+            end
+            if v3 ~= BlockSpinSubscriptionClient.NO_SUBSCRIPTION_SKU_VALUE then
+                return false
+            end
+            if a1 == UI.get("MainSubscription") then
+                return true
+            end
+            return false
+        end)).hook(function(a1_2) -- Line: 809 -- upvalues: a1 (val)
+            a1.Visible = a1_2
+        end)
+        if u22.info_type == Enum.InfoType.Product and u49.FLAG_CAN_GIFT_PRODUCTS then
+            u49.is_gift_mode.hook(function(a1, a2) -- Line: 816 -- upvalues: PurchaseButton (val), u173 (upval)
+                if a1 == a2 then
+                    return
+                end
+                local GIFT = a1 and u173.GIFT or u173.PURCHASE
+                PurchaseButton.ImageColor3 = GIFT
+            end)
+        end
+        v1 = PurchaseButton:FindFirstAncestorWhichIsA("GuiButton")
+        if PurchaseButton.Parent:IsA("Frame") and PurchaseButton.Parent:HasTag(u171.PRODUCT_FRAME) then
+            v1 = PurchaseButton
+        end
+        if v1 == nil then
+            return
+        end
+        u221:Connect(function() -- Line: 834 -- upvalues: update_button_ownership (upval), u22 (val), PurchaseButton (val)
+            update_button_ownership(u22, PurchaseButton)
+        end)
+        u49.is_gift_mode.hook(function() -- Line: 839 -- upvalues: update_button_ownership (upval), u22 (val), PurchaseButton (val)
+            update_button_ownership(u22, PurchaseButton)
+        end)
+        u49.enabled.hook(function() -- Line: 844 -- upvalues: update_button_ownership (upval), u22 (val), PurchaseButton (val)
+            update_button_ownership(u22, PurchaseButton)
+        end)
+        UI.on_click(v1, on_click)
+    end)
+    Util.watch_attribute(LocalPlayer, "is_server_purchasing", function(a1) end)
+    MarketplaceService.PromptProductPurchaseFinished:Connect(function() -- Line: 859 -- upvalues: u49 (upval)
+        u49.prompt_open.set(false)
+    end)
+    MarketplaceService.PromptSubscriptionPurchaseFinished:Connect(function() -- Line: 863 -- upvalues: u49 (upval)
+        u49.prompt_open.set(false)
+    end)
+    MarketplaceService.PromptGamePassPurchaseFinished:Connect(function() -- Line: 867 -- upvalues: u49 (upval)
+        u49.prompt_open.set(false)
+    end)
+    UI.on_click("GiftButton", function() -- Line: 871 -- upvalues: u49 (upval), turn_off_gifting (upval)
+        if u49.prompt_open.get() then
+            return
+        end
+        if u49.is_gift_mode.get() then
+            turn_off_gifting()
+            return
+        end
+        u49.is_gift_mode.set(true)
+    end)
+    local GiftButton = UI.get("GiftButton")
+    GiftButton.Visible = u49.FLAG_CAN_GIFT_PRODUCTS
+    u49.is_gift_mode.hook(function(a1) -- Line: 883 -- upvalues: UI (upval)
+        local FinalDividerFrame = UI.get("FinalDividerFrame")
+        FinalDividerFrame.Visible = not a1
+    end)
+    Data.on_connect(function() -- Line: 887 -- upvalues: u221 (upval)
+        u221:Fire()
+    end)
+    u49.policy_subscriptions_can_be_purchased.hook(function(a1) -- Line: 891 -- upvalues: BlockSpinSubscriptionClient (upval)
+        BlockSpinSubscriptionClient.policy_subscriptions_can_be_purchased.set(a1)
+    end)
+    update_policies()
+end
+
+return u49

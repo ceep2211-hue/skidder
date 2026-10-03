@@ -1,0 +1,43 @@
+-- Path : ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator.Items.SkinColors
+-- Script path: ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator.Items.SkinColors
+-- Decompile time: 0.99 ms
+
+local skin_color = require(script.Parent.Parent.CharacterCreatorTypes).all_item_types.skin_color
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local v1 = {
+    {255, 224, 189},
+    {255, 205, 148},
+    {229, 194, 152},
+    {210, 161, 124},
+    {178, 126, 92},
+    {155, 94, 52},
+    {102, 60, 40},
+    {76, 47, 39},
+    {57, 37, 30},
+}
+local v2 = {}
+for i, j in v1 do
+    table.insert(v2, {item_name = "Skin " .. tostring(i), item_type = skin_color, skin_color = j})
+end
+return {
+    focus_part_name = "Head",
+    page_offset = Vector3.new(2, -1.5, 12),
+    page_name = skin_color,
+    colors = v1,
+    items_for_page = v2,
+    run_equipped_sound_effect = function(a1, a2) end,
+    get_equipped_status = function(a1, a2) -- Line: 33 -- upvalues: Util (val) -- types: a2: userdata
+        local HeadColor = a2.HeadColor
+        if a1.skin_color and HeadColor == Util.table_to_color(a1.skin_color, true) then
+            return true
+        end
+        return false
+    end,
+    send_equipped_to_server = function(a1, a2) -- Line: 43 -- upvalues: Net (val) -- types: a1: boolean
+        if not a1 then
+            return
+        end
+        Net.send("change_skin_color", a2.skin_color)
+    end,
+}

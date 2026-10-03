@@ -1,0 +1,264 @@
+-- Path : ReplicatedStorage.Modules.Core.Spring
+-- Script path: ReplicatedStorage.Modules.Core.Spring
+-- Decompile time: 6.79 ms
+
+local Tbl = require(game.ReplicatedStorage.Modules.Core.Tbl)
+local v1 = {}
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local sin = math.sin
+local cos = math.cos
+local u28 = State.new(0)
+u28.hook(function(a1) end)
+
+local function new(a1, a2, a3, a4) -- Line: 13
+    -- upvalues: cos (val), sin (val), State (val), Tbl (val), u28 (val), Util (val)
+    local u11, u20, u28_2, u5
+    if not a1 then
+        u5 = 0
+    else
+        u5 = a1 * 0
+        if not u5 then
+            u5 = 0
+        end
+    end
+    if not a4 then
+        u11 = u5
+    else
+        u11 = a4
+        if not u11 then
+            u11 = u5
+        end
+    end
+    local u13 = u11
+    if not a2 then
+        u20 = 6.283185307179586
+    else
+        u20 = 6.283185307179586 * a2
+        if not u20 then
+            u20 = 6.283185307179586
+        end
+    end
+    if not a3 then
+        u28_2 = 0.5
+    else
+        u28_2 = a3
+        if not u28_2 then
+            u28_2 = 0.5
+        end
+    end
+    local u30 = tick()
+
+    local function get_s(a1) -- Line: 20
+        -- upvalues: u30 (ref), u28_2 (ref), u11 (ref), u13 (ref), u20 (ref), cos (upval), u5 (ref), sin (upval)
+        local v1 = a1 - u30
+        local v2 = (1 - u28_2 * u28_2) ^ 0.5
+        local v3 = u11
+        local v4 = u13 - u11
+        local v5 = v2 * u20 * v1
+        local v6 = v4 * cos(v5)
+        local v7 = (u5 / u20 + u28_2 * (u13 - u11)) / v2
+        local v8 = v2 * u20 * v1
+        return v3 + (v6 + v7 * sin(v8)) / 2.718281828459045 ^ (u28_2 * u20 * v1)
+    end
+
+    local function get_v(a1) -- Line: 25
+        -- upvalues: u30 (ref), u28_2 (ref), u13 (ref), u11 (ref), u5 (ref), u20 (ref), cos (upval), sin (upval)
+        local v1 = a1 - u30
+        local v2 = (1 - u28_2 * u28_2) ^ 0.5
+        local v3 = u13 - u11
+        local v4 = (u5 / u20 + u28_2 * v3) / v2
+        local v5 = u20
+        local v6 = v2 * v4 - u28_2 * v3
+        local v7 = v2 * u20 * v1
+        local v8 = v6 * cos(v7)
+        local v9 = v2 * v3 + u28_2 * v4
+        local v10 = v2 * u20 * v1
+        return v5 * (v8 - v9 * sin(v10)) / 2.718281828459045 ^ (u28_2 * u20 * v1)
+    end
+
+    local function get_sv(a1) -- Line: 32
+        -- upvalues: u30 (ref), u28_2 (ref), u13 (ref), u11 (ref), u5 (ref), u20 (ref), sin (upval), cos (upval)
+        local v1 = a1 - u30
+        local v2 = (1 - u28_2 * u28_2) ^ 0.5
+        local v3 = u13 - u11
+        local v4 = (u5 / u20 + u28_2 * v3) / v2
+        local v5 = v2 * u20 * v1
+        local v6 = sin(v5)
+        local v7 = v2 * u20 * v1
+        v5 = cos(v7)
+        v7 = 2.718281828459045 ^ (u28_2 * u20 * v1)
+        return u11 + (v3 * v5 + v4 * v6) / v7, u20 * ((v2 * v4 - u28_2 * v3) * v5 - (v2 * v3 + u28_2 * v4) * v6) / v7
+    end
+
+    local u51 = {}
+
+    local function hook(a1) -- Line: 43 -- upvalues: State (upval), get_sv (val), u51 (val), Tbl (upval)
+        if State.stop_duplicate_hooks_while_refreshing then
+            a1(get_sv(tick()))
+            return
+        end
+        a1(get_sv(tick()))
+        table.insert(u51, a1)
+        return {
+            unhook = function() -- Line: 51 -- upvalues: Tbl (upval), u51 (upval), a1 (val)
+                Tbl.remove_value(u51, a1)
+            end,
+        }
+    end
+
+    local u53 = nil
+
+    local function start_updates() -- Line: 58
+        -- upvalues: u53 (ref), u28 (upval), Util (upval), get_sv (val), u11 (ref), u13 (ref), a1 (val), u51 (val)
+        if u53 then
+            return
+        end
+        local u1 = nil
+        u28.update(function(a1) -- Line: 61
+            return a1 + 1
+        end)
+        u53 = Util.run(function() -- Line: 62
+            -- upvalues: get_sv (upval), u1 (ref), u11 (upval), u28 (upval), u53 (upval), u13 (upval), a1 (upval)
+            -- upvalues: u51 (upval)
+            local v1, v2 = get_sv(tick())
+            if u1 then
+                if if typeof(v2) ~= "number" then (u1 - v2).Magnitude < 1e-08 else v2 ^ 2 + (v1 - u11) ^ 2 < 1e-08 then
+                    u28.update(function(a1) -- Line: 65
+                        return a1 - 1
+                    end)
+                    u53:Disconnect()
+                    u53 = nil
+                    v1 = u11
+                    v2 = a1
+                    u13 = u11
+                end
+            end
+            for i, j in u51 do
+                task.spawn(j, v1, v2)
+            end
+            u1 = v2
+        end)
+    end
+
+    start_updates()
+    return (setmetatable({}, {
+        __index = function(a1, a2) -- Line: 80
+            -- upvalues: State (upval), u30 (ref), u28_2 (ref), u11 (ref), u13 (ref), u20 (ref), cos (upval), u5 (ref)
+            -- upvalues: sin (upval), get_v (val), get_sv (val), hook (val), u53 (ref)
+            local v1 = tick()
+            if a2 == "s" then
+                if State.poll then
+                    State.poll(a1)
+                end
+                local v2 = v1 - u30
+                local v3 = (1 - u28_2 * u28_2) ^ 0.5
+                local v4 = u11
+                local v5 = u13 - u11
+                local v6 = v3 * u20 * v2
+                local v7 = v5 * cos(v6)
+                local v8 = (u5 / u20 + u28_2 * (u13 - u11)) / v3
+                local v9 = v3 * u20 * v2
+                return v4 + (v7 + v8 * sin(v9)) / 2.718281828459045 ^ (u28_2 * u20 * v2)
+            end
+            if a2 == "v" then
+                return (get_v(v1))
+            end
+            if a2 == "r" then
+                return u11
+            end
+            if a2 == "f" then
+                return u20 / 6.283185307179586
+            end
+            if a2 == "get_sv" then
+                return get_sv
+            end
+            if a2 == "hook" then
+                return hook
+            end
+            if a2 == "is_active" then
+                return not not u53
+            end
+            error(a2 .. " is not a valid member of spring!", 0)
+        end,
+        __newindex = function(a1, a2, a3) -- Line: 103
+            -- upvalues: get_v (val), u13 (ref), u5 (ref), u30 (ref), u28_2 (ref), u11 (ref), u20 (ref), cos (upval)
+            -- upvalues: sin (upval), get_sv (val), start_updates (val)
+            local v1, v2, v3
+            local v4 = tick()
+            if a2 == "s" then
+                v1 = get_v(v4)
+                u13 = a3
+                u5 = v1
+                start_updates()
+                u30 = v4
+                return
+            end
+            if a2 == "v" then
+                v2 = v4 - u30
+                v3 = (1 - u28_2 * u28_2) ^ 0.5
+                local v5 = u11
+                local v6 = u13 - u11
+                local v7 = v3 * u20 * v2
+                local v8 = v6 * cos(v7)
+                local v9 = (u5 / u20 + u28_2 * (u13 - u11)) / v3
+                local v10 = v3 * u20 * v2
+                u13 = v5 + (v8 + v9 * sin(v10)) / 2.718281828459045 ^ (u28_2 * u20 * v2)
+                u5 = a3
+                start_updates()
+                u30 = v4
+                return
+            end
+            if a2 == "a" then
+                v1, v2 = get_sv(v4)
+                v3 = v2 + a3
+                u13 = v1
+                u5 = v3
+                start_updates()
+                u30 = v4
+                return
+            end
+            if a2 == "r" then
+                if a3 == u11 then
+                    return
+                end
+                v1, v2 = get_sv(v4)
+                u13 = v1
+                u5 = v2
+                u11 = a3
+                start_updates()
+                u30 = v4
+                return
+            end
+            if a2 == "d" then
+                v1, v2 = get_sv(v4)
+                u13 = v1
+                u5 = v2
+                u28_2 = if not (a3 < 0) then a3 < 1 and a3 or 1 else 0
+            elseif a2 ~= "f" then
+                error(a2 .. " is not a valid member of spring!", 0)
+            else
+                v1, v2 = get_sv(v4)
+                u13 = v1
+                u5 = v2
+                u20 = if not (a3 < 0) then a3 * 6.283185307179586 else 0
+            end
+            start_updates()
+            u30 = v4
+        end,
+    }))
+end
+
+function v1.new(a1, a2, a3) -- Line: 133 -- upvalues: new (val) -- types: a1: number, a2: number, a3: number
+    return (new(0, a1, a2, a3))
+end
+
+function v1.new_v3(a1, a2, a3) -- Line: 137 -- upvalues: new (val) -- types: a1: number, a2: number, a3: vector
+    return (new(Vector3.new(), a1, a2, a3))
+end
+
+function v1.new_v2(a1, a2, a3) -- Line: 141 -- upvalues: new (val) -- types: a1: number, a2: number, a3: userdata
+    return (new(Vector2.new(), a1, a2, a3))
+end
+
+return v1

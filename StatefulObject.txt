@@ -1,0 +1,285 @@
+-- Path : ReplicatedStorage.Modules.Core.StatefulObject
+-- Script path: ReplicatedStorage.Modules.Core.StatefulObject
+-- Decompile time: 6.97 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+require(game.ReplicatedStorage.Modules.Core.Net)
+require(game.ReplicatedStorage.Modules.Core.Tbl)
+require(game.ReplicatedStorage.Modules.Core.Char)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local u46 = {
+    FLAG_STATE_HIDE_ATTRIBUTES = (require(ReplicatedStorage.Modules.Game.GameInfo.FlagManager)).FLAG_STATE_HIDE_ATTRIBUTES,
+}
+
+local function hash_string(a1) -- Line: 19
+    local v1 = 5381
+    local v2 = #a1
+    for i = 1, v2 do
+        v1 = (v1 * 33 + string.byte(a1, i)) % 4294967296
+    end
+    return (tostring(v1))
+end
+
+local function make_protected_name(a1) -- Line: 28 -- upvalues: u46 (val) -- types: a1: string
+    if not u46.FLAG_STATE_HIDE_ATTRIBUTES then
+        return a1
+    end
+    local v1 = workspace:GetAttribute("HashKey") or workspace:GetAttributeChangedSignal("HashKey"):Wait()
+    local v2 = 5381
+    local v3 = #a1
+    for i = 1, v3 do
+        v2 = (v2 * 33 + string.byte(a1, i)) % 4294967296
+    end
+    return v1 .. tostring(v2)
+end
+
+local u50 = {}
+local u51 = {}
+
+local function table_write(a1, a2, a3) -- Line: 47
+    a1[a2] = a3
+end
+
+function u46.new(a1, a2, a3) -- Line: 51
+    -- upvalues: Util (val), u46 (val), State (val), u51 (val)
+    local Attribute_2, v1, v2, v3, v4
+    local u131 = {states = a2, instance = a1}
+    local u4 = {}
+
+    function u131.get(...) -- Line: 59 -- upvalues: Util (upval), a1 (val)
+        return Util.wait_for_descendant(a1, ...)
+    end
+
+    local u6 = {}
+
+    function u131.clean(a1) -- Line: 65 -- upvalues: u6 (val)
+        table.insert(u6, a1)
+    end
+
+    a1.Destroying:Connect(function() -- Line: 69 -- upvalues: u6 (val)
+        local v1 = nil
+        local v2 = nil
+        for i, j in u6, v1, v2 do
+            if typeof(j) == "RBXScriptConnection" then
+                j:Disconnect()
+            elseif typeof(j) ~= "table" then
+                if typeof(j) == "function" then
+                    task.spawn(j)
+                end
+            elseif j.unhook then
+                j.unhook()
+            elseif typeof(j) == "function" then
+                task.spawn(j)
+            end
+        end
+        table.clear(u6)
+    end)
+    u131.states = a3()
+    local u159 = {}
+
+    function u131.update_from_attribute(a1_2, a2) -- Line: 86 -- upvalues: a1 (val), u159 (val), u131 (val)
+        local Attribute = a1:GetAttribute(a2)
+        if Attribute ~= nil then
+            u159[a1_2] = Attribute
+            u131.states[a1_2].set(Attribute)
+        end
+    end
+
+    function u131.update_from_object_value(a1_2, a2) -- Line: 94 -- upvalues: a1 (val), u159 (val), u131 (val)
+        local Value = a1:WaitForChild(a2).Value
+        u159[a1_2] = Value
+        u131.states[a1_2].set(Value)
+    end
+
+    function u131.refresh() -- Line: 100 -- upvalues: u131 (val), u46 (upval), State (upval), u4 (val)
+        local v1, v2, v3, v4, v5
+        local v6 = nil
+        local v7 = nil
+        for i, j in u131.states, v6, v7 do
+            if u46.FLAG_STATE_HIDE_ATTRIBUTES then
+                v5 = workspace:GetAttribute("HashKey") or workspace:GetAttributeChangedSignal("HashKey"):Wait()
+                v1 = 5381
+                v2 = #i
+                for k = 1, v2 do
+                    v1 = (v1 * 33 + string.byte(i, k)) % 4294967296
+                end
+                v3 = v5 .. tostring(v1)
+            else
+                v3 = i
+            end
+            v4 = j.get()
+            if v4 == nil then
+                u131.update_from_object_value(i, v3)
+            elseif typeof(v4) ~= "Instance" then
+                u131.update_from_attribute(i, v3)
+            else
+                u131.update_from_object_value(i, v3)
+            end
+        end
+        State.stop_duplicate_hooks_while_refreshing = true
+        for n, m in u4 do
+            m()
+        end
+        State.stop_duplicate_hooks_while_refreshing = false
+    end
+
+    function u131.add_refresh_function(a1_2) -- Line: 117 -- upvalues: u4 (val), u51 (upval), a1 (val)
+        if typeof(a1_2) == "function" then
+            a1_2()
+            table.insert(u4, a1_2)
+            return
+        end
+        if a1_2 ~= false then
+            if u51[a1.Name] then
+                return
+            end
+            u51[a1.Name] = true
+            error((("StatefulObject \"%*\" hook did not return function or false. Implies that this object has not considered streaming."):format(a1.Name)))
+        end
+    end
+
+    local v5 = nil
+    local v6 = nil
+    for i, j in u131.states, v5, v6 do
+        v1 = j.get()
+        if u46.FLAG_STATE_HIDE_ATTRIBUTES then
+            v2 = workspace:GetAttribute("HashKey") or workspace:GetAttributeChangedSignal("HashKey"):Wait()
+            v3 = 5381
+            v4 = #i
+            for k = 1, v4 do
+                v3 = (v3 * 33 + string.byte(i, k)) % 4294967296
+            end
+            u94 = v2 .. tostring(v3)
+        else
+            local u94 = i
+        end
+        if v1 == nil then
+            u131.update_from_object_value(i, u94)
+            ;((a1:WaitForChild(u94)):GetPropertyChangedSignal("Value")):Connect(function() -- Line: 134 -- upvalues: u131 (val), i (val), u94 (val)
+                u131.update_from_object_value(i, u94)
+            end)
+            j.hook(function(a1_2) -- Line: 137 -- upvalues: u159 (val), i (val), a1 (val), u94 (val)
+                if a1_2 ~= u159[i] then
+                    local v1 = a1:FindFirstChild(u94)
+                    if v1 then
+                        v1.Value = a1_2
+                    end
+                end
+            end)
+        elseif typeof(v1) ~= "Instance" then
+            if a1:GetAttribute(i) and u94 ~= i then
+                Attribute_2 = a1:GetAttribute(i)
+                a1:SetAttribute(i, nil)
+                a1:SetAttribute(u94, Attribute_2)
+            end
+            u131.update_from_attribute(i, u94)
+            ;(a1:GetAttributeChangedSignal(u94)):Connect(function() -- Line: 155 -- upvalues: u131 (val), i (val), u94 (val)
+                u131.update_from_attribute(i, u94)
+            end)
+            j.hook(function(a1_2) -- Line: 158 -- upvalues: u159 (val), i (val), a1 (val), u94 (val)
+                if a1_2 ~= u159[i] then
+                    a1:SetAttribute(u94, a1_2)
+                end
+            end)
+        else
+            u131.update_from_object_value(i, u94)
+            ;((a1:WaitForChild(u94)):GetPropertyChangedSignal("Value")):Connect(function() -- Line: 134 -- upvalues: u131 (val), i (val), u94 (val)
+                u131.update_from_object_value(i, u94)
+            end)
+            j.hook(function(a1_2) -- Line: 137 -- upvalues: u159 (val), i (val), a1 (val), u94 (val)
+                if a1_2 ~= u159[i] then
+                    local v1 = a1:FindFirstChild(u94)
+                    if v1 then
+                        v1.Value = a1_2
+                    end
+                end
+            end)
+        end
+    end
+    u131.streamed = State.new(a1:IsDescendantOf(workspace))
+    a1.AncestryChanged:Connect(function() -- Line: 168 -- upvalues: u131 (val), a1 (val)
+        u131.streamed.set(a1:IsDescendantOf(workspace))
+    end)
+    return u131
+end
+
+function u46.new_class(a1, a2) -- Line: 175 -- upvalues: u46 (val), Util (val), u50 (val) -- types: a2: string
+    local u2 = {}
+    local u4 = a1()
+    local v1 = {states = u4, instance = Instance.new("Model")}
+    local u9 = nil
+    u2.states = u4
+    u2.objects = {u9}
+    u2.hooks = {}
+
+    function u2.get(a1) -- Line: 186 -- upvalues: u2 (val)
+        while not u2.objects[a1] do
+            task.wait()
+            if a1.Parent == nil then
+                return nil
+            end
+        end
+        return u2.objects[a1]
+    end
+
+    function u2.find(a1) -- Line: 197 -- upvalues: u2 (val)
+        return u2.objects[a1]
+    end
+
+    function u2.new(a1_2) -- Line: 201 -- upvalues: u46 (upval), u4 (val), a1 (val), u2 (val) -- types: a1_2: userdata
+        local v1 = u46.new(a1_2, u4, a1)
+        u2.objects[a1_2] = v1
+        a1_2.Destroying:Connect(function() -- Line: 205 -- upvalues: u2 (upval), a1_2 (val)
+            u2.objects[a1_2] = nil
+        end)
+        for i, j in u2.hooks do
+            v1.add_refresh_function(j(v1))
+        end
+        return v1
+    end
+
+    function u2.hook(a1) -- Line: 216 -- upvalues: u2 (val), u9 (ref)
+        local v1 = nil
+        local v2 = nil
+        local v3 = a1
+        for i, j in u2.objects, v1, v2 do
+            if u9 then
+                v3(u9)
+            end
+            j.add_refresh_function(v3(j))
+        end
+        table.insert(u2.hooks, v3)
+    end
+
+    task.spawn(function() -- Line: 224 -- upvalues: Util (upval), a2 (val), u2 (val)
+        Util.hook_tag(a2, function(a1) -- Line: 225 -- upvalues: u2 (upval)
+            while true do
+                if a1:IsDescendantOf(workspace) then
+                    break
+                end
+                a1.AncestryChanged:Wait()
+            end
+            if u2.objects[a1] then
+                u2.objects[a1].refresh()
+                return
+            end
+            task.spawn(u2.new, a1)
+        end)
+    end)
+    u50[a2] = u2
+    return u2
+end
+
+function u46.get_object(a1, a2) -- Line: 259 -- upvalues: u50 (val) -- types: a1: string, a2: userdata
+    if u50[a1] then
+        return u50[a1].get(a2)
+    end
+    warn((("Class with %* doesn't exist, yet?"):format(a1)))
+end
+
+function u46.initiate() end
+
+function u46.loaded() end
+
+return u46

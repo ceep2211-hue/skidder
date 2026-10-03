@@ -1,0 +1,111 @@
+-- Path : ReplicatedStorage.Modules.Core.Signal
+-- Script path: ReplicatedStorage.Modules.Core.Signal
+-- Decompile time: 1.92 ms
+
+local u0 = nil
+
+local function acquireRunnerThreadAndCallEventHandler(a1, ...) -- Line: 34 -- upvalues: u0 (ref)
+    local v1 = u0
+    u0 = nil
+    a1(...)
+    u0 = v1
+end
+
+local function runEventHandlerInFreeThread() -- Line: 45 -- upvalues: acquireRunnerThreadAndCallEventHandler (val)
+    while true do
+        acquireRunnerThreadAndCallEventHandler(coroutine.yield())
+    end
+end
+
+local u3 = {}
+u3.__index = u3
+
+function u3.new(a1, a2) -- Line: 60 -- upvalues: u3 (val)
+    return (setmetatable({_connected = true, _next = false, _signal = a1, _fn = a2}, u3))
+end
+
+function u3:Disconnect() -- Line: 69
+    self._connected = false
+    if self._signal._handlerListHead == self then
+        self._signal._handlerListHead = self._next
+        return
+    end
+    local _handlerListHead = self._signal._handlerListHead
+    while _handlerListHead do
+        if _handlerListHead._next == self then
+            break
+        end
+        _handlerListHead = _handlerListHead._next
+    end
+    if _handlerListHead then
+        _handlerListHead._next = self._next
+    end
+end
+
+local v1 = {
+    __index = function(a1, a2) -- Line: 91
+        error(("Attempt to get Connection::%s (not a valid member)"):format((tostring(a2))), 2)
+    end,
+    __newindex = function(a1, a2, a3) -- Line: 94
+        error(("Attempt to set Connection::%s (not a valid member)"):format((tostring(a2))), 2)
+    end,
+}
+setmetatable(u3, v1)
+local u12 = {}
+u12.__index = u12
+
+function u12.new() -- Line: 103 -- upvalues: u12 (val)
+    return (setmetatable({_handlerListHead = false}, u12))
+end
+
+function u12:Connect(a2) -- Line: 109 -- upvalues: u3 (val)
+    local v1 = u3.new(self, a2)
+    if not self._handlerListHead then
+        self._handlerListHead = v1
+        return v1
+    end
+    v1._next = self._handlerListHead
+    self._handlerListHead = v1
+    return v1
+end
+
+function u12.DisconnectAll(a1) -- Line: 122
+    a1._handlerListHead = false
+end
+
+function u12.Fire(a1, ...) -- Line: 130 -- upvalues: u0 (ref), runEventHandlerInFreeThread (val)
+    local _handlerListHead = a1._handlerListHead
+    while _handlerListHead do
+        if _handlerListHead._connected then
+            if not u0 then
+                u0 = coroutine.create(runEventHandlerInFreeThread)
+                coroutine.resume(u0)
+            end
+            task.spawn(u0, _handlerListHead._fn, ...)
+        end
+        _handlerListHead = _handlerListHead._next
+    end
+end
+
+function u12.Wait(a1) -- Line: 147
+    local u2 = coroutine.running()
+    local u3 = nil
+    local v1 = a1:Connect(function(...) -- Line: 150 -- upvalues: u3 (ref), u2 (val)
+        u3:Disconnect()
+        task.spawn(u2, ...)
+    end)
+    return (coroutine.yield())
+end
+
+function u12.Once(a1, a2) -- Line: 159
+    local u2 = nil
+    u2 = (a1:Connect(function(...) -- Line: 161 -- upvalues: u2 (ref), a2 (val)
+        if u2._connected then
+            u2:Disconnect()
+        end
+        a2(...)
+    end))
+    return u2
+end
+
+return u12

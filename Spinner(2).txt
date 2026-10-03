@@ -1,0 +1,16 @@
+-- Path : ReplicatedStorage.Modules.Game.UI.Spinner
+-- Script path: ReplicatedStorage.Modules.Game.UI.Spinner
+-- Decompile time: 0.34 ms
+
+local RadialModule = require(game.ReplicatedStorage.Modules.Game.UI.RadialModule)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+return {
+    new = function() -- Line: 6 -- upvalues: RadialModule (val), Util (val)
+        local v1 = script.Spinner:Clone()
+        local v2 = RadialModule.new(v1)
+        v2:Init()
+        v2:SetProgress(75)
+        Util.tween(v1, TweenInfo.new(0.8, Enum.EasingStyle.Linear, Enum.EasingDirection.In, -1), {Rotation = 180})
+        return v1
+    end,
+}

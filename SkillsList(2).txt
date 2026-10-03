@@ -1,0 +1,268 @@
+-- Path : ReplicatedStorage.Modules.Game.Skills.SkillsList
+-- Script path: ReplicatedStorage.Modules.Game.Skills.SkillsList
+-- Decompile time: 7.00 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+require(game.ReplicatedStorage.Modules.Core.Tbl)
+game:GetService("RunService")
+local XPFormula = require(game.ReplicatedStorage.Modules.Game.Skills.XPFormula)
+local StringManipulation = require(game.ReplicatedStorage.Modules.Core.StringManipulation)
+local FlagManager = require(ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local u38 = {
+    FLAG_FARMING_ENABLED = FlagManager.FLAG_FARMING_ENABLED,
+    FLAG_FISHING_ENABLED = FlagManager.FLAG_FISHING_ENABLED,
+}
+u38.names = {
+    janitor = "Janitor",
+    cook = "Cook",
+    shelf_stocker = "Shelf Stocker",
+    pistol = "Handgun",
+    rifle = "Rifle",
+    shotgun = "Shotgun",
+    stamina = "Stamina",
+    total_level = "Total Level",
+    atm_hacker = "Swiper",
+    farmer = "Farming",
+    fishing = "Fishing",
+}
+u38.skill_icons = {
+    janitor = "rbxassetid://135184226521959",
+    cook = "rbxassetid://129264619893382",
+    shelf_stocker = "rbxassetid://134812486114734",
+    pistol = "rbxassetid://97846154366870",
+    rifle = "rbxassetid://124555430577178",
+    shotgun = "rbxassetid://101271375930409",
+    stamina = "rbxassetid://92120615566345",
+    total_level = "rbxassetid://102674664582760",
+    atm_hacker = "rbxassetid://74076710555685",
+    farmer = "rbxassetid://117400976699935",
+    fishing = "rbxassetid://106570831786716",
+}
+u38.skills_relevant_job = {janitor = {"janitor"}, cook = {"steakhouse_cook"}, shelf_stocker = {"shelf_stocker"}}
+u38.list = {}
+
+function u38.is_job_related_to_skill(a1, a2) -- Line: 69 -- upvalues: u38 (val) -- types: a1: string, a2: string
+    local v1 = u38.skills_relevant_job[a1]
+    if not v1 then
+        return false
+    end
+    if table.find(v1, a2) then
+        return true
+    end
+    return false
+end
+
+local function get_xp_for_skill(a1, a2) -- Line: 79
+    for i, j in a1.xp do
+        if i == a2 then
+            return j
+        end
+    end
+    return 1
+end
+
+function u38.has_skill(a1, a2, a3) -- Line: 89 -- upvalues: XPFormula (val), u38 (val) -- types: a2: string, a3: string
+    local v1
+    for i, j in a1.xp do
+        if i == a2 then
+            v1 = XPFormula.xp_to_level(j)
+            for k, n in u38.list[a2] do
+                if n.name == a3 then
+                    if not (n.level <= v1) then
+                        break
+                    end
+                    return true, n
+                end
+            end
+            return false, nil
+        end
+    end
+    v1 = XPFormula.xp_to_level(1)
+    for m, i5 in u38.list[a2] do
+        if i5.name == a3 then
+            if not (i5.level <= v1) then
+                break
+            end
+            return true, i5
+        end
+    end
+    return false, nil
+end
+
+function u38.get_level_for_skill(a1, a2) -- Line: 108 -- upvalues: u38 (val) -- types: a1: string, a2: string
+    for i, j in u38.list[a1] do
+        if j.name == a2 then
+            return j.level
+        end
+    end
+    return -1
+end
+
+function u38.get_last_unlocked_skill(a1, a2) -- Line: 117 -- upvalues: XPFormula (val), u38 (val) -- types: a2: string
+    local v1
+    local v2 = nil
+    for i, j in a1.xp, v2 do
+        if i == a2 then
+            v1 = XPFormula.xp_to_level(j)
+            v2 = nil
+            for k, n in u38.list[a2] do
+                if n.level <= v1 then
+                    v2 = n
+                end
+            end
+            return v2
+        end
+    end
+    v1 = XPFormula.xp_to_level(1)
+    v2 = nil
+    for m, i5 in u38.list[a2] do
+        if i5.level <= v1 then
+            v2 = i5
+        end
+    end
+    return v2
+end
+
+function u38.get_skill_unlock_info(a1, a2) -- Line: 132 -- upvalues: u38 (val) -- types: a1: string, a2: string
+    local v1 = u38.names[a1]
+    for i, j in u38.list[a1] do
+        if j.name == a2 then
+            return (("This item can be unlocked by reaching level %* in the %* skill"):format(j.level, v1))
+        end
+    end
+    return ""
+end
+
+function u38.init() -- Line: 146 -- upvalues: u38 (val), StringManipulation (val)
+    local item_info, reward_info, reward_info_2, v1, v2, v3, v4
+    for i, j in script:GetChildren() do
+        if j:IsA("ModuleScript") then
+            if j.Name ~= "farmer" then
+                if j.Name ~= "fishing" then
+                    v2 = require(j)
+                    v3 = nil
+                    v4 = nil
+                    for k, n in v2, v3, v4 do
+                        v1 = {
+                            ["{percentage_increase}"] = n.reward_info and n.reward_info.percentage_increase or nil,
+                        }
+                        v1["{stamina_capacity_increase}"] = n.reward_info and n.reward_info.stamina_capacity_increase or nil
+                        v1["{stamina_regeneration_increase}"] = n.reward_info and n.reward_info.stamina_regeneration_increase or nil
+                        v1["{speed_percentage_increase}"] = n.reward_info and n.reward_info.speed_percentage_increase or nil
+                        v1["{bar_percentage_increase}"] = n.reward_info and n.reward_info.bar_percentage_increase or nil
+                        v1["{pay_percentage_increase}"] = n.reward_info and n.reward_info.pay_percentage_increase or nil
+                        v1["{pay_multiplier_increase}"] = n.reward_info and n.reward_info.pay_multiplier_increase or nil
+                        reward_info = n.reward_info and n.reward_info.extra_box
+                        v1["{extra_box}"] = reward_info
+                        reward_info_2 = n.reward_info and n.reward_info.extra_chance
+                        v1["{extra_chance}"] = reward_info_2
+                        v1["{crate_name}"] = n.reward_info and n.reward_info.crate_name or nil
+                        item_info = n.item_info and n.item_info.amount
+                        v1["{amount}"] = item_info
+                        v1["{level}"] = n.level
+                        StringManipulation.recursive_string_search(v1, n)
+                    end
+                    u38.list[j.Name] = v2
+                elseif u38.FLAG_FISHING_ENABLED then
+                    v2 = require(j)
+                    v3 = nil
+                    v4 = nil
+                    for m, i5 in v2, v3, v4 do
+                        v1 = {
+                            ["{percentage_increase}"] = i5.reward_info and i5.reward_info.percentage_increase or nil,
+                        }
+                        v1["{stamina_capacity_increase}"] = i5.reward_info and i5.reward_info.stamina_capacity_increase or nil
+                        v1["{stamina_regeneration_increase}"] = i5.reward_info and i5.reward_info.stamina_regeneration_increase or nil
+                        v1["{speed_percentage_increase}"] = i5.reward_info and i5.reward_info.speed_percentage_increase or nil
+                        v1["{bar_percentage_increase}"] = i5.reward_info and i5.reward_info.bar_percentage_increase or nil
+                        v1["{pay_percentage_increase}"] = i5.reward_info and i5.reward_info.pay_percentage_increase or nil
+                        v1["{pay_multiplier_increase}"] = i5.reward_info and i5.reward_info.pay_multiplier_increase or nil
+                        reward_info = i5.reward_info and i5.reward_info.extra_box
+                        v1["{extra_box}"] = reward_info
+                        reward_info_2 = i5.reward_info and i5.reward_info.extra_chance
+                        v1["{extra_chance}"] = reward_info_2
+                        v1["{crate_name}"] = i5.reward_info and i5.reward_info.crate_name or nil
+                        item_info = i5.item_info and i5.item_info.amount
+                        v1["{amount}"] = item_info
+                        v1["{level}"] = i5.level
+                        StringManipulation.recursive_string_search(v1, i5)
+                    end
+                    u38.list[j.Name] = v2
+                end
+            elseif u38.FLAG_FARMING_ENABLED then
+                if j.Name ~= "fishing" then
+                    v2 = require(j)
+                    v3 = nil
+                    v4 = nil
+                    for i6, i7 in v2, v3, v4 do
+                        v1 = {
+                            ["{percentage_increase}"] = i7.reward_info and i7.reward_info.percentage_increase or nil,
+                        }
+                        v1["{stamina_capacity_increase}"] = i7.reward_info and i7.reward_info.stamina_capacity_increase or nil
+                        v1["{stamina_regeneration_increase}"] = i7.reward_info and i7.reward_info.stamina_regeneration_increase or nil
+                        v1["{speed_percentage_increase}"] = i7.reward_info and i7.reward_info.speed_percentage_increase or nil
+                        v1["{bar_percentage_increase}"] = i7.reward_info and i7.reward_info.bar_percentage_increase or nil
+                        v1["{pay_percentage_increase}"] = i7.reward_info and i7.reward_info.pay_percentage_increase or nil
+                        v1["{pay_multiplier_increase}"] = i7.reward_info and i7.reward_info.pay_multiplier_increase or nil
+                        reward_info = i7.reward_info and i7.reward_info.extra_box
+                        v1["{extra_box}"] = reward_info
+                        reward_info_2 = i7.reward_info and i7.reward_info.extra_chance
+                        v1["{extra_chance}"] = reward_info_2
+                        v1["{crate_name}"] = i7.reward_info and i7.reward_info.crate_name or nil
+                        item_info = i7.item_info and i7.item_info.amount
+                        v1["{amount}"] = item_info
+                        v1["{level}"] = i7.level
+                        StringManipulation.recursive_string_search(v1, i7)
+                    end
+                    u38.list[j.Name] = v2
+                elseif u38.FLAG_FISHING_ENABLED then
+                    v2 = require(j)
+                    v3 = nil
+                    v4 = nil
+                    for i8, i9 in v2, v3, v4 do
+                        v1 = {
+                            ["{percentage_increase}"] = i9.reward_info and i9.reward_info.percentage_increase or nil,
+                        }
+                        v1["{stamina_capacity_increase}"] = i9.reward_info and i9.reward_info.stamina_capacity_increase or nil
+                        v1["{stamina_regeneration_increase}"] = i9.reward_info and i9.reward_info.stamina_regeneration_increase or nil
+                        v1["{speed_percentage_increase}"] = i9.reward_info and i9.reward_info.speed_percentage_increase or nil
+                        v1["{bar_percentage_increase}"] = i9.reward_info and i9.reward_info.bar_percentage_increase or nil
+                        v1["{pay_percentage_increase}"] = i9.reward_info and i9.reward_info.pay_percentage_increase or nil
+                        v1["{pay_multiplier_increase}"] = i9.reward_info and i9.reward_info.pay_multiplier_increase or nil
+                        reward_info = i9.reward_info and i9.reward_info.extra_box
+                        v1["{extra_box}"] = reward_info
+                        reward_info_2 = i9.reward_info and i9.reward_info.extra_chance
+                        v1["{extra_chance}"] = reward_info_2
+                        v1["{crate_name}"] = i9.reward_info and i9.reward_info.crate_name or nil
+                        item_info = i9.item_info and i9.item_info.amount
+                        v1["{amount}"] = item_info
+                        v1["{level}"] = i9.level
+                        StringManipulation.recursive_string_search(v1, i9)
+                    end
+                    u38.list[j.Name] = v2
+                end
+            end
+        end
+    end
+end
+
+function u38.scan() -- Line: 193 -- upvalues: u38 (val)
+    local v1, v2
+    local v3 = {}
+    local v4 = nil
+    local v5 = nil
+    for i, j in u38.list, v4, v5 do
+        v1 = nil
+        v2 = nil
+        for k, n in j, v1, v2 do
+            if v3[n.name] then
+                warn("DUPLICATE SKILL LIST NAME ", n.name, " FOR JOB ", i)
+            end
+            v3[n.name] = true
+        end
+    end
+end
+
+u38.init()
+task.spawn(u38.scan)
+return u38

@@ -1,0 +1,26 @@
+-- Path : Workspace.Map.Tiles.ShoppingTile.Garage1.Interior.Crates.Garage Crate.CrateOptions.Spoilers I
+-- Script path: Workspace.Map.Tiles.ShoppingTile.Garage1.Interior.Crates.Garage Crate.CrateOptions.Spoilers I
+-- Decompile time: 0.59 ms
+
+local v1 = {
+    crate_name = script.Name,
+    crate_color_type = "Basic",
+    layout_order = 1,
+    bias = 0.81,
+    category = "spoiler",
+}
+local v2 = {}
+for i, j in {5, 6, 7} do
+    table.insert(v2, {item_type = "cosmetic", name = "Aero Max" .. tostring(j)})
+end
+for k, n in {2000, 3000} do
+    table.insert(v2, {item_type = "cosmetic", name = "Race X" .. tostring(n)})
+end
+for m, i5 in {1} do
+    table.insert(v2, {item_type = "cosmetic", name = "Sport Classic SRX-" .. tostring(i5)})
+end
+for i6, i7 in {3, 5} do
+    table.insert(v2, {item_type = "cosmetic", name = "Sport PlusX" .. tostring(i7)})
+end
+v1.items = v2
+return v1

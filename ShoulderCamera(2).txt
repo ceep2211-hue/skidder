@@ -1,0 +1,221 @@
+-- Path : ReplicatedStorage.Modules.Game.ShoulderCamera
+-- Script path: ReplicatedStorage.Modules.Game.ShoulderCamera
+-- Decompile time: 7.66 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local CFrameSpring = require(game.ReplicatedStorage.Modules.Core.CFrameSpring)
+local Spring = require(game.ReplicatedStorage.Modules.Core.Spring)
+require(game.ReplicatedStorage.Modules.Core.UI)
+local Keybinds = require(game.ReplicatedStorage.Modules.Game.Keybinds)
+local Crosshair = require(ReplicatedStorage.Modules.Game.UI.Crosshair)
+local Ragdoll = require(game.ReplicatedStorage.Modules.Game.Ragdoll)
+local CrouchSystem = require(game.ReplicatedStorage.Modules.Game.CrouchSystem)
+local SubMenuBackground = require(ReplicatedStorage.Modules.Game.UI.SubMenuBackground)
+local u80 = {}
+local LocalPlayer = game.Players.LocalPlayer
+local CurrentCamera = game.Workspace.CurrentCamera
+local UserInputService = game:GetService("UserInputService")
+local UserGameSettings = UserSettings():GetService("UserGameSettings")
+u80.enabled = State.new(false)
+u80.throwing = State.new(false)
+u80.left_side = State.new(false)
+u80.recoil = CFrameSpring.new(3, 0.9, CFrame.new())
+local u117 = Spring.new(3, 0.9, 0)
+u80.spring_zoom = u117
+u80.spring_crosshair = Spring.new(3, 0.9, 0)
+u80.lock_mouse_center = State.new(function() -- Line: 34 -- upvalues: u80 (val), SubMenuBackground (val)
+    local v1 = u80.enabled.get()
+    local v2 = SubMenuBackground.enabled.get()
+    return v1 and not v2
+end)
+
+function normalize_angle(a1) -- Line: 41
+    return (a1 + 180) % 360 - 180
+end
+
+function normalize_angle_radians(a1) -- Line: 45
+    return (a1 + 3.141592653589793) % 6.283185307179586 - 3.141592653589793
+end
+
+function u80.initiate() end
+
+function u80.loaded() -- Line: 54
+    -- upvalues: LocalPlayer (val), u80 (val), Crosshair (val), u117 (val), CurrentCamera (val), UserInputService (val)
+    -- upvalues: CFrameSpring (val), Util (val), Char (val), State (val), CrouchSystem (val), Spring (val)
+    -- upvalues: Ragdoll (val), UserGameSettings (val), Keybinds (val)
+    LocalPlayer:GetMouse()
+    u80.spring_crosshair.hook(function(a1) -- Line: 57 -- upvalues: Crosshair (upval), u80 (upval)
+        Crosshair.set_spring_crosshair(a1, u80.enabled.get())
+    end)
+    u117.hook(function(a1) -- Line: 61 -- upvalues: CurrentCamera (upval), UserInputService (upval)
+        CurrentCamera.FieldOfView = 50 + (1 - a1) * 20
+        UserInputService.MouseDeltaSensitivity = 0.5 + (1 - a1) * 0.2
+    end)
+    local u14 = CFrame.new()
+
+    local function update_torso(a1) -- Line: 68 -- upvalues: LocalPlayer (upval)
+        local Waist = (LocalPlayer.Character:WaitForChild("UpperTorso")):WaitForChild("Waist")
+        Waist.C0 = CFrame.new(Waist.C0.Position) * a1
+        Waist.C1 = CFrame.new(Waist.C1.Position)
+    end
+
+    local function update_arm(a1) -- Line: 74 -- upvalues: LocalPlayer (upval)
+        local RightShoulder = (LocalPlayer.Character:WaitForChild("RightUpperArm")):WaitForChild("RightShoulder")
+        RightShoulder.C0 = CFrame.new(RightShoulder.C0.Position) * a1
+        RightShoulder.C1 = CFrame.new(RightShoulder.C1.Position)
+    end
+
+    local u23 = CFrameSpring.new(3, 0.9, CFrame.new())
+    local u30 = CFrameSpring.new(3, 0.9, CFrame.new())
+    Util.render_stepped(function(a1) -- Line: 83
+        -- upvalues: LocalPlayer (upval), u80 (upval), Char (upval), CurrentCamera (upval), u23 (val), u30 (val)
+        -- upvalues: update_torso (val), update_arm (val), u14 (ref)
+        if LocalPlayer.Character then
+            local v1
+            if not u80.enabled.get() then
+                u23.r = CFrame.identity
+                u30.r = CFrame.identity
+            elseif Char.sitting.get() then
+                local v2, v3, v4
+                v1, v2, v3 = CurrentCamera.CFrame:ToOrientation()
+                _, v4 = Char.get_hrp().CFrame:ToOrientation()
+                local v5 = v2 - v4
+                Char.get_hrp().CFrame:ToOrientation()
+                local v6, v7, v8 = Char.get_hrp().CFrame:ToOrientation()
+                local v9 = v6 * (CFrame.Angles(0, v7, v8)).LookVector:Dot((CFrame.Angles(0, v2, v3)).LookVector)
+                v5 = normalize_angle_radians(v5)
+                u23.r = CFrame.fromOrientation(math.tan(v1 / 3) * 1 + v9, v5 * 0.5, 0)
+                u30.r = CFrame.fromOrientation(math.tan(v1 / 3) * 1 + v9, v5 * 0.5, 0)
+            else
+                u23.r = CFrame.Angles(math.tan((CurrentCamera.CFrame:ToOrientation()) / 2) * 2, 0, 0)
+                u30.r = CFrame.Angles(0, 0, 0)
+            end
+            update_torso(u23.s)
+            update_arm(u30.s)
+            if CurrentCamera.CameraSubject ~= Char.get_hum() then
+                v1 = CurrentCamera
+                v1.CFrame = v1.CFrame * CFrame.new(Char.get_hum().CameraOffset)
+            end
+            v1 = CurrentCamera
+            v1.CFrame = v1.CFrame * ((u14:Inverse()) * u80.recoil.s)
+            u14 = u80.recoil.s
+        end
+    end)
+    local v1 = State.new(function() -- Line: 130 -- upvalues: u80 (upval), Char (upval), CrouchSystem (upval)
+        local v1 = u80.enabled.get()
+        local v2 = u80.left_side.get()
+        local v3 = u80.throwing.get()
+        local v4 = Char.sitting.get()
+        local v5 = CrouchSystem.crouching.get()
+        local v6 = {0, 0, 0}
+        if v1 then
+            if not v2 then
+                v6[1] = 1
+            else
+                v6[1] = -1
+            end
+            v6[2] = 0.5
+            if v3 then
+                v6[1] = v6[1] * 1.5
+                v6[2] = v6[2] * 2
+            end
+            if v4 then
+                v6[2] = v6[2] + 2
+                if not v4:IsA("VehicleSeat") then
+                    v6[3] = v6[3] - 4
+                else
+                    v6[3] = v6[3] + 4
+                end
+            end
+        end
+        if v5 then
+            v6[2] = v6[2] - 1
+        end
+        return v6
+    end)
+    local u44 = Spring.new(3, 0.8, 0)
+    local u50 = Spring.new(3, 0.8, 0)
+    local u56 = Spring.new(3, 0.8, 0)
+    v1.hook(function(a1) -- Line: 168 -- upvalues: u44 (val), u50 (val), u56 (val)
+        u44.r = a1[1]
+        u50.r = a1[2]
+        u56.r = a1[3]
+    end)
+    u44.hook(function(a1) -- Line: 174 -- upvalues: Char (upval)
+        local v1 = 2 * a1
+        local v2 = Char.get_hum()
+        v2.CameraOffset = Char.get_hum().CameraOffset * Vector3.new(0, 1, 1) + Vector3.new(v1, 0, 0)
+    end)
+    u50.hook(function(a1) -- Line: 179 -- upvalues: Char (upval)
+        local v1 = 1 * a1
+        local v2 = Char.get_hum()
+        v2.CameraOffset = Char.get_hum().CameraOffset * Vector3.new(1, 0, 1) + Vector3.new(0, v1, 0)
+    end)
+    u56.hook(function(a1) -- Line: 184 -- upvalues: Char (upval)
+        local v1 = 1 * a1
+        local v2 = Char.get_hum()
+        v2.CameraOffset = Char.get_hum().CameraOffset * Vector3.new(1, 1, 0) + Vector3.new(0, 0, v1)
+    end)
+    local u69 = 0
+    local u75 = Spring.new(9, 0.95, 0)
+    u75.hook(function(a1) -- Line: 193 -- upvalues: LocalPlayer (upval), u69 (ref)
+        if a1 ~= 1 and a1 ~= 0 then
+            LocalPlayer.CameraMaxZoomDistance = 6 * a1 + (1 - a1) * u69
+            LocalPlayer.CameraMinZoomDistance = 6 * a1 + (1 - a1) * u69
+            return
+        end
+        LocalPlayer.CameraMaxZoomDistance = 6 * a1 + (1 - a1) * game.StarterPlayer.CameraMaxZoomDistance
+        LocalPlayer.CameraMinZoomDistance = 6 * a1 + (1 - a1) * game.StarterPlayer.CameraMinZoomDistance
+    end)
+    local u82 = Util.override(function(a1) -- Line: 203 -- upvalues: CurrentCamera (upval), Char (upval), u69 (ref), u75 (val)
+        if not a1 then
+            u75.r = 0
+            u75.f = 2
+            return
+        end
+        u69 = (CurrentCamera.CFrame.Position - Char.get_head().Position).Magnitude
+        u75.r = 1
+        u75.f = 9
+    end)
+    u80.enabled.hook(function(a1, a2) -- Line: 216
+        -- upvalues: u80 (upval), Ragdoll (upval), UserGameSettings (upval), u117 (upval), update_torso (val)
+        -- upvalues: update_arm (val), u82 (val)
+        if a1 ~= a2 and a2 ~= nil then
+            local v1 = if not a1 then 0 else 1
+            u80.spring_crosshair.r = v1
+            local v2 = Ragdoll.is_ragdolling.get()
+            UserGameSettings.RotationType = if not a1 or v2 then Enum.RotationType.MovementRelative else Enum.RotationType.CameraRelative
+            if not a1 then
+                u117.r = 0
+                u80.throwing.set(false)
+                update_torso(CFrame.new())
+                update_arm(CFrame.new())
+            end
+            u82(a1)
+            return
+        end
+    end)
+    u80.lock_mouse_center.hook(function(a1) -- Line: 235 -- upvalues: CurrentCamera (upval), UserInputService (upval)
+        CurrentCamera:SetAttribute("QLockMouseRobloxCamera", a1)
+        UserInputService.MouseIconEnabled = not a1
+        UserInputService.MouseBehavior = if not a1 then Enum.MouseBehavior.Default else Enum.MouseBehavior.LockCurrentPosition
+    end)
+    Ragdoll.is_ragdolling.hook(function(a1) -- Line: 245 -- upvalues: u80 (upval), UserGameSettings (upval)
+        local v1 = u80.enabled.get() and not a1
+        UserGameSettings.RotationType = if not v1 then Enum.RotationType.MovementRelative else Enum.RotationType.CameraRelative
+    end)
+    Char.hook(function(a1) -- Line: 251 -- upvalues: Keybinds (upval), u80 (upval)
+        Keybinds.hook_action("switch_side", function(a1) -- Line: 252 -- upvalues: u80 (upval)
+            if a1 and u80.enabled.get() then
+                u80.left_side.update(function(a1) -- Line: 254
+                    return not a1
+                end)
+            end
+        end)
+    end)
+end
+
+return u80

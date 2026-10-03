@@ -1,0 +1,275 @@
+-- Path : ReplicatedStorage.Modules.Game.Minigames.SliderMinigame
+-- Script path: ReplicatedStorage.Modules.Game.Minigames.SliderMinigame
+-- Decompile time: 7.01 ms
+
+local Keybinds = require(game.ReplicatedStorage.Modules.Game.Keybinds)
+local Spring = require(game.ReplicatedStorage.Modules.Core.Spring)
+local Signal = require(game.ReplicatedStorage.Modules.Core.Signal)
+require(game.ReplicatedStorage.Modules.Core.Input)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+require(game.ReplicatedStorage.Modules.Game.Skills.SkillsList)
+local SliderConstants = require(game.ReplicatedStorage.Modules.Game.Minigames.SliderConstants)
+local RunService = game:GetService("RunService")
+local SoundService = game:GetService("SoundService")
+local u75 = {}
+local LENIENCE = SliderConstants.LENIENCE
+local NEEDLE_SPEED_RATE = SliderConstants.NEEDLE_SPEED_RATE
+local START_TARGET_SIZE = SliderConstants.START_TARGET_SIZE
+
+function u75.server_mode_enabled() -- Line: 36
+    return workspace:GetAttribute("EI_ServerSlider") == true
+end
+
+local u80 = nil
+local u81 = false
+local u82 = 0
+
+function u75.in_server_session() -- Line: 46 -- upvalues: u80 (ref)
+    return u80 ~= nil
+end
+
+u75.enabled = State.new(false)
+u75.tries = State.new(3)
+u75.needle_pos = State.new(0)
+u75.levels = State.new(3)
+u75.target_size_mult = State.new(0.6666666666666666)
+u75.bar_percentage_increase = State.new(0)
+u75.target_size = State.new(START_TARGET_SIZE)
+u75.target_pos = State.new(0.5)
+u75.level = State.new(1)
+u75.shake_spring = Spring.new(3, 0.4, 0)
+u75.win = Signal.new()
+local u118 = nil
+local u119 = nil
+
+local function play_audio(a1, a2, a3) -- Line: 67 -- upvalues: SoundService (val)
+    local Sound = Instance.new("Sound")
+    Sound.SoundId = "rbxassetid://" .. a1
+    Sound.Volume = a2
+    if a3 then
+        Instance.new("PitchShiftSoundEffect", Sound).Octave = a3
+    end
+    task.spawn(function() -- Line: 75 -- upvalues: Sound (val)
+        Sound.Ended:Wait()
+        Sound:Destroy()
+    end)
+    Sound.Parent = SoundService
+    Sound:Play()
+end
+
+function u75.initiate() end
+
+function u75.loaded() -- Line: 87
+    -- upvalues: UI (val), u75 (val), SliderConstants (val), LENIENCE (val), u80 (ref), u81 (ref), u82 (ref)
+    -- upvalues: play_audio (val), SoundService (val), Net (val), START_TARGET_SIZE (val), u118 (ref), RunService (val)
+    -- upvalues: u119 (ref), Keybinds (val)
+    local u4 = UI.get("SliderMinigameFrame", true)
+    local u9 = UI.get("SliderMinigameBar", true)
+    local u14 = UI.get("SliderMinigameNeedle", true)
+    local u19 = UI.get("SliderMinigameTarget", true)
+    local Hint = u4.Hint
+    local Tries = u4.Tries
+    local u22 = 0
+
+    local function update_needle() -- Line: 106 -- upvalues: u22 (ref), u75 (upval), SliderConstants (upval)
+        local ServerTimeNow = workspace:GetServerTimeNow()
+        u22 = ServerTimeNow
+        u75.needle_pos.set(SliderConstants.needle_at(ServerTimeNow))
+    end
+
+    local function handle_click() -- Line: 112
+        -- upvalues: u75 (upval), LENIENCE (upval), u80 (upval), u81 (upval), u82 (upval), play_audio (upval)
+        -- upvalues: SoundService (upval), u22 (ref), Net (upval)
+        local v1 = u75.needle_pos.get()
+        local v2 = u75.target_size.get() / 2
+        local v3 = u75.target_pos.get()
+        local v4 = false
+        if v3 - v2 - LENIENCE <= v1 then
+            v4 = v1 <= v3 + v2 + LENIENCE
+        end
+        local v5 = u75.level.get()
+        if not u80 then
+            if v4 then
+                u75.level.set(v5 + 1)
+                play_audio("3450794184", 0.3, (math.min(2, 1.25 + 0.25 * v5)))
+                return
+            end
+            u75.tries.update(function(a1) -- Line: 146
+                return (math.max(a1 - 1, 0))
+            end)
+            u75.level.set(1)
+            u75.shake_spring.v = (math.random(0, 1) * 2 - 1) * 2000
+            local Sound_2 = Instance.new("Sound")
+            Sound_2.SoundId = "rbxassetid://2390695935"
+            Sound_2.Volume = 0.2
+            task.spawn(function() -- Line: 75 -- upvalues: Sound_2 (val)
+                Sound_2.Ended:Wait()
+                Sound_2:Destroy()
+            end)
+            Sound_2.Parent = SoundService
+            Sound_2:Play()
+            return
+        end
+        if u81 and os.clock() - u82 < 1.5 then
+            return
+        end
+        u81 = true
+        u82 = os.clock()
+        if not v4 then
+            u75.shake_spring.v = (math.random(0, 1) * 2 - 1) * 2000
+            local Sound = Instance.new("Sound")
+            Sound.SoundId = "rbxassetid://2390695935"
+            Sound.Volume = 0.2
+            task.spawn(function() -- Line: 75 -- upvalues: Sound (val)
+                Sound.Ended:Wait()
+                Sound:Destroy()
+            end)
+            Sound.Parent = SoundService
+            Sound:Play()
+        else
+            play_audio("3450794184", 0.3, (math.min(2, 1.25 + 0.25 * v5)))
+        end
+        local ServerTimeNow = u22 > 0 and u22 or workspace:GetServerTimeNow()
+        Net.send("minigame_click", u80.id, v5, v1, ServerTimeNow, u80.version)
+    end
+
+    u75.tries.hook(function(a1) -- Line: 153 -- upvalues: Tries (val), u80 (upval), u75 (upval)
+        Tries.Text = ("You have %* tries"):format(a1)
+        if a1 == 0 and not u80 then
+            u75.win:Fire(false)
+            u75.enabled.set(false)
+        end
+    end)
+    u75.bar_percentage_increase.hook(function(a1) -- Line: 162 -- upvalues: START_TARGET_SIZE (upval), u75 (upval)
+        local v1 = START_TARGET_SIZE * u75.target_size_mult.get() ^ (u75.level.get() - 1) * (1 + a1 / 100)
+        u75.target_size.set(v1)
+    end)
+    u75.level.hook(function(a1) -- Line: 167 -- upvalues: u80 (upval), START_TARGET_SIZE (upval), u75 (upval)
+        if u80 then
+            return
+        end
+        local v1 = START_TARGET_SIZE * u75.target_size_mult.get() ^ (a1 - 1) * (1 + u75.bar_percentage_increase.get() / 100)
+        local v2 = v1 / 2
+        u75.target_size.set(v1)
+        u75.target_pos.set((Random.new()):NextNumber(0 + v2, 1 - v2))
+        if u75.levels.get() < a1 then
+            u75.win:Fire(true)
+            u75.enabled.set(false)
+        end
+    end)
+    u75.shake_spring.hook(function(a1) -- Line: 184 -- upvalues: u9 (val)
+        u9.Position = UDim2.new(0, a1, 1, 0)
+    end)
+    u75.needle_pos.hook(function(a1) -- Line: 188 -- upvalues: u14 (val)
+        u14.Position = UDim2.new(a1, 0, 0, 0)
+    end)
+    u75.target_size.hook(function(a1) -- Line: 192 -- upvalues: u19 (val)
+        u19.Size = UDim2.new(a1, 0, 1, 0)
+    end)
+    u75.target_pos.hook(function(a1) -- Line: 196 -- upvalues: u19 (val)
+        u19.Position = UDim2.new(a1, 0, 0, 0)
+    end)
+    u75.enabled.hook(function(a1) -- Line: 200
+        -- upvalues: u80 (upval), START_TARGET_SIZE (upval), u75 (upval), u118 (upval), RunService (upval)
+        -- upvalues: update_needle (val), u119 (upval), Keybinds (upval), Hint (val), handle_click (val), u4 (val)
+        -- upvalues: u22 (ref), u81 (upval)
+        if a1 then
+            if not u80 then
+                local v1 = START_TARGET_SIZE * u75.target_size_mult.get() ^ (u75.level.get() - 1) * (1 + u75.bar_percentage_increase.get() / 100)
+                local v2 = v1 / 2
+                u75.target_size.set(v1)
+                u75.target_pos.set((Random.new()):NextNumber(0 + v2, 1 - v2))
+            end
+            u118 = RunService.RenderStepped:Connect(update_needle)
+            u119 = Keybinds.current_input_mode.hook(function(a1) -- Line: 210 -- upvalues: Hint (upval)
+                local v1 = ""
+                if a1 == "keyboard" then
+                    v1 = "Click anywhere"
+                elseif a1 == "gamepad" then
+                    v1 = "Press R2"
+                elseif a1 == "touch" then
+                    v1 = "Tap the screen"
+                end
+                v1 = v1 .. " when the needle is over the green target"
+                Hint.Text = v1
+            end)
+            Keybinds.hook_action("minigame_click", function(a1) -- Line: 223 -- upvalues: handle_click (upval)
+                if a1 then
+                    handle_click()
+                end
+            end)
+            u4.Visible = true
+            return
+        end
+        Keybinds.unhook_action("minigame_click")
+        if u118 ~= nil then
+            u118:Disconnect()
+            u118 = nil
+        end
+        u4.Visible = false
+        u22 = 0
+        u75.needle_pos.set(0)
+        u75.target_size.set(START_TARGET_SIZE)
+        u75.level.set(1)
+        u75.levels.set(3)
+        u75.win:DisconnectAll()
+        u80 = nil
+        u81 = false
+    end)
+
+    function u75.start(a1) -- Line: 250 -- upvalues: u75 (upval)
+        u75.target_size_mult.set(a1 or 0.6666666666666666)
+        u75.enabled.set(true)
+    end
+
+    Net.hook("minigame_open", function(a1, a2, a3, a4, a5, a6, a7, a8) -- Line: 257 -- upvalues: u75 (upval), u80 (upval), u81 (upval)
+        if not (workspace:GetAttribute("EI_ServerSlider") == true) then
+            return
+        end
+        if u75.enabled.get() then
+            u75.enabled.set(false)
+        end
+        u80 = {id = a1, kind = a2, version = a8}
+        u81 = false
+        u75.levels.set(a6)
+        u75.tries.set(a7)
+        u75.level.set(a3)
+        u75.target_size.set(a5)
+        u75.target_pos.set(a4)
+        u75.enabled.set(true)
+        u75.target_size.set(a5)
+        u75.target_pos.set(a4)
+    end)
+    Net.hook("minigame_level", function(a1, a2, a3, a4, a5) -- Line: 278 -- upvalues: u80 (upval), u81 (upval), u75 (upval)
+        if u80 and u80.id == a1 then
+            u81 = false
+            u75.tries.set(a5)
+            u75.level.set(a2)
+            u75.target_size.set(a4)
+            u75.target_pos.set(a3)
+            return
+        end
+    end)
+    Net.hook("minigame_result", function(a1, a2, a3) -- Line: 289 -- upvalues: u80 (upval), u81 (upval), u75 (upval)
+        if u80 and u80.id == a1 then
+            u81 = false
+            if a3 ~= "cancelled" then
+                u75.win:Fire(a2 == true)
+            end
+            u75.enabled.set(false)
+            return
+        end
+    end)
+    Keybinds.hook_action_icon("minigame_click", function(a1) -- Line: 303 -- upvalues: Keybinds (upval), u19 (val) -- types: a1: string?
+        if a1 and Keybinds.current_input_mode.get() == "gamepad" then
+            u19.ConsoleButton.Image = a1
+            u19.ConsoleButton.Visible = true
+            return
+        end
+        u19.ConsoleButton.Visible = false
+    end)
+end
+
+return u75

@@ -1,0 +1,33 @@
+-- Path : ReplicatedStorage.Modules.Game.StockTimes
+-- Script path: ReplicatedStorage.Modules.Game.StockTimes
+-- Decompile time: 0.77 ms
+
+local Data = require(game.ReplicatedStorage.Modules.Core.Data)
+require(game.ReplicatedStorage.Modules.Core.Util)
+return {
+    get_consumed_amount = function(a1, a2) -- Line: 5 -- upvalues: Data (val) -- types: a1: string, a2: number?
+        local v1 = os.time()
+        if game["Run Service"]:IsClient() then
+            v1 = math.round((workspace:GetServerTimeNow()))
+        end
+        if not Data.stock_times[a1] then
+            return 0
+        end
+        if a2 and a2 < v1 - Data.stock_times[a1].earliest_stamp then
+            return 0
+        end
+        return Data.stock_times[a1].amount
+    end,
+    get_time_left = function(a1, a2) -- Line: 26 -- upvalues: Data (val) -- types: a1: string, a2: number?
+        local v1 = os.time()
+        if game["Run Service"]:IsClient() then
+            v1 = math.round((workspace:GetServerTimeNow()))
+        end
+        if Data.stock_times[a1] then
+            return (math.max(0, a2 - (v1 - Data.stock_times[a1].earliest_stamp)))
+        end
+        return 0
+    end,
+    initiate = function() end,
+    loaded = function() end,
+}

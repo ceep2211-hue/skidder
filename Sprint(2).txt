@@ -1,0 +1,309 @@
+-- Path : ReplicatedStorage.Modules.Game.Sprint
+-- Script path: ReplicatedStorage.Modules.Game.Sprint
+-- Decompile time: 10.16 ms
+
+local SplashScreen = require(game.ReplicatedStorage.Modules.Game.SplashScreen)
+game:GetService("ReplicatedStorage")
+local CharacterCreator = require(game.ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local Keybinds = require(game.ReplicatedStorage.Modules.Game.Keybinds)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+require(game.ReplicatedStorage.Modules.Core.Tbl)
+require(game.ReplicatedStorage.Modules.Core.Input)
+local List = require(game.ReplicatedStorage.Modules.Core.List)
+local Spring = require(game.ReplicatedStorage.Modules.Core.Spring)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+require(game.ReplicatedStorage.Modules.Core.Timer)
+local CrouchSystem = require(game.ReplicatedStorage.Modules.Game.CrouchSystem)
+local Crosshair = require(game.ReplicatedStorage.Modules.Game.UI.Crosshair)
+local u112 = {}
+local LocalPlayer = game.Players.LocalPlayer
+local KeyboardEnabled = game:GetService("UserInputService").KeyboardEnabled
+require(game.ReplicatedStorage.Modules.Core.Data)
+require(game.ReplicatedStorage.Modules.Game.Skills.SkillsList)
+local Jumping = require(game.ReplicatedStorage.Modules.Game.Character.Jumping)
+local CharacterWalkSpeed = game.StarterPlayer.CharacterWalkSpeed
+u112.sprinting = State.new(false)
+local u152 = List.new()
+local u157 = Spring.new(1, 0.9, 16)
+local u160 = State.new(1)
+u112.sprint_bar = u160
+
+function u112.set_walk_speed(a1, a2) -- Line: 41 -- upvalues: u152 (val) -- types: a1: number, a2: number?
+    local u2 = {WalkSpeed = a1}
+    u152.add(u2)
+    if a2 then
+        task.delay(a2, function() -- Line: 45 -- upvalues: u152 (upval), u2 (val)
+            u152.remove(u2)
+        end)
+    end
+    return function() -- Line: 49 -- upvalues: u152 (upval), u2 (val)
+        u152.remove(u2)
+    end
+end
+
+function u112.consume_stamina(a1) -- Line: 55
+    -- upvalues: LocalPlayer (val), u112 (val), Crosshair (val)
+    local u6 = LocalPlayer:GetAttribute("MaxStamina") or 100
+    local u13 = a1 * (LocalPlayer:GetAttribute("StaminaConsumeMultiplier") or 1)
+    if not (u112.sprint_bar.get() < u13 / u6) then
+        u112.sprint_bar.update(function(a1) -- Line: 65 -- upvalues: u13 (ref), u6 (val)
+            return a1 - u13 / u6
+        end)
+        return true
+    end
+    u112.pulse_bar_red()
+    Crosshair.pulse_red()
+    return false
+end
+
+function u112.restore_stamina(a1) -- Line: 71 -- upvalues: LocalPlayer (val), u112 (val) -- types: a1: number
+    local u6 = LocalPlayer:GetAttribute("MaxStamina") or 100
+    u112.sprint_bar.update(function(a1_2) -- Line: 74 -- upvalues: a1 (val), u6 (val)
+        return (math.min(1, a1_2 + a1 / u6))
+    end)
+end
+
+function u112.initiate() end
+
+function u112.loaded() -- Line: 83
+    -- upvalues: u112 (val), State (val), LocalPlayer (val), Util (val), CharacterCreator (val), SplashScreen (val)
+    -- upvalues: Char (val), u160 (val), Jumping (val), UI (val), Net (val), Keybinds (val), CrouchSystem (val)
+    -- upvalues: u152 (val), CharacterWalkSpeed (val), u157 (val)
+    u112.in_seat = State.new(false)
+    local u16 = State.new(LocalPlayer:GetAttribute("IsHeadshotBlocked") == true)
+    local v1 = LocalPlayer
+    Util.watch_attribute(v1, "IsHeadshotBlocked", function(a1) -- Line: 90 -- upvalues: u16 (val), u112 (upval)
+        u16.set(a1 == true)
+        if a1 then
+            u112.sprinting.set(false)
+        end
+    end)
+    local v2 = State.new(function() -- Line: 97 -- upvalues: CharacterCreator (upval), u112 (upval), SplashScreen (upval), u16 (val)
+        local v1 = CharacterCreator.is_in_creator.get()
+        local v2 = u112.in_seat.get()
+        local v3 = SplashScreen.in_loading_screen.get()
+        local v4 = u16.get()
+        if not v1 and not v2 and not v3 and not v4 then
+            return true
+        end
+        return false
+    end)
+    Util.hook_children(game.Players, function(a1) -- Line: 108 -- upvalues: Util (upval)
+        Util.watch_attribute(a1, "SprintBar", function(a1_2) -- Line: 110 -- upvalues: a1 (val), Util (upval)
+            local Character = a1.Character
+            if Character and Character:IsDescendantOf(workspace) and Character:FindFirstChild("HumanoidRootPart") then
+                if a1_2 == nil then
+                    return
+                end
+                if a1_2 <= 0.5 then
+                    local PrimaryPart = Character.PrimaryPart
+                    local Breathing = PrimaryPart
+                    if Breathing then
+                        Breathing = PrimaryPart:FindFirstChild("Breathing")
+                    end
+                    if PrimaryPart and not Breathing then
+                        Breathing = script.Breathing:Clone()
+                        Breathing.Parent = Character.HumanoidRootPart
+                        Breathing.PlaybackSpeed = Util.rand(0.95, 1.05)
+                        Breathing.Looped = true
+                        Breathing:Play()
+                        Breathing.DidLoop:Connect(function() -- Line: 124 -- upvalues: Breathing (ref), Util (upval)
+                            Breathing.PlaybackSpeed = Util.rand(0.95, 1.05)
+                        end)
+                    end
+                    if Breathing then
+                        Breathing.Volume = math.map(a1_2, 0, 1, 0.2, 0.05)
+                    end
+                    return
+                end
+                if a1_2 > 0.5 then
+                    local Breathing_2 = Character.HumanoidRootPart:FindFirstChild("Breathing")
+                    if Breathing_2 then
+                        Breathing_2.Name = " "
+                        Util.tween(Breathing_2, TweenInfo.new(1), {Volume = 0}).Completed:Wait()
+                        Breathing_2:Destroy()
+                    end
+                end
+            end
+        end)
+    end)
+    Char.hook(function(a1) -- Line: 144 -- upvalues: u160 (upval), u112 (upval), Jumping (upval)
+        u160.set(1)
+        u112.sprinting.set(false)
+        u112.in_seat.set(false)
+        local Humanoid = a1:WaitForChild("Humanoid")
+        Humanoid.StateChanged:Connect(function(a1, a2) -- Line: 149 -- upvalues: u112 (upval), Jumping (upval)
+            if a2 == Enum.HumanoidStateType.Jumping then
+                if u112.consume_stamina(10) then
+                    return
+                end
+                Jumping.sprint_can_jump_state.set(false)
+            end
+        end)
+        ;(Humanoid:GetPropertyChangedSignal("SeatPart")):Connect(function() -- Line: 158 -- upvalues: u112 (upval), Humanoid (val)
+            u112.in_seat.set(not not Humanoid.SeatPart)
+        end)
+    end)
+    u112.pulse_bar_red = Util.override(function() -- Line: 163 -- upvalues: UI (upval), Util (upval)
+        local UIStroke = UI.get("StaminaBar").UIStroke
+        Util.tween(UIStroke, TweenInfo.new(0.08, Enum.EasingStyle.Quad), {Color = Color3.fromRGB(255, 0, 0)}).Completed:Wait()
+        Util.tween(UIStroke, TweenInfo.new(0.05, Enum.EasingStyle.Quad), {Color = Color3.fromRGB(25, 26, 28)})
+    end)
+    local StaminaBar = UI.get("StaminaBar")
+    local u46 = 0
+    local v3 = LocalPlayer
+    Util.watch_attribute(v3, "StaminaConsumeMultiplier", function(a1) -- Line: 177 -- upvalues: StaminaBar (val)
+        if a1 == nil then
+            return
+        end
+        if a1 < 1 then
+            StaminaBar.Fill.Boosted.Enabled = true
+            StaminaBar.Fill.Normal.Enabled = false
+            return
+        end
+        StaminaBar.Fill.Boosted.Enabled = false
+        StaminaBar.Fill.Normal.Enabled = true
+    end)
+    v3 = LocalPlayer
+    Util.watch_attribute(v3, "MaxStamina", function(a1) -- Line: 188 -- upvalues: Net (upval), UI (upval), u160 (upval)
+        if a1 == nil then
+            return
+        end
+        Net.send("replicate_stamina_bar_1", a1)
+        local StaminaBarAmount = UI.get("StaminaBarAmount")
+        StaminaBarAmount.Text = ("%* / %*"):format(math.round((u160.get()) * a1), a1)
+    end)
+    local u59 = nil
+    u160.hook(function(a1, a2) -- Line: 197
+        -- upvalues: StaminaBar (val), u59 (ref), UI (upval), LocalPlayer (upval), u112 (upval), Keybinds (upval)
+        -- upvalues: u46 (ref), Jumping (upval)
+        StaminaBar.Fill.Size = UDim2.fromScale(a1, 1)
+        if not (a1 >= 1) then
+            if u59 then
+                task.cancel(u59)
+                u59 = nil
+            end
+            local StaminaBar_2 = UI.get("StaminaBar")
+            StaminaBar_2.Visible = true
+        else
+            u59 = task.delay(5, function() -- Line: 201 -- upvalues: UI (upval)
+                local StaminaBar = UI.get("StaminaBar")
+                StaminaBar.Visible = false
+            end)
+        end
+        local v1 = LocalPlayer:GetAttribute("MaxStamina") or 100
+        local StaminaBarAmount = UI.get("StaminaBarAmount")
+        StaminaBarAmount.Text = ("%* / %*"):format(math.round(a1 * v1), v1)
+        if a1 <= 0 then
+            u112.sprinting.set(false)
+            Keybinds.touch.sprint:SetAttribute("toggled", false)
+        end
+        if a1 < a2 then
+            u46 = 0
+        end
+        if 10 / v1 <= a1 then
+            Jumping.sprint_can_jump_state.set(true)
+        end
+    end)
+    Util.run(function(a1) -- Line: 231 -- upvalues: LocalPlayer (upval), u112 (upval), Char (upval), u160 (upval), u46 (ref)
+        local u6 = LocalPlayer:GetAttribute("MaxStamina") or 100
+        local u12 = LocalPlayer:GetAttribute("StaminaRegen") or 2
+        if u112.sprinting.get()
+            and not Char.get_hum():GetAttribute("Stunned")
+            and not Char.get_hum():GetAttribute("IsDead")
+            and Char.get_hum().Sit == false
+            and 0.1 < Char.get_hum().MoveDirection.Magnitude then
+            local u46_2 = LocalPlayer:GetAttribute("StaminaConsumeMultiplier") or 1
+            u160.update(function(a1_2) -- Line: 236 -- upvalues: u46_2 (val), a1 (val), u6 (val)
+                return (math.max(0, a1_2 - 10 * u46_2 * a1 / u6))
+            end)
+            return
+        end
+        u46 = u46 + a1
+        if u46 > 1 then
+            u160.update(function(a1_2) -- Line: 242 -- upvalues: u12 (val), a1 (val), u6 (val)
+                return (math.min(1, a1_2 + 10 * u12 * a1 / u6))
+            end)
+        end
+    end)
+    u112.sprinting.hook(function(a1, a2) -- Line: 249 -- upvalues: CrouchSystem (upval), Net (upval)
+        if a1 == a2 then
+            return
+        end
+        if a1 and CrouchSystem.crouching.get() then
+            CrouchSystem.crouching.set(false)
+        end
+        Net.send("set_sprinting_1", a1)
+    end)
+    Char.hook(function(a1) end)
+    v2.hook(function(a1) -- Line: 261 -- upvalues: Keybinds (upval), Char (upval), u160 (upval), u112 (upval)
+        Keybinds.unhook_action("sprint")
+        if a1 then
+            Keybinds.hook_action("sprint", function(a1, a2) -- Line: 265 -- upvalues: Char (upval), u160 (upval), u112 (upval), Keybinds (upval)
+                local v1 = Char.current_char.get()
+                if v1 ~= nil and v1:FindFirstChild("Humanoid") ~= nil and not (u160.get() <= 0) then
+                    if Keybinds.current_input_mode.get() ~= "gamepad" then
+                        u112.sprinting.set(a1)
+                        return
+                    end
+                    if not a1 then
+                        return
+                    end
+                    u112.sprinting.update(function(a1) -- Line: 278
+                        return not a1
+                    end)
+                    return
+                end
+                u112.sprinting.set(false)
+            end, {label = "Sprint"})
+        end
+    end)
+    Keybinds.current_input_mode.hook(function(a1) end)
+    local u88 = State.new(nil)
+    u152.hook(function() -- Line: 300 -- upvalues: u152 (upval), u88 (val)
+        local v1 = u152.raw()[#u152.raw()]
+        if v1 then
+            u88.set(v1.WalkSpeed)
+            return
+        end
+        u88.set(nil)
+    end)
+    local u96 = State.new(1)
+    local v4 = LocalPlayer
+    Util.watch_attribute(v4, "SpeedMultiplier", function(a1) -- Line: 310 -- upvalues: u96 (val)
+        u96.set(a1 or 1)
+    end)
+    ;(State.new(function() -- Line: 314
+        -- upvalues: u88 (val), CrouchSystem (upval), u112 (upval), u160 (upval), u96 (val), CharacterWalkSpeed (upval)
+        local v1 = u88.get()
+        local v2 = CrouchSystem.crouching.get()
+        local v3 = u112.sprinting.get()
+        local v4 = 0 < u160.get()
+        local v5 = u96.get()
+        if v1 then
+            return v1
+        end
+        if v3 and v4 then
+            return CharacterWalkSpeed * v5 * 3
+        end
+        if v2 then
+            return CharacterWalkSpeed * v5 * 0.7
+        end
+        return CharacterWalkSpeed * v5
+    end)).hook(function(a1) -- Line: 333 -- upvalues: u157 (upval)
+        u157.r = a1
+    end)
+    u157.hook(function(a1) -- Line: 337 -- upvalues: LocalPlayer (upval), Char (upval)
+        if LocalPlayer.Character ~= nil and LocalPlayer.Character:FindFirstChild("Humanoid") ~= nil then
+            local v1 = Char.get_hum()
+            v1.WalkSpeed = a1
+            v1:SetAttribute("TargetWalkSpeed", a1)
+            return
+        end
+    end)
+end
+
+return u112

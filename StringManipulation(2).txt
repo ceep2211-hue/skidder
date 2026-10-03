@@ -1,0 +1,51 @@
+-- Path : ReplicatedStorage.Modules.Core.StringManipulation
+-- Script path: ReplicatedStorage.Modules.Core.StringManipulation
+-- Decompile time: 1.05 ms
+
+local text_search
+local v1 = {}
+
+local function extract_and_fill(a1, a2, a3) -- Line: 8 -- types: a1: string, a2: string
+    local v1 = a1
+    if not a3 then
+        return v1
+    end
+    local v2 = tostring(a3)
+    if string.find(a1, a2) then
+        v1 = string.gsub(a1, a2, v2)
+    end
+    return v1
+end
+
+function text_search(a1, a2, a3) -- Line: 19 -- upvalues: text_search (val)
+    local v1, v2
+    local v3 = nil
+    local v4 = nil
+    local v5, v6, v7 = a2, a3, a1
+    for i, j in a1, v3, v4 do
+        if typeof(j) == "table" then
+            text_search(j, v5, v6)
+        elseif typeof(j) == "string" then
+            v2 = v6
+            v1 = j
+            if v2 then
+                v2 = tostring(v2)
+                if string.find(j, v5) then
+                    v1 = string.gsub(j, v5, v2)
+                end
+            end
+            v7[i] = v1
+        end
+    end
+end
+
+function v1.recursive_string_search(a1, a2) -- Line: 30 -- upvalues: text_search (val) -- types: a1: table, a2: table
+    assert(typeof(a2) == "table", "Recursive string search requires a table")
+    for i, j in a1 do
+        if j ~= nil then
+            text_search(a2, i, j)
+        end
+    end
+end
+
+return v1
