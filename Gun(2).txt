@@ -1,0 +1,1149 @@
+-- Path : ReplicatedStorage.Modules.Game.ItemTypes.Gun
+-- Script path: ReplicatedStorage.Modules.Game.ItemTypes.Gun
+-- Decompile time: 47.25 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+require(game.ReplicatedStorage.Modules.Game.Sprint)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+require(game.ReplicatedStorage.Modules.Core.Spring)
+local ShoulderCamera = require(game.ReplicatedStorage.Modules.Game.ShoulderCamera)
+local Keybinds = require(game.ReplicatedStorage.Modules.Game.Keybinds)
+local Vehicle = require(game.ReplicatedStorage.Modules.Game.VehicleSystem.Vehicle)
+require(game.ReplicatedStorage.Modules.Core.Audio)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local Crosshair = require(ReplicatedStorage.Modules.Game.UI.Crosshair)
+local Blood = require(game.ReplicatedStorage.Modules.Game.Effects.Blood)
+local Sparks = require(game.ReplicatedStorage.Modules.Game.Effects.Sparks)
+local ToolUtil = require(ReplicatedStorage.Modules.Game.ToolUtil)
+require(ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+local Data = require(game.ReplicatedStorage.Modules.Core.Data)
+local ItemUtils = require(ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+local HitDetection = require(game.ReplicatedStorage.Modules.Game.HitDetection)
+local Timer = require(game.ReplicatedStorage.Modules.Core.Timer)
+local MultiPlayerAnimation = require(game.ReplicatedStorage.Modules.Game.MultiAnimations.MultiPlayerAnimation)
+local ShotDeterminism = require(game.ReplicatedStorage.Modules.Game.ShotDeterminism)
+local u165 = {}
+local LocalPlayer = game.Players.LocalPlayer
+local CurrentCamera = game.Workspace.CurrentCamera
+local FlagManager = require(game.ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+u165.FLAG_BULLET_DISTANCE_MUFFLING = FlagManager.FLAG_BULLET_DISTANCE_MUFFLING
+u165.FLAG_AIMBOT = FlagManager.FLAG_AIMBOT
+u165.FLAG_MOBILE_AUTO_AIM_WHEN_SHOOTING = FlagManager.FLAG_MOBILE_AUTO_AIM_WHEN_SHOOTING
+u165.class = StatefulObject.new_class(function() -- Line: 50 -- upvalues: State (val)
+    return {
+        damage = State.new(0),
+        explode_damage = State.new(0),
+        range = State.new(0),
+        mag = State.new(0),
+        last_shot = State.new(0),
+        seed = State.new(0),
+        durability = State.new(0),
+        reload_time = State.new(0),
+        automatic = State.new(false),
+        fire_rate = State.new(0),
+        accuracy = State.new(0),
+    }
+end, script.Name)
+u165.equipped_gun = State.new(nil)
+
+function apply_muffling(a1, a2) -- Line: 73 -- upvalues: u165 (val)
+    if not u165.FLAG_BULLET_DISTANCE_MUFFLING then
+        return
+    end
+    a1.RollOffMaxDistance = 1000
+    local Magnitude = (game.Workspace.CurrentCamera.CFrame.Position - a2).Magnitude
+    local EqualizerSoundEffect = Instance.new("EqualizerSoundEffect")
+    EqualizerSoundEffect.Parent = a1
+    local v1 = math.map(Magnitude, 0, 750, 0, 1)
+    EqualizerSoundEffect.LowGain = math.map(v1, 0, 1, 0, 10)
+    EqualizerSoundEffect.MidGain = math.map(v1, 0, 1, 0, -20)
+    EqualizerSoundEffect.HighGain = math.map(v1, 0, 1, 0, -40)
+end
+
+function u165.calculate_bullet_direction(a1, a2) -- Line: 86
+    local instance = a1.instance
+    local random_object = a1.random_object
+    local v1 = 1 - a1.states.accuracy.get()
+    local v2 = random_object:NextNumber(-50, 50)
+    local v3 = random_object:NextNumber(-50, 50)
+    local v4 = random_object:NextNumber(-50, 50)
+    return (a2 * 500 + Vector3.new(v2 * v1, v3 * v1, v4 * v1)).Unit
+end
+
+function u165.bullet_hit(a1, a2, a3) -- Line: 98
+    -- upvalues: Sparks (val), Util (val), Blood (val)
+    local v1, v2
+    local Attachment = Instance.new("Attachment")
+    for i, j in script.ImpactParticles:GetChildren() do
+        j:Clone().Parent = Attachment
+    end
+    Attachment.Parent = game.Workspace.Terrain
+    Attachment.WorldCFrame = (CFrame.lookAt(a1 + a2 * 0.01, a1 + a2)) * CFrame.Angles(0.0017453292519943296, 0, 0)
+    task.delay(5, function() -- Line: 105 -- upvalues: Attachment (val)
+        Attachment:Destroy()
+    end)
+    local v3 = nil
+    if a3 then
+        v1 = a3:FindFirstAncestorWhichIsA("Model")
+        if v1 then
+            v3 = v1:FindFirstChildOfClass("Humanoid")
+            if v3 and not game.Players:GetPlayerFromCharacter(v3.Parent) then
+                v3 = nil
+            end
+        end
+    end
+    v1 = nil
+    if a3 then
+        v1 = a3:IsDescendantOf(game.Workspace.Vehicles)
+    end
+    if v1 then
+        v2 = a3:FindFirstAncestorWhichIsA("Folder")
+        if not v2 or v2.Name ~= "Wheels" then
+            Sparks.car_hit(a1, a2, true)
+        end
+    else
+        local u112, u142, u85
+        if not a3 or not a3.Parent then
+            if not v3 then
+                u142 = Attachment.Wall:Clone()
+                u142.PlaybackSpeed = Util.rand(0.8, 1)
+                u142.Parent = Attachment
+                u142:Play()
+                u142.Ended:Connect(function() -- Line: 158 -- upvalues: u142 (val)
+                    u142:Destroy()
+                end)
+                Attachment.Hole:Emit(1)
+            else
+                u85 = Attachment.Flesh:Clone()
+                u85.PlaybackSpeed = Util.rand(0.95, 1.05)
+                u85.Parent = Attachment
+                u85:Play()
+                u85.Ended:Connect(function() -- Line: 139 -- upvalues: u85 (val)
+                    u85:Destroy()
+                end)
+                u112 = Attachment[if not ((Util.rand(0, 1)) < 0.5) then "Groan2" else "Groan"]:Clone()
+                u112.PlaybackSpeed = Util.rand(0.95, 1.05)
+                u112.Parent = Attachment
+                u112:Play()
+                u112.Ended:Connect(function() -- Line: 147 -- upvalues: u112 (val)
+                    u112:Destroy()
+                end)
+                Blood.apply_blood(a1, a2)
+            end
+        elseif a3.Parent.Parent == workspace.Map.SatelliteDishes then
+            v2 = a3:FindFirstAncestorWhichIsA("Folder")
+            if not v2 or v2.Name ~= "Wheels" then
+                Sparks.car_hit(a1, a2, true)
+            end
+        elseif not v3 then
+            u142 = Attachment.Wall:Clone()
+            u142.PlaybackSpeed = Util.rand(0.8, 1)
+            u142.Parent = Attachment
+            u142:Play()
+            u142.Ended:Connect(function() -- Line: 158 -- upvalues: u142 (val)
+                u142:Destroy()
+            end)
+            Attachment.Hole:Emit(1)
+        else
+            u85 = Attachment.Flesh:Clone()
+            u85.PlaybackSpeed = Util.rand(0.95, 1.05)
+            u85.Parent = Attachment
+            u85:Play()
+            u85.Ended:Connect(function() -- Line: 139 -- upvalues: u85 (val)
+                u85:Destroy()
+            end)
+            u112 = Attachment[if not ((Util.rand(0, 1)) < 0.5) then "Groan2" else "Groan"]:Clone()
+            u112.PlaybackSpeed = Util.rand(0.95, 1.05)
+            u112.Parent = Attachment
+            u112:Play()
+            u112.Ended:Connect(function() -- Line: 147 -- upvalues: u112 (val)
+                u112:Destroy()
+            end)
+            Blood.apply_blood(a1, a2)
+        end
+    end
+    if not v1 and not v3 then
+        Attachment.Flare:Emit(1)
+        Attachment.Far:Emit(10)
+        Attachment.Near:Emit(10)
+        Attachment.Bullet:Emit(2)
+        Attachment.Bullet2:Emit(10)
+        Attachment.Normal:Emit(3)
+        return
+    end
+    Attachment.Flare:Emit(1)
+    Attachment.Near:Emit(5)
+    Attachment.Bullet:Emit(1)
+    Attachment.Bullet2:Emit(5)
+    Attachment.Normal:Emit(2)
+end
+
+function shortest_distance(a1, a2, a3) -- Line: 182
+    local v1 = a3 - a2
+    local v2 = a2 + v1 * math.clamp(((a1 - a2):Dot(v1)) / v1:Dot(v1), 0, 1)
+    return v2, (v2 - a1).Magnitude
+end
+
+local Children = script.BulletWhooshes:GetChildren()
+
+function u165.bullet_trail(a1, a2) -- Line: 197 -- upvalues: Util (val), LocalPlayer (val), Children (val)
+    if a1 ~= nil and a1.Parent ~= nil then
+        local Attachment = Instance.new("Attachment")
+        Attachment.WorldCFrame = a1:FindFirstChild("BarrelAttachment", true).WorldCFrame
+        Attachment.Parent = game.Workspace.Terrain
+        local Attachment_2 = Instance.new("Attachment")
+        Attachment_2.WorldCFrame = CFrame.new(a2)
+        Attachment_2.Parent = game.Workspace.Terrain
+        local Beam = Instance.new("Beam")
+        Beam.Parent = game.Workspace
+        Beam.Color = ColorSequence.new(Color3.new(0.9, 0.9, 0.9))
+        Beam.Attachment0 = Attachment
+        Beam.Attachment1 = Attachment_2
+        Beam.FaceCamera = true
+        Beam.Width0 = 0.2
+        Beam.Width1 = 0.2
+        Util.tween(Beam, TweenInfo.new(0.5), {Width0 = 0, Width1 = 0})
+        game.Debris:AddItem(Attachment, 1)
+        game.Debris:AddItem(Attachment_2, 1)
+        game.Debris:AddItem(Beam, 1)
+        if LocalPlayer.Character then
+            local Head = LocalPlayer.Character:FindFirstChild("Head")
+            if Head then
+                local v1, v2 = shortest_distance(Head.Position, Attachment.WorldCFrame.Position, Attachment_2.WorldCFrame.Position)
+                local Attachment_3 = Instance.new("Attachment")
+                Attachment_3.Parent = game.Workspace.Terrain
+                Attachment_3.WorldCFrame = CFrame.new(v1)
+                game.Debris:AddItem(Attachment_3, 1)
+                local v3 = Children[math.random(1, #Children)]:Clone()
+                v3.PlaybackSpeed = Util.rand(0.95, 1.05)
+                v3.TimePosition = 0
+                v3.Volume = v2 / 50 * 0.5
+                v3.Parent = Attachment_3
+                v3:Play()
+            end
+        end
+        return
+    end
+end
+
+function u165.gunshot(a1, a2, a3, a4) -- Line: 243 -- upvalues: Util (val), u165 (val)
+    local BarrelAttachment = a1:FindFirstChild("BarrelAttachment", true)
+    if BarrelAttachment and BarrelAttachment:FindFirstChild("Sound") then
+        local u16 = BarrelAttachment.Sound:Clone()
+        u16.PlaybackSpeed = Util.rand(0.95, 1.05)
+        u16.RollOffMaxDistance = 500
+        apply_muffling(u16, BarrelAttachment.WorldCFrame.Position)
+        u16.TimePosition = 0.01
+        u16.Parent = BarrelAttachment
+        u16:Play()
+        u16.Ended:Connect(function() -- Line: 255 -- upvalues: u16 (val)
+            u16:Destroy()
+        end)
+        local v1 = next
+        local Children, Children_2 = BarrelAttachment:GetChildren()
+        for k, v in v1, Children, Children_2 do
+            if v:IsA("ParticleEmitter") then
+                v:Emit(10)
+            end
+        end
+    end
+    local PumpSound = a1:FindFirstChild("PumpSound", true)
+    if PumpSound then
+        task.delay(0.2, function() -- Line: 267 -- upvalues: PumpSound (val), Util (upval)
+            local u3 = PumpSound:Clone()
+            u3.PlaybackSpeed = Util.rand(0.95, 1.05)
+            u3.TimePosition = 0.01
+            u3.Parent = PumpSound.Parent
+            u3.Ended:Connect(function() -- Line: 272 -- upvalues: u3 (val)
+                u3:Destroy()
+            end)
+            u3:Play()
+        end)
+    end
+    if a2 and a3 then
+        u165.bullet_hit(a2, a3, a4)
+    end
+    if a2 then
+        u165.bullet_trail(a1, a2)
+    end
+end
+
+function get_start_pos(a1) -- Line: 287
+    return a1:FindFirstChild("BarrelAttachment", true).WorldCFrame
+end
+
+local function passes_through(a1) -- Line: 305 -- types: a1: userdata
+    if a1.Transparency ~= 1 or a1.CanCollide then
+        return false
+    end
+    return not a1:IsDescendantOf(game.Workspace.Vehicles)
+end
+
+function u165.rocket_shot(a1, a2) -- Line: 311
+    -- upvalues: Util (val), u165 (val), CurrentCamera (val), HitDetection (val)
+    local instance = a1.instance
+    local BarrelAttachment = instance:FindFirstChild("BarrelAttachment", true)
+    if BarrelAttachment and BarrelAttachment:FindFirstChild("Sound") then
+        local u15 = BarrelAttachment.Sound:Clone()
+        u15.PlaybackSpeed = Util.rand(0.95, 1.05)
+        u15.TimePosition = 0.01
+        u15.Parent = BarrelAttachment
+        u15:Play()
+        u15.Ended:Connect(function() -- Line: 320 -- upvalues: u15 (val)
+            u15:Destroy()
+        end)
+        apply_muffling(u15, BarrelAttachment.WorldCFrame.Position)
+        local v1 = next
+        local Children, Children_2 = BarrelAttachment:GetChildren()
+        for k, v in v1, Children, Children_2 do
+            if v:IsA("ParticleEmitter") then
+                v:Emit(10)
+            end
+        end
+    end
+    if a2 == nil then
+        a2 = u165.calculate_bullet_direction(a1, CurrentCamera.CFrame.LookVector)
+    end
+    local v2 = get_start_pos(a1.instance)
+    local u75 = script.Rocket:Clone()
+    u75.Parent = game.Workspace
+    u75:PivotTo((CFrame.lookAt(v2.Position, v2.Position + a2 * 1)))
+    game.Debris:AddItem(u75, 2)
+    local SmokeParticles = u75:FindFirstChild("SmokeParticles", true)
+    if SmokeParticles then
+        SmokeParticles.Rate = instance:GetAttribute("BulletSpeed") * 5
+    end
+    local LinearVelocity = Instance.new("LinearVelocity")
+    local Attachment = Instance.new("Attachment")
+    Attachment.Parent = u75.PrimaryPart
+    LinearVelocity.Attachment0 = Attachment
+    LinearVelocity.Parent = u75.PrimaryPart
+    LinearVelocity.VectorVelocity = a2.Unit * a1.instance:GetAttribute("BulletSpeed")
+    local u126 = nil
+    local v3 = HitDetection.FastTouched(u75.PrimaryPart, function(a1_2) -- Line: 358 -- upvalues: a1 (val), u75 (val), u126 (ref)
+        local Instance = a1_2.Instance
+        if not Instance:IsDescendantOf(a1.instance.Parent) and not Instance:IsDescendantOf(u75) then
+            u126:Disconnect()
+            for i, j in u75:GetDescendants() do
+                if j:IsA("BasePart") then
+                    j.Transparency = 1
+                elseif j:IsA("ParticleEmitter") then
+                    j.Enabled = false
+                end
+            end
+            game.Debris:AddItem(u75, 2)
+        end
+    end, nil, nil, "loose_props")
+end
+
+function u165.firework_shot(a1, a2) -- Line: 377
+    -- upvalues: Util (val), u165 (val), CurrentCamera (val), HitDetection (val)
+    local v1
+    local instance = a1.instance
+    local BarrelAttachment = instance:FindFirstChild("BarrelAttachment", true)
+    if BarrelAttachment and BarrelAttachment:FindFirstChild("Sound") then
+        v1 = next
+        local Children, Children_2 = BarrelAttachment:GetChildren()
+        for k, v in v1, Children, Children_2 do
+            if v:IsA("Sound") then
+                local u30 = v:Clone()
+                u30.PlaybackSpeed = Util.rand(0.95, 1.05)
+                u30.TimePosition = 0.01
+                u30.Parent = BarrelAttachment
+                u30:Play()
+                u30.Ended:Connect(function() -- Line: 389 -- upvalues: u30 (val)
+                    u30:Destroy()
+                end)
+                apply_muffling(u30, BarrelAttachment.WorldCFrame.Position)
+            end
+            if v:IsA("ParticleEmitter") then
+                v:Emit(10)
+            end
+        end
+    end
+    if a2 == nil then
+        a2 = u165.calculate_bullet_direction(a1, CurrentCamera.CFrame.LookVector)
+    end
+    v1 = get_start_pos(a1.instance)
+    local u86 = script.Firework:Clone()
+    u86.Parent = game.Workspace
+    u86:PivotTo((CFrame.lookAt(v1.Position, v1.Position + a2 * 1)))
+    game.Debris:AddItem(u86, 2)
+    local SmokeParticles = u86:FindFirstChild("SmokeParticles", true)
+    if SmokeParticles then
+        SmokeParticles.Rate = instance:GetAttribute("BulletSpeed") * 10
+    end
+    local LinearVelocity = Instance.new("LinearVelocity")
+    local Attachment = Instance.new("Attachment")
+    Attachment.Parent = u86.PrimaryPart
+    LinearVelocity.Attachment0 = Attachment
+    LinearVelocity.Parent = u86.PrimaryPart
+    LinearVelocity.VectorVelocity = a2.Unit * a1.instance:GetAttribute("BulletSpeed")
+    local u138 = nil
+    local v2 = HitDetection.FastTouched(u86.PrimaryPart, function(a1_2) -- Line: 427 -- upvalues: a1 (val), u86 (val), u138 (ref)
+        local Instance = a1_2.Instance
+        if not Instance:IsDescendantOf(a1.instance.Parent) and not Instance:IsDescendantOf(u86) then
+            u138:Disconnect()
+            for i, j in u86:GetDescendants() do
+                if j:IsA("BasePart") then
+                    j.Transparency = 1
+                elseif j:IsA("ParticleEmitter") then
+                    j.Enabled = false
+                end
+            end
+            game.Debris:AddItem(u86, 2)
+        end
+    end, nil, nil, "loose_props")
+end
+
+function u165.arrow_shot(a1, a2) -- Line: 446
+    -- upvalues: Util (val), u165 (val), CurrentCamera (val), HitDetection (val)
+    local instance = a1.instance
+    local BarrelAttachment = instance:FindFirstChild("BarrelAttachment", true)
+    if BarrelAttachment and BarrelAttachment:FindFirstChild("Sound") then
+        local u15 = BarrelAttachment.Sound:Clone()
+        u15.PlaybackSpeed = Util.rand(0.95, 1.05)
+        u15.TimePosition = 0.01
+        u15.Parent = BarrelAttachment
+        u15:Play()
+        u15.Ended:Connect(function() -- Line: 455 -- upvalues: u15 (val)
+            u15:Destroy()
+        end)
+        apply_muffling(u15, BarrelAttachment.WorldCFrame.Position)
+        local v1 = next
+        local Children, Children_2 = BarrelAttachment:GetChildren()
+        for k, v in v1, Children, Children_2 do
+            if v:IsA("ParticleEmitter") then
+                v:Emit(10)
+            end
+        end
+    end
+    if a2 == nil then
+        a2 = u165.calculate_bullet_direction(a1, CurrentCamera.CFrame.LookVector)
+    end
+    local v2 = get_start_pos(a1.instance)
+    local u75 = script.Arrow:Clone()
+    u75.Parent = game.Workspace
+    u75:PivotTo((CFrame.lookAt(v2.Position, v2.Position + a2 * 1)))
+    game.Debris:AddItem(u75, 5)
+    local LinearVelocity = Instance.new("LinearVelocity")
+    local Attachment = Instance.new("Attachment")
+    Attachment.Parent = u75.PrimaryPart
+    LinearVelocity.Attachment0 = Attachment
+    LinearVelocity.Parent = u75.PrimaryPart
+    local SmokeParticles = u75:FindFirstChild("SmokeParticles", true)
+    if SmokeParticles then
+        SmokeParticles.Rate = instance:GetAttribute("BulletSpeed") * 5
+    end
+    LinearVelocity.VectorVelocity = a2.Unit * a1.instance:GetAttribute("BulletSpeed")
+    local u126 = nil
+    local v3 = HitDetection.FastTouched(u75.PrimaryPart, function(a1_2) -- Line: 493
+        -- upvalues: a1 (val), u75 (val), u126 (ref), LinearVelocity (val), SmokeParticles (val), Util (upval)
+        local Instance = a1_2.Instance
+        if not Instance:IsDescendantOf(a1.instance.Parent) and not Instance:IsDescendantOf(u75) then
+            if if Instance.Transparency ~= 1 then false else if not Instance.CanCollide then not Instance:IsDescendantOf(game.Workspace.Vehicles) else false then
+                return
+            end
+            if Instance:IsDescendantOf(game.Workspace.Vehicles) and Instance.CanCollide == false then
+                return
+            end
+            u126:Disconnect()
+            LinearVelocity.Enabled = false
+            SmokeParticles.Rate = 0
+            u75.PrimaryPart.CFrame = (CFrame.new(a1_2.Position)) * u75.PrimaryPart.CFrame.Rotation
+            Util.weld(Instance, u75.PrimaryPart)
+            local u64 = Util.watch_property(Instance, "Transparency", function(a1) -- Line: 503 -- upvalues: Instance (val), u75 (upval)
+                if a1 == 1 and not Instance:IsDescendantOf(game.Workspace.Vehicles) then
+                    u75:Destroy()
+                end
+            end)
+            u75.Destroying:Connect(function() -- Line: 508 -- upvalues: u64 (val)
+                u64:Disconnect()
+            end)
+        end
+    end, nil, nil, "loose_props")
+end
+
+function u165.apply_recoil(a1) -- Line: 515 -- upvalues: Crosshair (val), ShoulderCamera (val)
+    local Attribute = a1.instance:GetAttribute("Recoil")
+    Crosshair.pulse(Attribute)
+    ShoulderCamera.recoil.r = CFrame.Angles(math.rad(10 * Attribute), math.rad((math.random(-5, 5)) * Attribute), 0)
+    task.wait(0.05)
+    ShoulderCamera.recoil.r = CFrame.new()
+end
+
+function u165.initiate() -- Line: 523 -- upvalues: Net (val), u165 (val)
+    Net.hook("gunshot", u165.gunshot)
+    Net.hook("rocket_shot", u165.rocket_shot)
+    Net.hook("firework_shot", u165.firework_shot)
+    Net.hook("arrow_shot", u165.arrow_shot)
+    Net.hook("bullet_hit", u165.bullet_hit)
+end
+
+function u165.load_idling_animations(a1) -- Line: 531 -- upvalues: Char (val), Timer (val), ShoulderCamera (val)
+    local u1 = {}
+    local u2 = {}
+    local IdleAnimations = a1.instance:FindFirstChild("IdleAnimations", true)
+    if IdleAnimations then
+        for i, j in IdleAnimations:GetChildren() do
+            if not j:GetAttribute("StandingStill") then
+                table.insert(u1, (Char.anim(j)))
+            else
+                table.insert(u2, (Char.anim(j)))
+            end
+        end
+    end
+    return (Timer.new(10, function() -- Line: 546 -- upvalues: ShoulderCamera (upval), Char (upval), u1 (val), a1 (val), u2 (val)
+        if ShoulderCamera.enabled.get() then
+            return
+        end
+        if Char.moving.get() and #u1 > 0 then
+            a1.playing_idle = u1[math.random(1, #u1)]
+            a1.playing_idle:Play()
+            return
+        end
+        if #u2 > 0 then
+            a1.playing_idle = u2[math.random(1, #u2)]
+            a1.playing_idle:Play()
+        end
+    end, true))
+end
+
+local SniperScope = script.SniperScope
+
+function u165.scope_animation(a1) -- Line: 562 -- upvalues: SniperScope (val), LocalPlayer (val), Util (val), Char (val)
+    if not a1 then
+        SniperScope.Enabled = false
+        SniperScope.Parent = nil
+        for i, j in Char.get():GetDescendants() do
+            if j:IsA("BasePart") then
+                j.LocalTransparencyModifier = 0
+            end
+        end
+        return
+    end
+    SniperScope.Parent = LocalPlayer.PlayerGui
+    script.Scope:Play()
+    SniperScope.Enabled = true
+    SniperScope.Scope.BackgroundTransparency = 0
+    SniperScope.Scope.Position = UDim2.fromScale(math.random(3, 7) * 0.1, math.random(6, 7) * 0.1)
+    Util.tween(
+        SniperScope.Scope,
+        TweenInfo.new(1, Enum.EasingStyle.Back),
+        {BackgroundTransparency = 1, Position = UDim2.fromScale(0.5, 0.5)}
+    )
+    for k, n in Char.get():GetDescendants() do
+        if n:IsA("BasePart") then
+            n.LocalTransparencyModifier = 1
+        end
+    end
+end
+
+local u213 = {}
+
+local function log_fire(a1) -- Line: 588 -- upvalues: u213 (val)
+    local v1 = u213[a1] or {}
+    u213[a1] = v1
+    local v2 = os.clock()
+    table.insert(u213[a1], v2)
+    while true do
+        if not (#u213[a1] > 0) or not (u213[a1][1] < v2 - 1) then
+            break
+        end
+        table.remove(u213[a1], 1)
+    end
+end
+
+local function check_fire_rate(a1, a2) -- Line: 599 -- upvalues: u213 (val)
+    if not u213[a1] then
+        return true
+    end
+    while true do
+        if not (#u213[a1] > 0) or not (u213[a1][1] < os.clock() - 1) then
+            break
+        end
+        table.remove(u213[a1], 1)
+    end
+    local v1 = #u213[a1]
+    if a2 * 1 < v1 then
+        return false
+    end
+    return true
+end
+
+function u165.loaded() -- Line: 613
+    -- upvalues: UI (val), u165 (val), ShoulderCamera (val), ItemUtils (val), Data (val), Util (val), ToolUtil (val)
+    -- upvalues: State (val), Char (val), Crosshair (val), Net (val), check_fire_rate (val), LocalPlayer (val)
+    -- upvalues: log_fire (val), Vehicle (val), ShotDeterminism (val), Keybinds (val), MultiPlayerAnimation (val)
+    local ItemsUI = require(game.ReplicatedStorage.Modules.Game.Inventory.ItemsUI)
+    local Hotbar = require(game.ReplicatedStorage.Modules.Game.Inventory.Hotbar)
+    local Bullets = UI.get("Bullets")
+    ShoulderCamera.spring_crosshair.hook(function(a1) -- Line: 618 -- upvalues: u165 (upval), Bullets (val)
+        if u165.equipped_gun.get() then
+            Bullets.Visible = a1 > 0
+            Bullets.TextTransparency = 0.3 + (1 - a1) * 0.7
+        end
+    end)
+    Hotbar.hook_hotbar_items(function(a1) -- Line: 628 -- upvalues: ItemUtils (upval), Data (upval)
+        local Value = a1.Tool.Value
+        if Value and Value:HasTag("Gun") then
+            local Attribute = Value:GetAttribute("ItemGUID")
+            a1.ToolFrame.Ammo.Visible = true
+            local Attribute_2 = Value:GetAttribute("MagSize")
+            local v1 = ItemUtils.get_item_info(Data, Attribute)
+            a1.ToolFrame.Ammo.Text = ("%*/%*"):format(v1.ammo_amount, Attribute_2)
+        end
+    end)
+    local u29 = nil
+    u165.equipped_gun.hook(function(a1) -- Line: 642
+        -- upvalues: Bullets (val), u29 (ref), Util (upval), UI (upval), ItemUtils (upval), Data (upval), Hotbar (val)
+        if a1 == nil then
+            Bullets.Text = ""
+        end
+        if u29 then
+            u29:Disconnect()
+            u29 = nil
+        end
+        if not a1 then
+            local CrosshairFrame = UI.get("CrosshairFrame")
+            CrosshairFrame.Visible = true
+        else
+            u29 = Util.watch_attribute(a1, "SniperScope", function(a1) -- Line: 651 -- upvalues: UI (upval)
+                local CrosshairFrame = UI.get("CrosshairFrame")
+                CrosshairFrame.Visible = not a1
+            end)
+        end
+        if a1 then
+            local Attribute = a1:GetAttribute("ItemGUID")
+            local v1 = ItemUtils.get_item_info(Data, Attribute)
+            local v2 = Hotbar.get_hotbar_item_by_guid(Attribute)
+            if v2 then
+                v2.ToolFrame.Ammo.Text = ("%*/%*"):format(v1.ammo_amount, (a1:GetAttribute("MagSize")))
+            end
+        end
+    end)
+    u165.class.hook(function(a1) -- Line: 667
+        -- upvalues: Util (upval), Hotbar (val), ToolUtil (upval), u165 (upval), State (upval), Char (upval)
+        -- upvalues: Crosshair (upval), ItemUtils (upval), Data (upval), Net (upval), ShoulderCamera (upval)
+        -- upvalues: check_fire_rate (upval), LocalPlayer (upval), log_fire (upval), Vehicle (upval)
+        -- upvalues: ShotDeterminism (upval), UI (upval), Keybinds (upval), MultiPlayerAnimation (upval), ItemsUI (val)
+        local instance = a1.instance
+        if not game.Players:GetPlayerFromCharacter(instance.Parent) then
+            return false
+        end
+        Util.watch_attribute(instance, "MagSize", function(a1) -- Line: 673 -- upvalues: Hotbar (upval), instance (val)
+            Hotbar.fire_hooks(instance:GetAttribute("ItemGUID"))
+        end)
+        local u167 = 60 / a1.states.fire_rate.get()
+        ToolUtil.override_ik_hold(a1)
+        local u186 = nil
+        local u171 = Util.override(u165.apply_recoil)
+        local u159 = State.new(-1)
+        local BarrelAttachment = instance:FindFirstChild("BarrelAttachment", true)
+        local RocketBarrelParticles = nil
+        if instance:GetAttribute("AmmoType") == "rocket" then
+            RocketBarrelParticles = script.RocketBarrelParticles
+            u159.hook(function(a1) -- Line: 692 -- upvalues: instance (val)
+                local v1
+                for i, j in instance:FindFirstChild("Rocket"):GetChildren() do
+                    if j:IsA("BasePart") then
+                        v1 = if a1 ~= 0 then 0 else 1
+                        j.Transparency = v1
+                    end
+                end
+            end)
+        elseif instance:GetAttribute("AmmoType") == "firework" then
+            RocketBarrelParticles = script.FireworkBarrelParticles
+            u159.hook(function(a1) -- Line: 701 -- upvalues: instance (val)
+                local v1
+                for i, j in instance:FindFirstChild("Rocket"):GetChildren() do
+                    if j:IsA("BasePart") then
+                        v1 = if a1 ~= 0 then 0 else 1
+                        j.Transparency = v1
+                    end
+                end
+            end)
+        elseif instance:GetAttribute("AmmoType") ~= "arrow" then
+            RocketBarrelParticles = script.BarrelParticles
+        else
+            u159.hook(function(a1) -- Line: 709 -- upvalues: instance (val)
+                local v1
+                for i, j in instance:FindFirstChild("Arrow"):GetChildren() do
+                    if j:IsA("BasePart") then
+                        v1 = if a1 ~= 0 then 0 else 1
+                        j.Transparency = v1
+                    end
+                end
+            end)
+        end
+        if RocketBarrelParticles then
+            for i, j in RocketBarrelParticles:GetChildren() do
+                if j.Name ~= "Sound" or not BarrelAttachment:FindFirstChild("Sound") then
+                    j:Clone().Parent = BarrelAttachment
+                end
+            end
+        end
+        local u108 = Char.anim(a1.instance:FindFirstChild("ShootAnimation", true) or 102186577987623)
+        local u118 = Char.anim(a1.instance:FindFirstChild("ADSAnimation", true) or 97952042379271)
+        local u130 = Char.anim(a1.instance:FindFirstChild("ReloadAnimation", true) or 95709349617639, false, Enum.AnimationPriority.Action4)
+        local u140 = Char.anim(a1.instance:FindFirstChild("IdleAnimation", true) or 84928275123466)
+        local u141 = nil
+
+        local function cancel_reload() -- Line: 735
+            -- upvalues: u141 (ref), u130 (val), a1 (val), instance (val), Crosshair (upval)
+            if u141.running then
+                u141:cancel()
+                u130:Stop(0.2)
+                local ReloadSound = a1.instance:FindFirstChild("ReloadSound", true)
+                if ReloadSound then
+                    ReloadSound:Stop()
+                end
+                if instance:GetAttribute("AmmoType") == "rocket" then
+                    for i, j in instance:FindFirstChild("Rocket"):GetChildren() do
+                        if j:IsA("BasePart") then
+                            j.Transparency = 1
+                        end
+                    end
+                elseif instance:GetAttribute("AmmoType") == "firework" then
+                    for m, i5 in instance:FindFirstChild("Rocket"):GetChildren() do
+                        if i5:IsA("BasePart") then
+                            i5.Transparency = 1
+                        end
+                    end
+                elseif instance:GetAttribute("AmmoType") == "arrow" then
+                    for k, n in instance:FindFirstChild("Arrow"):GetChildren() do
+                        if n:IsA("BasePart") then
+                            n.Transparency = 1
+                        end
+                    end
+                end
+                Crosshair.is_reloading.set(false)
+            end
+        end
+
+        local u150 = u165.load_idling_animations(a1)
+        local u151 = 0
+        local u152 = 0
+        u141 = Util.override(function(a1_2) -- Line: 788
+            -- upvalues: a1 (val), ItemUtils (upval), Data (upval), instance (val), u159 (val), Crosshair (upval)
+            -- upvalues: u130 (val), u141 (ref), Net (upval)
+            local Length, v1, v2, v3, v4, v5, v6
+            local v7 = a1.instance:GetAttribute("ReloadMultiplierOffset") or 1
+            local v8 = false
+            local v9 = true
+            while true do
+                v3 = ItemUtils.get_item_count(Data, "ammo", instance:GetAttribute("OverrideAmmoType"))
+                if u159.get() == 0 and v3 < 1 then
+                    v9 = true
+                    v3 = ItemUtils.get_item_count(Data, "ammo", instance:GetAttribute("AmmoType"))
+                end
+                if v3 < 1 or not v9 then
+                    Crosshair.pulse_red()
+                end
+                v4 = u159.get()
+                if a1.instance:GetAttribute("MagSize") <= v4 or v3 < 1 or not v9 then
+                    break
+                end
+                if instance:GetAttribute("AmmoType") == "rocket" then
+                    for i, j in instance:FindFirstChild("Rocket"):GetChildren() do
+                        if j:IsA("BasePart") then
+                            j.Transparency = 0
+                        end
+                    end
+                elseif instance:GetAttribute("AmmoType") == "firework" then
+                    for k, n in instance:FindFirstChild("Rocket"):GetChildren() do
+                        if n:IsA("BasePart") then
+                            n.Transparency = 0
+                        end
+                    end
+                elseif instance:GetAttribute("AmmoType") == "arrow" then
+                    task.delay(0.5, function() -- Line: 821 -- upvalues: instance (upval)
+                        for i, j in instance:FindFirstChild("Arrow"):GetChildren() do
+                            if j:IsA("BasePart") then
+                                j.Transparency = 0
+                            end
+                        end
+                    end)
+                end
+                v4 = a1.states.reload_time.get()
+                Length = u130.Length
+                local ReloadSound = a1.instance:FindFirstChild("ReloadSound", true)
+                if ReloadSound then
+                    v5 = ItemUtils.get_item_instance(instance.Name):GetAttribute("reload_time") / v4
+                    if ReloadSound:GetAttribute("DefaultPlaybackSpeed") then
+                        v5 = v5 * ReloadSound:GetAttribute("DefaultPlaybackSpeed")
+                    end
+                    ReloadSound.PlaybackSpeed = v5
+                    if not ReloadSound:GetAttribute("PlayDelay") then
+                        ReloadSound:Play()
+                    else
+                        task.delay(ReloadSound:GetAttribute("PlayDelay"), function() -- Line: 843 -- upvalues: u141 (upval), ReloadSound (val)
+                            if u141.running then
+                                ReloadSound:Play()
+                            end
+                        end)
+                    end
+                end
+                if u130.IsPlaying then
+                    u130:Stop(0.2)
+                    task.wait(0.2)
+                end
+                u130:Play(0.2)
+                u130:AdjustSpeed(Length / v4)
+                Crosshair.reloading_length.set(v4 * v7)
+                Crosshair.is_reloading.set(true)
+                task.wait(v4 * v7)
+                v6, v2 = Net.get("reload_gun", a1.instance, v1)
+                v5 = v6
+                Crosshair.is_reloading.set(false)
+                if v5 then
+                    u159.set(v5)
+                end
+                v8 = true
+            end
+            if v8 then
+                local PumpSound = a1.instance:FindFirstChild("PumpSound", true)
+                if PumpSound then
+                    PumpSound:Play()
+                end
+            end
+        end)
+        a1.reload = u141
+        local u162 = 0
+
+        local function u163() -- Line: 902
+            -- upvalues: ShoulderCamera (upval), Crosshair (upval), a1 (val), u159 (val), u141 (ref), u162 (ref)
+            -- upvalues: u151 (ref), u167 (val), check_fire_rate (upval), LocalPlayer (upval), log_fire (upval)
+            -- upvalues: u152 (ref), instance (val), u165 (upval), Vehicle (upval), ShotDeterminism (upval)
+            -- upvalues: Char (upval), Util (upval), Net (upval), u171 (val), u108 (val)
+            local v1 = os.clock()
+            if ShoulderCamera.enabled.get() and not Crosshair.is_reloading.get() and a1.random_object ~= nil then
+                if u159.get() ~= 0 then
+                    if 0 < u159.get() then
+                        local v2 = v1 - u151
+                        if u167 <= v2 and check_fire_rate(LocalPlayer, a1.states.fire_rate.get() / 60) then
+                            u159.update(function(a1) -- Line: 917
+                                return a1 - 1
+                            end)
+                            u151 = v1
+                            log_fire(LocalPlayer)
+                            u152 = u152 + 1
+                            v2 = {}
+                            if instance:GetAttribute("AmmoType") == "rocket" then
+                                u165.rocket_shot(a1)
+                            elseif instance:GetAttribute("AmmoType") == "firework" then
+                                u165.firework_shot(a1)
+                            elseif instance:GetAttribute("AmmoType") ~= "arrow" then
+                                local Position, v3, v4, v5, v6
+                                u165.gunshot(a1.instance)
+                                local v7 = a1.instance:GetAttribute("Multishot") or 1
+                                local v8 = game.Workspace.CurrentCamera.CFrame * CFrame.new(0, 0, -2)
+                                local v9 = Vehicle.get_car_player_is_in(LocalPlayer)
+                                for i = 1, v7 do
+                                    v6 = {LocalPlayer.Character}
+                                    if v9 then
+                                        table.insert(v6, v9)
+                                    end
+                                    Position = v8.Position
+                                    v3 = ShotDeterminism.direction_for(v8.LookVector, a1.states.accuracy.get(), a1.states.seed.get(), u152, i)
+                                    local u147 = {}
+                                    local u148 = 2
+                                    if not u165.FLAG_AIMBOT then
+                                        Util.all_parts_on_ray(Position, v3 * 500, v6, function(a1) -- Line: 991 -- upvalues: u147 (val), u148 (ref)
+                                            local v1 = {
+                                                Instance = a1.Instance,
+                                                Position = a1.Position,
+                                                Normal = a1.Normal,
+                                            }
+                                            table.insert(u147, v1)
+                                            if v1.Instance.CanCollide then
+                                                u148 = u148 - 1
+                                                if u148 <= 0 then
+                                                    return false
+                                                end
+                                            end
+                                            return true
+                                        end)
+                                    else
+                                        v4 = {}
+                                        for j, k in game.Players:GetChildren() do
+                                            if k ~= LocalPlayer
+                                                and k.Character
+                                                and k.Character:IsDescendantOf(game.Workspace) then
+                                                table.insert(v4, k)
+                                            end
+                                        end
+                                        if #v4 > 0 then
+                                            table.sort(v4, function(a1, a2) -- Line: 979 -- upvalues: Char (upval)
+                                                return (a1.Character:GetPivot().Position - Char.get_hrp().Position).Magnitude < (a2.Character:GetPivot().Position - Char.get_hrp().Position).Magnitude
+                                            end)
+                                            v5 = v4[1]
+                                            table.insert(u147, {
+                                                Instance = v5.Character.Head,
+                                                Position = v5.Character.Head.Position,
+                                                Normal = Vector3.new(),
+                                            })
+                                        end
+                                    end
+                                    table.insert(v2, u147)
+                                end
+                            else
+                                u165.arrow_shot(a1)
+                            end
+                            Net.send(
+                                "shoot_gun",
+                                a1.instance,
+                                game.Workspace.CurrentCamera.CFrame * CFrame.new(0, 0, -2),
+                                v2,
+                                0 < (a1.states.seed.get() or 0) and u152 or nil
+                            )
+                            u171(a1)
+                            if a1.playing_idle then
+                                a1.playing_idle:Stop()
+                            end
+                            u108:Play()
+                        end
+                    end
+                elseif not u141.running and 0.35 <= v1 - u162 then
+                    u162 = v1
+                    Crosshair.pulse_red()
+                    local EmptySound = a1.instance:FindFirstChild("EmptySound", true)
+                    if EmptySound then
+                        EmptySound:Play()
+                        return
+                    end
+                end
+            end
+        end
+
+        local function update_ammo(a1) -- Line: 1039
+            -- upvalues: instance (val), UI (upval), ItemUtils (upval), Data (upval), Hotbar (upval)
+            local Attribute = instance:GetAttribute("ItemGUID")
+            local Attribute_2 = instance:GetAttribute("MagSize")
+            local Bullets = UI.get("Bullets")
+            Bullets.Text = ("%*/%*"):format(a1, Attribute_2)
+            ItemUtils.get_item_info(Data, Attribute).ammo_amount = a1
+            local v1 = Hotbar.get_hotbar_item_by_guid(Attribute)
+            if v1 then
+                v1.ToolFrame.Ammo.Text = ("%*/%*"):format(a1, Attribute_2)
+            end
+        end
+
+        u159.hook(function(a1, a2) -- Line: 1054 -- upvalues: u165 (upval), instance (val), update_ammo (val)
+            if u165.equipped_gun.get() == instance then
+                update_ammo(if a1 ~= -1 then a1 else 0)
+            end
+        end)
+        local u176 = true
+        local u177 = false
+        local u178 = nil
+        local u179 = nil
+
+        local function aiming() -- Line: 1066
+            -- upvalues: ShoulderCamera (upval), instance (val), u118 (val), u140 (val), u165 (upval), Keybinds (upval)
+            -- upvalues: MultiPlayerAnimation (upval), u163 (val), u177 (ref)
+            if not ShoulderCamera.enabled.get() then
+                ShoulderCamera.spring_zoom.r = 0
+                u118:Stop()
+                if u165.equipped_gun.get() == instance then
+                    u140:Play()
+                end
+                if not u165.FLAG_MOBILE_AUTO_AIM_WHEN_SHOOTING then
+                    Keybinds.unhook_action("shoot")
+                end
+            else
+                ShoulderCamera.spring_zoom.r = instance:GetAttribute("Zoom") or 1
+                u118:Play()
+                u140:Stop()
+                if not u165.FLAG_MOBILE_AUTO_AIM_WHEN_SHOOTING then
+                    Keybinds.hook_action("shoot", function(a1) -- Line: 1073 -- upvalues: MultiPlayerAnimation (upval), u163 (upval), u177 (upval)
+                        if MultiPlayerAnimation.block_input.get() then
+                            return
+                        end
+                        if a1 then
+                            u163()
+                        end
+                        u177 = a1
+                    end)
+                end
+            end
+            if instance:GetAttribute("SniperScope") then
+                u165.scope_animation(ShoulderCamera.enabled.get())
+            end
+        end
+
+        instance.Equipped:Connect(function() -- Line: 1101
+            -- upvalues: Char (upval), instance (val), u176 (ref), u159 (val), ItemUtils (upval), Data (upval), a1 (val)
+            -- upvalues: u165 (upval), ShoulderCamera (upval), u140 (val), Keybinds (upval)
+            -- upvalues: MultiPlayerAnimation (upval), aiming (val), u141 (ref), u163 (val), u177 (ref), u186 (ref)
+            -- upvalues: Util (upval), u178 (ref), u150 (val), update_ammo (val), u179 (ref), LocalPlayer (upval)
+            if Char.get(true) ~= nil and instance:IsDescendantOf((Char.get(true))) then
+                if not Char.get_hum():GetAttribute("IsDead") and not Char.get_hum():GetAttribute("Stunned") then
+                    local v1
+                    if u176 then
+                        u159.set(ItemUtils.get_available_ammo(Data, instance))
+                        u176 = false
+                    elseif u159.get() ~= a1.states.mag.get() then
+                        u159.set(a1.states.mag.get())
+                    end
+                    for i, j in instance:GetDescendants() do
+                        if j:IsA("BasePart") then
+                            j.LocalTransparencyModifier = 0
+                        end
+                    end
+                    local EquipAnimation = a1.instance:FindFirstChild("EquipAnimation", true)
+                    if not EquipAnimation then
+                        u140:Play()
+                    else
+                        local v2 = Char.anim(EquipAnimation)
+                        v2:Play()
+                        local u79 = nil
+                        v1 = v2.Stopped:Connect(function() -- Line: 1126 -- upvalues: u79 (ref), u165 (upval), instance (upval), ShoulderCamera (upval), u140 (upval)
+                            u79:Disconnect()
+                            if (u165.equipped_gun:get()) == instance and not ShoulderCamera.enabled.get() then
+                                u140:Play()
+                            end
+                        end)
+                    end
+                    local u90 = false
+                    Keybinds.hook_action("aim", function(a1) -- Line: 1137 -- upvalues: MultiPlayerAnimation (upval), ShoulderCamera (upval), u90 (ref), aiming (upval)
+                        if MultiPlayerAnimation.block_input.get() then
+                            return
+                        end
+                        ShoulderCamera.enabled.set(a1)
+                        u90 = a1
+                        aiming()
+                    end, {label = "Aim", priority = 2})
+                    Keybinds.hook_action("aim_toggle", function(a1) -- Line: 1144 -- upvalues: MultiPlayerAnimation (upval), ShoulderCamera (upval), aiming (upval)
+                        if MultiPlayerAnimation.block_input.get() then
+                            return
+                        end
+                        if a1 then
+                            ShoulderCamera.enabled.update(function(a1) -- Line: 1147
+                                return not a1
+                            end)
+                            aiming()
+                        end
+                    end, {label = "Alt Aim", priority = 3})
+                    Keybinds.hook_action("reload", function(a1) -- Line: 1154 -- upvalues: MultiPlayerAnimation (upval), u141 (upval)
+                        if MultiPlayerAnimation.block_input.get() then
+                            return
+                        end
+                        if a1 and not u141.running then
+                            u141()
+                        end
+                    end, {label = "Reload", priority = 4})
+                    if u165.FLAG_MOBILE_AUTO_AIM_WHEN_SHOOTING then
+                        Keybinds.hook_action("shoot", function(a1) -- Line: 1162
+                            -- upvalues: MultiPlayerAnimation (upval), u165 (upval), Keybinds (upval), u90 (ref)
+                            -- upvalues: ShoulderCamera (upval), aiming (upval), u163 (upval), u177 (upval)
+                            if MultiPlayerAnimation.block_input.get() then
+                                return
+                            end
+                            if u165.FLAG_MOBILE_AUTO_AIM_WHEN_SHOOTING
+                                and Keybinds.current_input_mode.get() == "touch"
+                                and not u90 then
+                                ShoulderCamera.enabled.set(a1)
+                                aiming()
+                            end
+                            if a1 then
+                                u163()
+                            end
+                            u177 = a1
+                        end)
+                    end
+                    if a1.states.automatic.get() then
+                        u186 = Util.run(function(a1) -- Line: 1183 -- upvalues: u177 (upval), u163 (upval)
+                            if u177 then
+                                u163()
+                            end
+                        end)
+                    elseif u165.FLAG_MOBILE_AUTO_AIM_WHEN_SHOOTING then
+                        Keybinds.current_input_mode.hook(function(a1) -- Line: 1189 -- upvalues: u186 (upval), Util (upval), u177 (upval), u163 (upval)
+                            if u186 then
+                                u186:Disconnect()
+                                u186 = nil
+                            end
+                            if a1 == "touch" then
+                                u186 = Util.run(function(a1) -- Line: 1196 -- upvalues: u177 (upval), u163 (upval)
+                                    if u177 then
+                                        u163()
+                                    end
+                                end)
+                            end
+                        end)
+                    end
+                    u165.equipped_gun.set(instance)
+                    u178 = task.delay(5, function() -- Line: 1206 -- upvalues: u150 (upval)
+                        u150.start()
+                    end)
+                    update_ammo(u159.get())
+                    v1 = LocalPlayer
+                    u179 = Util.watch_attribute(v1, "IsMultiPlayerAnimating", function(a1) -- Line: 1212 -- upvalues: ShoulderCamera (upval), aiming (upval)
+                        if a1 and ShoulderCamera.enabled.get() then
+                            ShoulderCamera.enabled.set(false)
+                            aiming()
+                        end
+                    end)
+                    return
+                end
+                return
+            end
+        end)
+
+        local function unhook() -- Line: 1225
+            -- upvalues: u165 (upval), instance (val), u178 (ref), u150 (val), cancel_reload (val), Keybinds (upval)
+            -- upvalues: u118 (val), u130 (val), u140 (val), u179 (ref), u186 (ref), u177 (ref)
+            if u165.equipped_gun.get() == instance then
+                u165.equipped_gun.set(nil)
+                if u178 then
+                    task.cancel(u178)
+                    u178 = nil
+                end
+                u150.stop()
+                cancel_reload()
+                Keybinds.unhook_action("aim")
+                Keybinds.unhook_action("aim_toggle")
+                Keybinds.unhook_action("reload")
+                Keybinds.unhook_action("shoot")
+                u118:Stop()
+                u130:Stop()
+                u140:Stop()
+                if u179 then
+                    u179:Disconnect()
+                    u179 = nil
+                end
+            end
+            if u186 then
+                u186:Disconnect()
+                u186 = nil
+            end
+            u177 = false
+        end
+
+        instance.Unequipped:Connect(unhook)
+        instance.Destroying:Connect(function() -- Line: 1259 -- upvalues: unhook (val)
+            unhook()
+        end)
+        return function() -- Line: 1264
+            -- upvalues: a1 (val), u165 (upval), instance (val), ItemUtils (upval), Data (upval), ItemsUI (upval)
+            a1.states.seed.hook(function(a1_2, a2) -- Line: 1265 -- upvalues: a1 (upval)
+                if a1_2 ~= a2 then
+                    a1.random_object = Random.new(a1_2)
+                end
+            end)
+            a1.states.durability.hook(function(a1) -- Line: 1271 -- upvalues: u165 (upval), instance (upval), ItemUtils (upval), Data (upval), ItemsUI (upval)
+                if u165.equipped_gun.get() == instance and instance:GetAttribute("ItemGUID") then
+                    ItemUtils.get_item_info(Data, instance:GetAttribute("ItemGUID")).durability = a1
+                    ItemsUI.update_item_by_guid(instance:GetAttribute("ItemGUID"))
+                end
+            end)
+        end
+    end)
+end
+
+return u165

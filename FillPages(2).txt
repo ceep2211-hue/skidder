@@ -1,0 +1,135 @@
+-- Path : ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator.FillPages
+-- Script path: ReplicatedStorage.Modules.Game.CharacterCreator.CharacterCreator.FillPages
+-- Decompile time: 2.88 ms
+
+local CharacterCreatorTypes = require(script.Parent.CharacterCreatorTypes)
+local all_item_types = CharacterCreatorTypes.all_item_types
+local u6 = {}
+local Items = script.Parent:WaitForChild("Items")
+require(Items.SkinColors)
+require(Items.Hairs)
+require(Items.Heights)
+require(Items.Faces)
+
+function u6.get_page_module_for_page_name(a1) -- Line: 19 -- upvalues: Items (val) -- types: a1: string
+    for i, j in Items:GetChildren() do
+        if j:IsA("ModuleScript") and require(j).page_name == a1 then
+            return j
+        end
+    end
+    return nil
+end
+
+local function get_items_for_page_name(a1) -- Line: 32 -- upvalues: Items (val) -- types: a1: string
+    local v1
+    for i, j in Items:GetChildren() do
+        if j:IsA("ModuleScript") then
+            v1 = require(j)
+            if v1.page_name == a1 then
+                return v1.items_for_page
+            end
+        end
+    end
+    return {}
+end
+
+local function get_page_offset_for_page(a1) -- Line: 45 -- upvalues: Items (val) -- types: a1: string
+    local v1
+    for i, j in Items:GetChildren() do
+        if j:IsA("ModuleScript") then
+            v1 = require(j)
+            if v1.page_name == a1 then
+                return v1.focus_part_name, v1.page_offset
+            end
+        end
+    end
+    return "", (Vector3.new(0, 0, 0))
+end
+
+function u6.fill_pages(a1) -- Line: 58
+    -- upvalues: all_item_types (val), get_page_offset_for_page (val), CharacterCreatorTypes (val)
+    -- upvalues: get_items_for_page_name (val), u6 (val)
+    local v1, v2, v3, v4, v5, v6
+    local v7 = {}
+    if not a1 or table.find(a1, all_item_types.gender) then
+        v4, v5 = get_page_offset_for_page(all_item_types.gender)
+        table.insert(v7, {
+            equipped_max = 1,
+            page_name = all_item_types.gender,
+            page_offset = v5,
+            focus_part_name = v4,
+            display_type = CharacterCreatorTypes.page_display_types.gender_selection,
+            items = get_items_for_page_name(all_item_types.gender),
+        })
+    end
+    if not a1 or table.find(a1, all_item_types.skin_color) then
+        local skin_color = all_item_types.skin_color
+        v4, v5 = get_page_offset_for_page(skin_color)
+        table.insert(v7, {
+            equipped_max = 1,
+            page_name = skin_color,
+            page_offset = v5,
+            focus_part_name = v4,
+            display_type = CharacterCreatorTypes.page_display_types.skin_color_selection,
+            items = get_items_for_page_name(all_item_types.skin_color),
+        })
+    end
+    if not a1 or table.find(a1, all_item_types.height) then
+        local height = all_item_types.height
+        v4, v5 = get_page_offset_for_page(height)
+        table.insert(v7, {
+            equipped_max = 1,
+            page_name = height,
+            page_offset = v5,
+            focus_part_name = v4,
+            display_type = CharacterCreatorTypes.page_display_types.height_selection,
+        })
+    end
+    if not a1 or table.find(a1, all_item_types.hair) then
+        local hair = all_item_types.hair
+        v4, v5 = get_page_offset_for_page(hair)
+        table.insert(v7, {
+            equipped_max = 1,
+            page_name = hair,
+            page_offset = v5,
+            focus_part_name = v4,
+            display_type = CharacterCreatorTypes.page_display_types.items,
+            items = get_items_for_page_name(all_item_types.hair),
+        })
+    end
+    if not a1 or table.find(a1, all_item_types.face) then
+        local face = all_item_types.face
+        v4, v5 = get_page_offset_for_page(face)
+        table.insert(v7, {
+            equipped_max = 1,
+            page_name = face,
+            page_offset = v5,
+            focus_part_name = v4,
+            display_type = CharacterCreatorTypes.page_display_types.items,
+            items = get_items_for_page_name(all_item_types.face),
+        })
+    end
+    for i, j in {
+        all_item_types.hat_accessories,
+        all_item_types.shoe_accessories,
+        all_item_types.top_accessories,
+        all_item_types.bottom_accessories,
+    } do
+        if a1 and table.find(a1, j) then
+            v6, v1 = get_page_offset_for_page(j)
+            v2 = u6.get_page_module_for_page_name(j)
+            v3 = require(v2)
+            table.insert(v7, {
+                page_name = j,
+                page_offset = v1,
+                focus_part_name = v6,
+                display_type = CharacterCreatorTypes.page_display_types.items,
+                equipped_max = v3.equipped_max or 1,
+                items = get_items_for_page_name(j),
+            })
+        end
+    end
+    return v7
+end
+
+return u6

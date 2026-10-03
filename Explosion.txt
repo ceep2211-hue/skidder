@@ -1,0 +1,39 @@
+-- Path : ReplicatedStorage.Modules.Game.Effects.Explosion
+-- Script path: ReplicatedStorage.Modules.Game.Effects.Explosion
+-- Decompile time: 0.62 ms
+
+require(game.ReplicatedStorage.Modules.Core.Util)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local u14 = {}
+
+function u14.explosion(a1) -- Line: 5
+    local v1
+    local Attachment = Instance.new("Attachment")
+    Attachment.Parent = game.Workspace.Terrain
+    Attachment.WorldCFrame = CFrame.new(a1)
+    for i, j in script.Particles:GetChildren() do
+        v1 = j:Clone()
+        v1.Parent = Attachment
+        v1.Enabled = true
+    end
+    for k, n in script.Sounds:GetChildren() do
+        v1 = n:Clone()
+        v1.Parent = Attachment
+        v1:Play()
+    end
+    task.wait(0.2)
+    game.Debris:AddItem(Attachment, 4)
+    for m, i5 in Attachment:GetChildren() do
+        if i5:IsA("ParticleEmitter") then
+            i5.Enabled = false
+        end
+    end
+end
+
+function u14.initiate() -- Line: 33 -- upvalues: Net (val), u14 (val)
+    Net.hook("explosion", u14.explosion)
+end
+
+function u14.loaded() end
+
+return u14

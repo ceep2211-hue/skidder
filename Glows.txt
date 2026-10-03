@@ -1,0 +1,20 @@
+-- Path : Workspace.Map.Tiles.ShoppingTile.Garage1.Interior.Crates.Garage Crate.CrateOptions.Glows
+-- Script path: Workspace.Map.Tiles.ShoppingTile.Garage1.Interior.Crates.Garage Crate.CrateOptions.Glows
+-- Decompile time: 0.22 ms
+
+return {
+    crate_name = "Glows I",
+    crate_color_type = "Advanced",
+    layout_order = 2,
+    bias = 1.2,
+    category = "glow",
+    items = {
+        {name = "Cyan Glow", item_type = "cosmetic"},
+        {name = "Green Glow", item_type = "cosmetic"},
+        {name = "Orange Glow", item_type = "cosmetic"},
+        {name = "Red Glow", item_type = "cosmetic"},
+        {name = "White Glow", item_type = "cosmetic"},
+        {name = "Purple Glow", item_type = "cosmetic"},
+        {name = "Pink Glow", item_type = "cosmetic"},
+    },
+}

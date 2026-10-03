@@ -1,0 +1,38 @@
+-- Path : ReplicatedStorage.Modules.Game.Effects.Fire
+-- Script path: ReplicatedStorage.Modules.Game.Effects.Fire
+-- Decompile time: 0.82 ms
+
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local Tween = require(game.ReplicatedStorage.Modules.Core.Tween)
+local Audio = require(game.ReplicatedStorage.Modules.Core.Audio)
+local u28 = {}
+
+function u28.area_fire(a1, a2, a3) -- Line: 7 -- upvalues: Util (val), Tween (val), Audio (val)
+    local u7 = script.MolotovFire:Clone()
+    u7.Size = Vector3.new(a2 * 2, 1, a2 * 2)
+    u7.CFrame = a1
+    local Sound = Instance.new("Sound")
+    Sound.Name = "FireLoopSound"
+    Sound.SoundId = "rbxassetid://75638102319594"
+    Sound.PlaybackSpeed = Util.rand(1.4, 1.7)
+    Sound.RollOffMaxDistance = 170
+    Sound.RollOffMinDistance = 10
+    Sound.Volume = 0.4
+    Sound.Looped = true
+    Sound.Parent = u7
+    u7.CanCollide = false
+    u7.Parent = game.Workspace
+    Sound:Play()
+    task.delay(a3 - 1.5, function() -- Line: 30 -- upvalues: Tween (upval), u7 (val), Audio (upval), Sound (val)
+        Tween.play(u7.Fire, TweenInfo.new(1), {Rate = 0}).Completed:Wait()
+        Audio.ease(Sound, 0, 1)
+        u7:Destroy()
+    end)
+end
+
+function u28.initiate() -- Line: 37 -- upvalues: Net (val), u28 (val)
+    Net.hook("area_fire", u28.area_fire)
+end
+
+return u28

@@ -1,0 +1,38 @@
+-- Path : ReplicatedStorage.Modules.Core.UIFX.FrameEffects
+-- Script path: ReplicatedStorage.Modules.Core.UIFX.FrameEffects
+-- Decompile time: 0.80 ms
+
+require(game.ReplicatedStorage.Modules.Core.Ease)
+require(game.ReplicatedStorage.Modules.Core.UI)
+require(game.ReplicatedStorage.Modules.Core.Spring)
+
+local function setup_sine_wave(a1, a2, a3, a4) -- Line: 6 -- types: a1: userdata, a2: number, a3: number, a4: number
+    if a1:GetAttribute("sine_wave") then
+        return
+    end
+    a1:SetAttribute("sine_wave", true)
+    a1.Visible = true
+    task.spawn(function() -- Line: 14 -- upvalues: a1 (val), a4 (val), a2 (val), a3 (val)
+        local v1
+        while a1.Visible do
+            task.wait()
+            v1 = (math.sin((os.clock()) * a4) + 1) / 2
+            a1.BackgroundTransparency = a2 + (a3 - a2) * v1
+        end
+    end)
+end
+
+local function remove_sin_wave(a1) -- Line: 24 -- types: a1: userdata
+    a1:SetAttribute("sine_wave", false)
+    a1.Visible = false
+end
+
+return {
+    sine_wave = function(a1, a2, a3, a4) -- Line: 32 -- upvalues: setup_sine_wave (val) -- types: a2: number, a3: number, a4: number
+        setup_sine_wave(a1, a2, a3, a4)
+    end,
+    remove_sine_wave = function(a1) -- Line: 36
+        a1:SetAttribute("sine_wave", false)
+        a1.Visible = false
+    end,
+}

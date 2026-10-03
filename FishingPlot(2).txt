@@ -1,0 +1,8 @@
+-- Path : ReplicatedStorage.Modules.Game.Fishing.FishingPlot
+-- Script path: ReplicatedStorage.Modules.Game.Fishing.FishingPlot
+-- Decompile time: 0.10 ms
+
+return {
+    initiate = function() end,
+    loaded = function() end,
+}

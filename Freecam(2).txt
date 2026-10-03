@@ -1,0 +1,395 @@
+-- Path : ReplicatedStorage.Modules.Game.Freecam
+-- Script path: ReplicatedStorage.Modules.Game.Freecam
+-- Decompile time: 10.63 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+local ContextActionService = game:GetService("ContextActionService")
+local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
+local Players = game:GetService("Players")
+local State = require(ReplicatedStorage.Modules.Core.State)
+local PlaceInfo = require(ReplicatedStorage.Modules.Game.GameInfo.PlaceInfo)
+local v1 = {}
+local LocalPlayer = Players.LocalPlayer
+local CurrentCamera = workspace.CurrentCamera
+local P = Enum.KeyCode.P
+local u50 = CFrame.new(0, 0, -16)
+local u53 = State.new(false)
+v1.is_active = u53
+
+local function is_enabled_here() -- Line: 71 -- upvalues: PlaceInfo (val), RunService (val)
+    return PlaceInfo.is_dev_place() and not RunService:IsStudio()
+end
+
+local u55 = false
+local u56 = nil
+local u57 = Vector3.new(0, 0, 0)
+local u58 = 0
+local u59 = 0
+local u60 = 0
+local u61 = Vector3.new(0, 0, 0)
+local zero = Vector2.zero
+local u63 = 70
+local u64 = 70
+local u65 = 1
+local u66 = false
+local u67 = {[Enum.KeyCode.Z] = 0, [Enum.KeyCode.C] = 0}
+local u72 = nil
+
+local function smooth(a1, a2, a3, a4) -- Line: 91 -- types: a3: number, a4: number
+    return a1 + (a2 - a1) * (1 - math.exp(-a3 * a4))
+end
+
+local function is_typing() -- Line: 95 -- upvalues: UserInputService (val)
+    return UserInputService:GetFocusedTextBox() ~= nil
+end
+
+local function builtin_freecam_present() -- Line: 99 -- upvalues: LocalPlayer (val)
+    local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+    local v1 = false
+    if PlayerGui ~= nil then
+        v1 = PlayerGui:FindFirstChild("Freecam") ~= nil
+    end
+    return v1
+end
+
+local function push_player_state() -- Line: 106
+    -- upvalues: u72 (ref), CurrentCamera (val), UserInputService (val), StarterGui (val), LocalPlayer (val), u56 (ref)
+    u72 = {
+        camera_type = CurrentCamera.CameraType,
+        camera_cframe = CurrentCamera.CFrame,
+        camera_focus = CurrentCamera.Focus,
+        field_of_view = CurrentCamera.FieldOfView,
+        mouse_icon_enabled = UserInputService.MouseIconEnabled,
+        mouse_behavior = UserInputService.MouseBehavior,
+        core_guis = {},
+        screen_guis = {},
+    }
+    for i, j in Enum.CoreGuiType:GetEnumItems() do
+        if j ~= Enum.CoreGuiType.All then
+            u72.core_guis[j] = (StarterGui:GetCoreGuiEnabled(j))
+        end
+    end
+    StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
+    pcall(StarterGui.SetCore, StarterGui, "TopbarEnabled", false)
+    local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+    if PlayerGui then
+        for k, n in PlayerGui:GetChildren() do
+            if n:IsA("ScreenGui") and n.Enabled then
+                table.insert(u72.screen_guis, n)
+                n.Enabled = false
+            end
+        end
+    end
+    if u56 then
+        u56:Disable()
+    end
+    CurrentCamera.CameraType = Enum.CameraType.Scriptable
+    UserInputService.MouseIconEnabled = true
+    UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+end
+
+local function pop_player_state() -- Line: 144
+    -- upvalues: u72 (ref), StarterGui (val), u56 (ref), UserInputService (val), CurrentCamera (val)
+    if not u72 then
+        return
+    end
+    for i, j in u72.core_guis do
+        StarterGui:SetCoreGuiEnabled(i, j)
+    end
+    pcall(StarterGui.SetCore, StarterGui, "TopbarEnabled", true)
+    for k, n in u72.screen_guis do
+        if n.Parent then
+            n.Enabled = true
+        end
+    end
+    if u56 then
+        u56:Enable()
+    end
+    UserInputService.MouseIconEnabled = u72.mouse_icon_enabled
+    UserInputService.MouseBehavior = u72.mouse_behavior
+    CurrentCamera.FieldOfView = u72.field_of_view
+    CurrentCamera.CFrame = u72.camera_cframe
+    CurrentCamera.Focus = u72.camera_focus
+    CurrentCamera.CameraType = u72.camera_type
+    u72 = nil
+end
+
+local function set_looking(a1) -- Line: 175 -- upvalues: u66 (ref), UserInputService (val) -- types: a1: boolean
+    u66 = a1
+    UserInputService.MouseBehavior = a1 and Enum.MouseBehavior.LockCurrentPosition or Enum.MouseBehavior.Default
+    UserInputService.MouseIconEnabled = not a1
+end
+
+local function handle_keys(a1, a2, a3) -- Line: 183 -- upvalues: u65 (ref), u67 (val), u60 (ref) -- types: a3: userdata
+    local KeyCode = a3.KeyCode
+    if a2 == Enum.UserInputState.Begin then
+        if KeyCode == Enum.KeyCode.Up then
+            u65 = math.min(u65 * 1.5, 8)
+        elseif KeyCode == Enum.KeyCode.Down then
+            u65 = math.max(u65 / 1.5, 0.05)
+        elseif KeyCode == Enum.KeyCode.Z or KeyCode == Enum.KeyCode.C then
+            local v1 = os.clock()
+            if v1 - u67[KeyCode] < 0.3 then
+                u60 = 0
+            end
+            u67[KeyCode] = v1
+        end
+    end
+    return Enum.ContextActionResult.Sink
+end
+
+local function handle_mouse(a1, a2, a3) -- Line: 203
+    -- upvalues: u66 (ref), UserInputService (val), u64 (ref)
+    if a3.UserInputType ~= Enum.UserInputType.MouseButton2 then
+        if a3.UserInputType == Enum.UserInputType.MouseWheel and a2 == Enum.UserInputState.Change then
+            u64 = math.clamp(u64 - a3.Position.Z * 5, 5, 110)
+        end
+    elseif a2 == Enum.UserInputState.Begin then
+        u66 = true
+        UserInputService.MouseBehavior = Enum.MouseBehavior.LockCurrentPosition or Enum.MouseBehavior.Default
+        UserInputService.MouseIconEnabled = false
+    elseif a2 == Enum.UserInputState.End or a2 == Enum.UserInputState.Cancel then
+        u66 = false
+        UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+        UserInputService.MouseIconEnabled = true
+    end
+    return Enum.ContextActionResult.Sink
+end
+
+local function handle_pan(a1, a2, a3) -- Line: 218 -- upvalues: u66 (ref), zero (ref) -- types: a3: userdata
+    if not u66 then
+        return Enum.ContextActionResult.Pass
+    end
+    if a2 == Enum.UserInputState.Change then
+        zero = zero + Vector2.new(a3.Delta.X, a3.Delta.Y)
+    end
+    return Enum.ContextActionResult.Sink
+end
+
+local function bind_input() -- Line: 228
+    -- upvalues: ContextActionService (val), handle_keys (val), handle_mouse (val), handle_pan (val)
+    local Value = Enum.ContextActionPriority.High.Value
+    ContextActionService:BindActionAtPriority(
+        "FreecamKeys",
+        handle_keys,
+        false,
+        Value,
+        Enum.KeyCode.W,
+        Enum.KeyCode.A,
+        Enum.KeyCode.S,
+        Enum.KeyCode.D,
+        Enum.KeyCode.E,
+        Enum.KeyCode.Q,
+        Enum.KeyCode.Z,
+        Enum.KeyCode.C,
+        Enum.KeyCode.Up,
+        Enum.KeyCode.Down,
+        Enum.KeyCode.LeftShift,
+        Enum.KeyCode.RightShift
+    )
+    ContextActionService:BindActionAtPriority(
+        "FreecamMouse",
+        handle_mouse,
+        false,
+        Value,
+        Enum.UserInputType.MouseButton1,
+        Enum.UserInputType.MouseButton2,
+        Enum.UserInputType.MouseWheel
+    )
+    ContextActionService:BindActionAtPriority("FreecamMousePan", handle_pan, false, Value, Enum.UserInputType.MouseMovement)
+end
+
+local function unbind_input() -- Line: 241 -- upvalues: ContextActionService (val)
+    ContextActionService:UnbindAction("FreecamKeys")
+    ContextActionService:UnbindAction("FreecamMouse")
+    ContextActionService:UnbindAction("FreecamMousePan")
+end
+
+local function step(a1) -- Line: 249
+    -- upvalues: zero (ref), u59 (ref), u58 (ref), UserInputService (val), u60 (ref), u65 (ref), u61 (ref), u57 (ref)
+    -- upvalues: u63 (ref), u64 (ref), CurrentCamera (val), u50 (val)
+    if zero ~= Vector2.zero then
+        u59 = u59 - zero.X * 0.0045
+        u58 = math.clamp(u58 - zero.Y * 0.0045, -1.5533430342749532, 1.5533430342749532)
+        zero = Vector2.zero
+    end
+    local u23 = UserInputService:GetFocusedTextBox() ~= nil
+
+    local function held(a1) -- Line: 258 -- upvalues: u23 (val), UserInputService (upval)
+        if not u23 and UserInputService:IsKeyDown(a1) then
+            return 1
+        end
+        return 0
+    end
+
+    local v1 = u60
+    local C = Enum.KeyCode.C
+    local v2 = if u23 then 0 else if not UserInputService:IsKeyDown(C) then 0 else 1
+    local Z = Enum.KeyCode.Z
+    u60 = v1 + (v2 - (if u23 then 0 else if not UserInputService:IsKeyDown(Z) then 0 else 1)) * 1.0471975511965976 * a1
+    local D = Enum.KeyCode.D
+    local A = Enum.KeyCode.A
+    local E = Enum.KeyCode.E
+    local v3 = if u23 then 0 else if not UserInputService:IsKeyDown(E) then 0 else 1
+    local Q = Enum.KeyCode.Q
+    local S = Enum.KeyCode.S
+    v2 = if u23 then 0 else if not UserInputService:IsKeyDown(S) then 0 else 1
+    local W = Enum.KeyCode.W
+    local Unit = Vector3.new(
+        (if u23 then 0 else if not UserInputService:IsKeyDown(D) then 0 else 1) - (if u23 then 0 else if not UserInputService:IsKeyDown(A) then 0 else 1),
+        v3 - (if u23 then 0 else if not UserInputService:IsKeyDown(Q) then 0 else 1),
+        v2 - (if u23 then 0 else if not UserInputService:IsKeyDown(W) then 0 else 1)
+    )
+    if 0 < Unit.Magnitude then
+        Unit = Unit.Unit
+    end
+    local LeftShift = Enum.KeyCode.LeftShift
+    v3 = if u23 then 0 else if not UserInputService:IsKeyDown(LeftShift) then 0 else 1
+    local RightShift = Enum.KeyCode.RightShift
+    local v4 = 0 < v3 + (if u23 then 0 else if not UserInputService:IsKeyDown(RightShift) then 0 else 1)
+    v3 = Unit * 64 * u65
+    local v5 = v3 * (if not v4 then 1 else 0.25)
+    v2 = u61
+    u61 = v2 + (v5 - v2) * (1 - math.exp(a1 * -8))
+    v3 = CFrame.fromEulerAnglesYXZ(u58, u59, u60)
+    u57 = u57 + v3:VectorToWorldSpace(u61) * a1
+    local v6 = u63
+    u63 = v6 + (u64 - v6) * (1 - math.exp(a1 * -12))
+    v2 = CFrame.new(u57) * v3
+    CurrentCamera.CameraType = Enum.CameraType.Scriptable
+    CurrentCamera.CFrame = v2
+    CurrentCamera.Focus = v2 * u50
+    CurrentCamera.FieldOfView = u63
+end
+
+local function start() -- Line: 290
+    -- upvalues: u53 (val), push_player_state (val), CurrentCamera (val), u57 (ref), u58 (ref), u59 (ref), u60 (ref)
+    -- upvalues: u61 (ref), zero (ref), u63 (ref), u64 (ref), bind_input (val), RunService (val), step (val)
+    if u53.get() then
+        return
+    end
+    push_player_state()
+    local CFrame = CurrentCamera.CFrame
+    local LookVector = CFrame.LookVector
+    u57 = CFrame.Position
+    u58 = math.asin((math.clamp(LookVector.Y, -1, 1)))
+    u59 = math.atan2(-LookVector.X, -LookVector.Z)
+    u60 = 0
+    u61 = Vector3.new(0, 0, 0)
+    zero = Vector2.zero
+    u63 = CurrentCamera.FieldOfView
+    u64 = u63
+    bind_input()
+    RunService:BindToRenderStep("Freecam", Enum.RenderPriority.Camera.Value, step)
+    u53.set(true)
+end
+
+v1.start = start
+
+function v1.stop() -- Line: 311
+    -- upvalues: u53 (val), RunService (val), ContextActionService (val), u66 (ref), pop_player_state (val)
+    if not u53.get() then
+        return
+    end
+    RunService:UnbindFromRenderStep("Freecam")
+    ContextActionService:UnbindAction("FreecamKeys")
+    ContextActionService:UnbindAction("FreecamMouse")
+    ContextActionService:UnbindAction("FreecamMousePan")
+    u66 = false
+    pop_player_state()
+    u53.set(false)
+end
+
+local function on_toggle() -- Line: 323
+    -- upvalues: u53 (val), RunService (val), ContextActionService (val), u66 (ref), pop_player_state (val), u55 (ref)
+    -- upvalues: LocalPlayer (val), start (val)
+    local PlayerGui, v1
+    if u53.get() then
+        if not u53.get() then
+            return
+        end
+        RunService:UnbindFromRenderStep("Freecam")
+        ContextActionService:UnbindAction("FreecamKeys")
+        ContextActionService:UnbindAction("FreecamMouse")
+        ContextActionService:UnbindAction("FreecamMousePan")
+        u66 = false
+        pop_player_state()
+        u53.set(false)
+        return
+    end
+    if u55 then
+        return
+    end
+    local v2 = os.clock() + 0.25
+    while os.clock() < v2 do
+        PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+        v1 = false
+        if PlayerGui ~= nil then
+            v1 = PlayerGui:FindFirstChild("Freecam") ~= nil
+        end
+        if v1 then
+            u55 = true
+            return
+        end
+        task.wait()
+    end
+    local PlayerGui_2 = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+    v1 = false
+    if PlayerGui_2 ~= nil then
+        v1 = PlayerGui_2:FindFirstChild("Freecam") ~= nil
+    end
+    if v1 then
+        u55 = true
+        return
+    end
+    start()
+end
+
+function v1.initiate() -- Line: 353
+    -- upvalues: PlaceInfo (val), RunService (val), UserInputService (val), P (val), on_toggle (val)
+    local v1 = PlaceInfo.is_dev_place() and not RunService:IsStudio()
+    if not v1 then
+        return
+    end
+    UserInputService.InputBegan:Connect(function(a1) -- Line: 358 -- upvalues: P (upval), UserInputService (upval), on_toggle (upval) -- types: a1: userdata
+        if a1.KeyCode ~= P or UserInputService:GetFocusedTextBox() ~= nil then
+            return
+        end
+        if not UserInputService:IsKeyDown(Enum.KeyCode.LeftShift)
+            and not UserInputService:IsKeyDown(Enum.KeyCode.RightShift) then
+            return
+        end
+        task.spawn(on_toggle)
+    end)
+end
+
+function v1.loaded() -- Line: 368
+    -- upvalues: PlaceInfo (val), RunService (val), u56 (ref), LocalPlayer (val), u55 (ref), u53 (val)
+    -- upvalues: ContextActionService (val), u66 (ref), pop_player_state (val)
+    local v1 = PlaceInfo.is_dev_place() and not RunService:IsStudio()
+    if not v1 then
+        return
+    end
+    u56 = require(LocalPlayer.PlayerScripts:WaitForChild("PlayerModule")):GetControls()
+    ;(LocalPlayer:WaitForChild("PlayerGui")).ChildAdded:Connect(function(a1) -- Line: 378
+        -- upvalues: u55 (upval), u53 (upval), RunService (upval), ContextActionService (upval), u66 (upval)
+        -- upvalues: pop_player_state (upval)
+        if a1.Name == "Freecam" then
+            u55 = true
+            if not u53.get() then
+                return
+            end
+            RunService:UnbindFromRenderStep("Freecam")
+            ContextActionService:UnbindAction("FreecamKeys")
+            ContextActionService:UnbindAction("FreecamMouse")
+            ContextActionService:UnbindAction("FreecamMousePan")
+            u66 = false
+            pop_player_state()
+            u53.set(false)
+        end
+    end)
+end
+
+return v1

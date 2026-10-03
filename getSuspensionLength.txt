@@ -1,0 +1,18 @@
+-- Path : Workspace.Vehicles.Urus.Scripts.Client.FX.getSuspensionLength
+-- Script path: Workspace.Vehicles.Urus.Scripts.Client.FX.getSuspensionLength
+-- Decompile time: 0.30 ms
+
+local Parent = script.Parent.Parent.Parent.Parent
+local u5 = {
+    Parent.Suspension.FL,
+    Parent.Suspension.FR,
+    Parent.Suspension.RL,
+    Parent.Suspension.RR,
+}
+return function() -- Line: 11 -- upvalues: u5 (val)
+    local v1 = 0
+    for i, j in u5 do
+        v1 = v1 + j.CurrentLength
+    end
+    return v1
+end

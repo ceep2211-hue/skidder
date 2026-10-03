@@ -1,0 +1,62 @@
+-- Path : ReplicatedStorage.Modules.Game.GameInfo.GlobalNotification
+-- Script path: ReplicatedStorage.Modules.Game.GameInfo.GlobalNotification
+-- Decompile time: 1.35 ms
+
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local v1 = {}
+local u15 = nil
+local u16 = {}
+u16.ms = {
+    pattern = "(:ms%s*(%d+):)",
+    update = function(a1, a2, a3) -- Line: 11
+        local v1 = math.max(a3 - (os.time()), 0)
+        return a1:gsub(a2, string.format("%02d:%02d", math.floor(v1 / 60), v1 % 60), 1)
+    end,
+}
+
+local function cancel() -- Line: 22 -- upvalues: u15 (ref)
+    if u15 then
+        task.cancel(u15)
+        u15 = nil
+    end
+end
+
+local function search_for_pattern(a1) -- Line: 29 -- upvalues: UI (val), u16 (val), u15 (ref) -- types: a1: string
+    local v1
+    local Title = UI.get("GlobalNotificationHolder").Title
+    for k, v in pairs(u16) do
+        u22, v1 = a1:match(v.pattern)
+        if u22 and v1 then
+            local u26 = tonumber(v1)
+            if u26 then
+                u15 = task.spawn(function() -- Line: 37 -- upvalues: v (val), a1 (val), u22 (val), u26 (val), Title (val)
+                    while true do
+                        Title.Text = (v.update(a1, u22, u26))
+                        task.wait(1)
+                    end
+                end)
+                return
+            end
+        end
+    end
+end
+
+function v1.initiate() end
+
+function v1.loaded() -- Line: 53 -- upvalues: Net (val), u15 (ref), UI (val), search_for_pattern (val)
+    Net.hook("set_notification", function(a1, a2) -- Line: 54
+        -- upvalues: u15 (upval), UI (upval), search_for_pattern (upval)
+        if u15 then
+            task.cancel(u15)
+            u15 = nil
+        end
+        if a2 then
+            UI.get("GlobalNotificationHolder").Title.Text = a2
+            search_for_pattern(a2)
+        end
+        UI.get("GlobalNotificationHolder").Visible = a1
+    end)
+end
+
+return v1

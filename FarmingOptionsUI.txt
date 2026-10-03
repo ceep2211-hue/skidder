@@ -1,0 +1,123 @@
+-- Path : ReplicatedStorage.Modules.Game.Farming.FarmingOptionsUI
+-- Script path: ReplicatedStorage.Modules.Game.Farming.FarmingOptionsUI
+-- Decompile time: 3.54 ms
+
+require(game.ReplicatedStorage.Modules.Core.Input)
+require(game.ReplicatedStorage.Modules.Core.UIFX)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local Data = require(game.ReplicatedStorage.Modules.Core.Data)
+local ItemUtils = require(game.ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+local SubMenuBackground = require(game.ReplicatedStorage.Modules.Game.UI.SubMenuBackground)
+local UIFX = require(game.ReplicatedStorage.Modules.Core.UIFX)
+game:GetService("UserInputService")
+require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local FlagManager = require(game.ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local FarmingInfo = require(game.ReplicatedStorage.Modules.Game.Farming.FarmingInfo)
+local u105 = {}
+u105.enabled = State.new(false)
+u105.FLAG_FARMING_ENABLED = FlagManager.FLAG_FARMING_ENABLED
+
+function u105.initiate() end
+
+function u105.select_item(a1, a2) -- Line: 27
+    -- upvalues: u105 (val), UI (val), Util (val), ReplicatedStorage (val), ItemUtils (val), Data (val), Net (val)
+    local v1, v2, v3
+    u105.enabled.set(true)
+    local FarmOptions = UI.get("FarmOptions")
+    FarmOptions.Visible = true
+    local PlantsHolder = UI.get("PlantsHolder")
+    PlantsHolder.Visible = false
+    local Title = (UI.get("FarmOptions")).Title
+    Title.Text = ("Choose %*"):format((Util.capitalize_first(a2)))
+    for i, j in UI.get("FarmScrollingFrame"):GetChildren() do
+        if j:IsA("GuiButton") and j.Visible then
+            j:Destroy()
+        end
+    end
+    for k, n in ReplicatedStorage:WaitForChild("Items").misc:GetChildren() do
+        v2 = ItemUtils.get_item_count(Data, "misc", n.Name)
+        if n:GetAttribute("FarmItem") == a2 and v2 > 0 then
+            v3 = ItemUtils.get_item_icon(n.Name)
+            v1 = UI.get("FarmItemTemplate"):Clone()
+            v1.Visible = true
+            v1.Parent = UI.get("FarmScrollingFrame")
+            v1.Frame.ItemImage.Image = v3.image_id
+            v1.Frame.ItemImage.ImageColor3 = v3.color
+            v1.ItemCount.Text = ("x%*"):format(v2)
+            UI.on_click(v1, function() -- Line: 53 -- upvalues: u105 (upval), Net (upval), a2 (val), a1 (val), n (val)
+                u105.enabled.set(false)
+                Net.send("add_to_pot", a2, a1.instance, n.Name)
+            end)
+        end
+    end
+end
+
+function u105.plant_progress_ui(a1) -- Line: 61 -- upvalues: u105 (val), UI (val), FarmingInfo (val), Util (val)
+    u105.enabled.set(true)
+    local FarmOptions = UI.get("FarmOptions")
+    FarmOptions.Visible = false
+    local PlantsHolder = UI.get("PlantsHolder")
+    PlantsHolder.Visible = true
+    for i, j in UI.get("PlantsScrollingFrame"):GetChildren() do
+        if j:IsA("GuiBase2d") and j.Visible then
+            j:Destroy()
+        end
+    end
+    local v1 = FarmingInfo.plants[a1.states.current_plant.get()]
+    local u46 = UI.get("PlantsOptionTemplate"):Clone()
+    u46.Visible = true
+    u46.Parent = UI.get("PlantsScrollingFrame")
+    u46.PlantImage.Image = v1.image
+    u46.PlantTitle.Text = v1.title
+    local u61 = Util.watch_attribute(a1.instance, "CompletionPercentage", function(a1) -- Line: 81 -- upvalues: u46 (val)
+        local v1 = a1 or 0
+        u46.PaddingFrame.GrowthBar.CompletionBar.Size = UDim2.fromScale(v1 / 100, 1)
+        u46.PaddingFrame.GrowthBar.GrowthBarAmount.Text = ("%*%%"):format((math.floor(v1)))
+    end)
+    u46.Destroying:Connect(function() -- Line: 87 -- upvalues: u61 (val)
+        u61:Disconnect()
+    end)
+    UI.on_click(u46.FertilizeButton, function() -- Line: 91 -- upvalues: u105 (upval), a1 (val)
+        u105.select_item(a1, "fertilizer")
+    end)
+end
+
+function setup_select_item_menu() -- Line: 97 -- upvalues: UI (val)
+    local PlantsOptionTemplate = UI.get("PlantsOptionTemplate")
+    PlantsOptionTemplate.Visible = false
+    local FarmItemTemplate = UI.get("FarmItemTemplate")
+    FarmItemTemplate.Visible = false
+end
+
+function u105.loaded() -- Line: 102 -- upvalues: u105 (val), UI (val), SubMenuBackground (val), UIFX (val)
+    if not u105.FLAG_FARMING_ENABLED then
+        return
+    end
+    setup_select_item_menu()
+    local FarmingOptionsHolder = UI.get("FarmingOptionsHolder")
+    UI.on_click("FarmCloseButton", function() -- Line: 109 -- upvalues: u105 (upval)
+        u105.enabled.set(false)
+    end)
+    UI.on_click("PlantsCloseButton", function() -- Line: 113 -- upvalues: u105 (upval)
+        u105.enabled.set(false)
+    end)
+    u105.enabled.hook(function(a1, a2) -- Line: 117
+        -- upvalues: SubMenuBackground (upval), u105 (upval), UI (upval), UIFX (upval), FarmingOptionsHolder (val)
+        if a1 == a2 or not SubMenuBackground.can_open() then
+            return
+        end
+        if a1 then
+            SubMenuBackground.open(u105.enabled, UI.get("FarmingOptions"))
+            UIFX.scale_open(FarmingOptionsHolder)
+            return
+        end
+        SubMenuBackground.close()
+        UIFX.scale_close(FarmingOptionsHolder)
+    end)
+end
+
+return u105

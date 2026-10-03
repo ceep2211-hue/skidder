@@ -1,0 +1,65 @@
+-- Path : ReplicatedStorage.Modules.Game.Emotes.EmotesList
+-- Script path: ReplicatedStorage.Modules.Game.Emotes.EmotesList
+-- Decompile time: 0.61 ms
+
+return {
+    {
+        name = "Hips",
+        id = 77421667060026,
+        skill_unlock_name = "emote_hips",
+        sound = "rbxassetid://91737769972240",
+        image = "rbxassetid://129911929857421",
+        anim_playback_speed = 1.075,
+    },
+    {
+        name = "Spin",
+        id = 104453182541418,
+        skill_unlock_name = "emote_spin",
+        sound = "rbxassetid://135739831360886",
+        image = "rbxassetid://81021978040364",
+        anim_playback_speed = 1.3,
+        sound_playback_region = NumberRange.new(24, 108),
+    },
+    {
+        name = "Kick Back",
+        id = 110624092321431,
+        skill_unlock_name = "emote_kick_back",
+        sound = "rbxassetid://9044018652",
+        image = "rbxassetid://129068707621369",
+        anim_playback_speed = 1.2,
+        sound_playback_region = NumberRange.new(0.1, 15.7),
+    },
+    {
+        name = "Running Man from Jersey",
+        id = 133704408728669,
+        skill_unlock_name = "emote_running_man",
+        sound = "rbxassetid://9043874655",
+        image = "rbxassetid://79436552736493",
+        anim_playback_speed = 1.075,
+    },
+    {
+        name = "Reverse Heel Toe",
+        id = 81767480866343,
+        skill_unlock_name = "emote_reverse_heel_toe",
+        sound = "rbxassetid://9040329043",
+        image = "rbxassetid://80184896469621",
+        anim_playback_speed = 1,
+        sound_playback_region = NumberRange.new(0.1, 16),
+    },
+    {
+        name = "Indian step",
+        id = 132482983596491,
+        skill_unlock_name = "emote_indian_step",
+        sound = "rbxassetid://117871005427414",
+        image = "rbxassetid://85105134365733",
+        anim_playback_speed = 1.25,
+    },
+    {
+        name = "Vstep",
+        id = 126977267327902,
+        skill_unlock_name = "emote_v_step",
+        sound = "rbxassetid://1847412801",
+        image = "rbxassetid://87336712833846",
+        anim_playback_speed = 1.22,
+    },
+}

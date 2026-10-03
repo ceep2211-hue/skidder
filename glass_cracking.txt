@@ -1,0 +1,23 @@
+-- Path : ReplicatedStorage.Modules.Game.Quests.QuestsData.Milestones.glass_cracking
+-- Script path: ReplicatedStorage.Modules.Game.Quests.QuestsData.Milestones.glass_cracking
+-- Decompile time: 0.21 ms
+
+return {
+    {
+        display_name = "Glass Crackin'",
+        max_counter = 100,
+        requirements = "Smash out {max_counter} glass panes",
+        rewards = {
+            {
+                image = "rbxassetid://106880354532086",
+                name = "${amount}",
+                item_info = {name = "Money", item_type = "money", amount = 50},
+            },
+            {
+                image = "rbxassetid://94246149678829",
+                name = "+{amount} Bottles",
+                item_info = {name = "Bottle", item_type = "throwable", amount = 5},
+            },
+        },
+    },
+}

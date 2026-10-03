@@ -1,0 +1,226 @@
+-- Path : ReplicatedStorage.Modules.Game.GunsmithSystem.GunsmithBeaconClient
+-- Script path: ReplicatedStorage.Modules.Game.GunsmithSystem.GunsmithBeaconClient
+-- Decompile time: 6.16 ms
+
+local Data = require(game.ReplicatedStorage.Modules.Core.Data)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local FlagManager = require(game.ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+local ItemCustomizationUI = require(game.ReplicatedStorage.Modules.Game.ItemCustomization.ItemCustomizationUI)
+local ItemUtils = require(game.ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+local ItemsUI = require(ReplicatedStorage.Modules.Game.Inventory.ItemsUI)
+local State = require(ReplicatedStorage.Modules.Core.State)
+local Util = require(ReplicatedStorage.Modules.Core.Util)
+local BeaconUtil = require(ReplicatedStorage.Modules.Game.Inventory.BeaconUtil)
+local UpdateCosmetics = require(ReplicatedStorage.Modules.Game.ItemCustomization.UpdateCosmetics)
+require(ReplicatedStorage.Modules.Game.ItemCustomization.UpdateUpgrades)
+local Spring = require(ReplicatedStorage.Modules.Core.Spring)
+local Char = require(ReplicatedStorage.Modules.Core.Char)
+local Crate = require(ReplicatedStorage.Modules.Game.CrateSystem.Crate)
+local ValidCosmeticTypes = require(game.ReplicatedStorage.Modules.Game.ItemCustomization.ValidCosmeticTypes)
+local UserInputService = game:GetService("UserInputService")
+local u106 = {}
+local LocalPlayer = game.Players.LocalPlayer
+u106.FLAG_GUNSMITH_ENABLED = FlagManager.FLAG_GUNSMITH_ENABLED
+u106.class = StatefulObject.new_class(function() -- Line: 26
+    return {}
+end, "GunsmithBeacon")
+local u116 = {"melee", "gun"}
+u106.display_item_model = State.new(nil)
+u106.is_gunsmithing = State.new(false)
+
+function u106.loaded() -- Line: 38
+    -- upvalues: u106 (val), ItemCustomizationUI (val), Spring (val), ItemUtils (val), Util (val), Data (val)
+    -- upvalues: UpdateCosmetics (val), UserInputService (val), BeaconUtil (val), Crate (val), Char (val), ItemsUI (val)
+    -- upvalues: u116 (val), ValidCosmeticTypes (val)
+    if not u106.FLAG_GUNSMITH_ENABLED then
+        return
+    end
+    local CurrentCamera = game.Workspace.CurrentCamera
+    local u5 = {}
+    local u6 = nil
+    ItemCustomizationUI.enabled.hook(function(a1, a2) -- Line: 46 -- upvalues: u6 (ref)
+        if not a1 and u6 then
+            u6.unhook()
+            u6 = nil
+        end
+    end)
+    u106.display_item_model.hook(function(a1, a2) -- Line: 57
+        -- upvalues: u5 (ref), Spring (upval), ItemUtils (upval), Util (upval), CurrentCamera (val), Data (upval)
+        -- upvalues: UpdateCosmetics (upval), ItemCustomizationUI (upval), UserInputService (upval)
+        if a1 == a2 then
+            return
+        end
+        if a2 then
+            a2:Destroy()
+        end
+        for i, j in u5 do
+            if typeof(j) == "RBXScriptConnection" then
+                j:Disconnect()
+            elseif typeof(j) == "function" then
+                j()
+            end
+        end
+        u5 = {}
+        if a1 then
+            local u22 = Spring.new_v2(2.6, 0.94, Vector2.zero)
+            a1.Parent = game.Workspace
+            local u28 = ItemUtils.get_item_type(a1.Name)
+            table.insert(u5, (Util.render_stepped(function(a1_2) -- Line: 80 -- upvalues: u22 (val), a1 (val), CurrentCamera (upval)
+                local s = u22.s
+                a1:PivotTo((CurrentCamera.CFrame + CurrentCamera.CFrame.LookVector * 4) * (CFrame.fromEulerAnglesYXZ(-s.X, s.Y, 0)))
+            end)))
+            table.insert(u5, (Data.hook("items", function(a1_2) -- Line: 85
+                -- upvalues: UpdateCosmetics (upval), u28 (val), ItemCustomizationUI (upval), ItemUtils (upval)
+                -- upvalues: Data (upval), a1 (val)
+                if UpdateCosmetics[u28] then
+                    local v1 = ItemCustomizationUI.item_guid.get()
+                    local v2 = ItemUtils.get_item_info(Data, v1)
+                    UpdateCosmetics[u28](v2, a1, Data)
+                end
+            end)).unhook)
+            local u45 = false
+            local u46 = Vector3.new(0, 0, 0)
+            table.insert(u5, (UserInputService.InputBegan:Connect(function(a1, a2) -- Line: 99 -- upvalues: u45 (ref), u46 (ref)
+                if a2 then
+                    return
+                end
+                if a1.UserInputType == Enum.UserInputType.MouseButton1
+                    or a1.UserInputType == Enum.UserInputType.Touch then
+                    u45 = true
+                    u46 = a1.Position
+                end
+            end)))
+            table.insert(u5, (UserInputService.InputChanged:Connect(function(a1, a2) -- Line: 108 -- upvalues: u22 (val), u45 (ref), u46 (ref)
+                if a1.KeyCode == Enum.KeyCode.Thumbstick2 then
+                    local Position = a1.Position
+                    u22.r = Vector2.new(3.141592653589793 * Position.Y, 3.141592653589793 * Position.X)
+                    return
+                end
+                if not u45 then
+                    return
+                end
+                if a1.UserInputType == Enum.UserInputType.MouseMovement
+                    or a1.UserInputType == Enum.UserInputType.Touch then
+                    local v1 = (a1.Position - u46) * 0.008
+                    local v2 = u22
+                    v2.r = v2.r + Vector2.new(v1.Y, v1.X)
+                    u46 = a1.Position
+                end
+            end)))
+            table.insert(u5, (UserInputService.InputEnded:Connect(function(a1, a2) -- Line: 123 -- upvalues: u45 (ref)
+                if not u45 then
+                    return
+                end
+                if a1.UserInputType == Enum.UserInputType.MouseButton1
+                    or a1.UserInputType == Enum.UserInputType.Touch then
+                    u45 = false
+                end
+            end)))
+        end
+    end)
+    ItemCustomizationUI.enabled.hook(function(a1) -- Line: 135 -- upvalues: u106 (upval)
+        if not a1 then
+            u106.display_item_model.set(nil)
+        end
+    end)
+    u106.class.hook(function(a1) -- Line: 141
+        -- upvalues: BeaconUtil (upval), Crate (upval), ItemCustomizationUI (upval), ItemUtils (upval), u106 (upval)
+        -- upvalues: u6 (ref), Char (upval), ItemsUI (upval), u116 (upval), ValidCosmeticTypes (upval)
+        local instance = a1.instance
+        local TouchPart = a1.get("TouchPart")
+        local u8 = BeaconUtil.init_beacon(instance)
+
+        local function show_item(a1) -- Line: 147
+            -- upvalues: Crate (upval), ItemCustomizationUI (upval), ItemUtils (upval), u106 (upval), u6 (upval)
+            local instance = nil
+            for i, j in Crate.class.objects do
+                if j.instance.Name == "Gunsmith Crate" then
+                    instance = j.instance
+                    break
+                end
+            end
+            ItemCustomizationUI.customise_title.set("Gunsmith")
+            ItemCustomizationUI.item_guid.set(a1.guid, true)
+            ItemCustomizationUI.crate_reference.set(instance)
+            ItemCustomizationUI.camera_and_controls_locked.set(true)
+            ItemCustomizationUI.enabled.set(true)
+
+            local function display_gun_model() -- Line: 163
+                -- upvalues: ItemUtils (upval), a1 (val), u106 (upval), ItemCustomizationUI (upval)
+                local v1 = ItemUtils.get_item_instance(a1.name):Clone()
+                for i, j in v1:GetDescendants() do
+                    if j:IsA("BasePart") then
+                        j.CastShadow = false
+                    end
+                end
+                u106.display_item_model.set(v1)
+                ItemCustomizationUI.item_inst.set(v1)
+            end
+
+            display_gun_model()
+            u6 = ItemCustomizationUI.visible.hook(function(a1, a2) -- Line: 178 -- upvalues: u106 (upval), display_gun_model (val)
+                if a1 == a2 then
+                    return
+                end
+                if not a1 then
+                    u106.display_item_model.set(nil)
+                    return
+                end
+                display_gun_model()
+            end)
+        end
+
+        local function yield_until_left_area() -- Line: 189
+            -- upvalues: Char (upval), TouchPart (val), ItemsUI (upval), ItemCustomizationUI (upval)
+            local Magnitude, v1, v2, v3
+            repeat
+                task.wait()
+                v1 = Char.current_hrp.get()
+                v2 = Char.current_hum.get()
+                if not v1 or not v2 or v2:GetAttribute("IsDead") then
+                    break
+                end
+                Magnitude = (TouchPart.Position - v1.Position).Magnitude
+                if not ItemsUI.is_open.get() then
+                    v3 = ItemCustomizationUI.enabled.get()
+                else
+                    v3 = true
+                    if ItemsUI.inventory_type.get() ~= "select" then
+                        v3 = ItemCustomizationUI.enabled.get()
+                    end
+                end
+            until Magnitude > 5 or not v3
+        end
+
+        u8.on_enter:Connect(function() -- Line: 203
+            -- upvalues: Char (upval), u116 (upval), ValidCosmeticTypes (upval), ItemsUI (upval), show_item (val)
+            -- upvalues: u106 (upval), yield_until_left_area (val), ItemCustomizationUI (upval)
+            local v1 = Char.current_hum.get()
+            if v1 and not v1.SeatPart then
+                v1:UnequipTools()
+                ItemsUI.select_an_item(function(a1, a2) -- Line: 211 -- upvalues: u116 (upval), ValidCosmeticTypes (upval)
+                    for i, j in u116 do
+                        if j == a2 and ValidCosmeticTypes.item_types[j] and #ValidCosmeticTypes.item_types[j] > 0 then
+                            return true
+                        end
+                    end
+                    return false
+                end, function(a1) -- Line: 220 -- upvalues: show_item (upval)
+                    show_item(a1)
+                end)
+                u106.is_gunsmithing.set(true)
+                yield_until_left_area()
+                ItemsUI.is_open.set(false)
+                ItemCustomizationUI.enabled.set(false)
+                u106.is_gunsmithing.set(false)
+                return
+            end
+        end)
+        return function() -- Line: 238 -- upvalues: u8 (val)
+            u8.on_stream()
+        end
+    end)
+end
+
+return u106

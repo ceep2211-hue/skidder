@@ -1,0 +1,8 @@
+-- Path : ReplicatedStorage.DealershipModel.Rezvani.FlagCheck
+-- Script path: ReplicatedStorage.DealershipModel.Rezvani.FlagCheck
+-- Decompile time: 0.16 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+if not require(ReplicatedStorage.Modules.Game.GameInfo.FlagManager).FLAG_REZVANI then
+    script.Parent:Destroy()
+end

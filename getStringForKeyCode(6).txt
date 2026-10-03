@@ -1,0 +1,24 @@
+-- Path : Workspace.Vehicles.Urus.Scripts.Client.Input.getStringForKeyCode
+-- Script path: Workspace.Vehicles.Urus.Scripts.Client.Input.getStringForKeyCode
+-- Decompile time: 0.35 ms
+
+local UserInputService = game:GetService("UserInputService")
+local u5 = {
+    [Enum.KeyCode.Space] = "Spacebar",
+    [Enum.KeyCode.LeftShift] = "LShift",
+    [Enum.KeyCode.RightShift] = "RShift",
+    [Enum.KeyCode.LeftControl] = "LCtrl",
+    [Enum.KeyCode.RightControl] = "RCtrl",
+    [Enum.KeyCode.LeftAlt] = "LAlt",
+    [Enum.KeyCode.RightAlt] = "RAlt",
+}
+return function(a1) -- Line: 13 -- upvalues: u5 (val), UserInputService (val)
+    if u5[a1] then
+        return u5[a1]
+    end
+    local StringForKeyCode = UserInputService:GetStringForKeyCode(a1)
+    if StringForKeyCode == "" then
+        return a1.Name
+    end
+    return StringForKeyCode
+end

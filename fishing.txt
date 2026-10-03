@@ -1,0 +1,174 @@
+-- Path : ReplicatedStorage.Modules.Game.Skills.SkillsList.fishing
+-- Script path: ReplicatedStorage.Modules.Game.Skills.SkillsList.fishing
+-- Decompile time: 1.49 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+require(ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+require(ReplicatedStorage.Modules.Game.Farming.FarmingInfo)
+require(game.ReplicatedStorage.Modules.Core.Util)
+return {
+    {
+        level = 1,
+        name = "LilPond",
+        display_name = "Lil' Pond",
+        display_reward = {
+            {image = "rbxassetid://17368081924", text = "Lil' Pond!"},
+            {
+                text = "Unlocks Lil' Pond, where you can start off your fishing journey! It is the smaller pond located behind the cell tower.",
+            },
+            {text = "Specific locations in a fishing zone have better odds for better fish"},
+        },
+    },
+    {
+        level = 1,
+        name = "FishingRodRegular",
+        display_name = "Regular Fishing Rod",
+        reward_info = {tool_name = "FishingRodRegular"},
+        display_reward = {
+            {image = "rbxassetid://120270558984957", text = "Regular Fishing Rod!"},
+            {text = "Unlocks the Regular Fishing Rod which can be purchased at Jack's Hardware Store"},
+        },
+    },
+    {
+        level = 1,
+        name = "WormtecRegular",
+        display_name = "Wormtec Regular",
+        reward_info = {tool_name = "WormtecRegular"},
+        display_reward = {
+            {image = "rbxassetid://120441301926763", text = "Wormtec Regular Fish Bait!"},
+            {
+                text = "Unlocks the Wormtec Regular Fish Bait which can be purchased at Jack's Hardware Store",
+            },
+            {text = "Better bait = better fish chances"},
+        },
+    },
+    {
+        level = 8,
+        name = "WormtecPro",
+        display_name = "Wormtec Pro",
+        reward_info = {tool_name = "WormtecPro"},
+        display_reward = {
+            {image = "rbxassetid://132337600953869", text = "Wormtec Pro Fish Bait!"},
+            {text = "Unlocks the Wormtec Pro Fish Bait which can be purchased at Jack's Hardware Store"},
+            {text = "Better bait = better fish chances"},
+        },
+    },
+    {
+        level = 10,
+        name = "LakeOLoot",
+        display_name = "Lake O' Loot",
+        display_reward = {
+            {image = "rbxassetid://17368081924", text = "Lake O' Loot!"},
+            {
+                text = "Unlocks Lake O' Loot, where you can find better fish. It is the larger pond located to the right of Lil' Pond",
+            },
+            {text = "Specific locations in a fishing zone have better odds for better fish"},
+        },
+    },
+    {
+        level = 15,
+        name = "WormtecUltimate",
+        display_name = "Wormtec Ultimate",
+        reward_info = {tool_name = "WormtecUltimate"},
+        display_reward = {
+            {image = "rbxassetid://127103363477906", text = "Wormtec Ultimate Fish Bait!"},
+            {
+                text = "Unlocks the Wormtec Ultimate Fish Bait which can be purchased at Jack's Hardware Store",
+            },
+            {text = "Better bait = better fish chances"},
+        },
+    },
+    {
+        level = 20,
+        name = "FishingRodPro",
+        display_name = "Pro Fishing Rod",
+        reward_info = {tool_name = "FishingRodPro"},
+        display_reward = {
+            {image = "rbxassetid://106570831786716", text = "Pro Fishing Rod!"},
+            {text = "Unlocks the Pro Fishing Rod which can be purchased at Jack's Hardware Store"},
+        },
+    },
+    {
+        level = 25,
+        name = "PrawntecRegular",
+        display_name = "Prawntec Regular",
+        reward_info = {tool_name = "PrawntecRegular"},
+        display_reward = {
+            {image = "rbxassetid://127976579217673", text = "Prawntec Regular Fish Bait!"},
+            {
+                text = "Unlocks the Prawntec Regular Fish Bait which can be purchased at Jack's Hardware Store",
+            },
+            {text = "Better bait = better fish chances"},
+        },
+    },
+    {
+        level = 30,
+        name = "PrawntecPro",
+        display_name = "Prawntec Pro",
+        reward_info = {tool_name = "PrawntecPro"},
+        display_reward = {
+            {image = "rbxassetid://105570092611846", text = "Prawntec Pro Fish Bait!"},
+            {
+                text = "Unlocks the Prawntec Pro Fish Bait which can be purchased at Jack's Hardware Store",
+            },
+            {text = "Better bait = better fish chances"},
+        },
+    },
+    {
+        level = 35,
+        name = "FishingRodAdvanced",
+        display_name = "Advanced Fishing Rod",
+        reward_info = {tool_name = "FishingRodAdvanced"},
+        display_reward = {
+            {image = "rbxassetid://94427395074184", text = "Advanced Fishing Rod!"},
+            {text = "Unlocks the Advanced Fishing Rod which can be purchased at Jack's Hardware Store"},
+        },
+    },
+    {
+        level = 40,
+        name = "BigCatchPier",
+        display_name = "Big Catch Pier",
+        display_reward = {
+            {image = "rbxassetid://17368081924", text = "Big Catch Pier!"},
+            {
+                text = "Unlocks Big Catch Pier, the fishing area around the beach bridge. Who knows what kind of fish lurk there?",
+            },
+            {text = "Specific locations in a fishing zone have better odds for better fish"},
+        },
+    },
+    {
+        level = 45,
+        name = "PrawntecUltimate",
+        display_name = "Prawntec Ultimate",
+        reward_info = {tool_name = "PrawntecUltimate"},
+        display_reward = {
+            {image = "rbxassetid://72557142179047", text = "Prawntec Ultimate Fish Bait!"},
+            {
+                text = "Unlocks the Prawntec Ultimate Fish Bait which can be purchased at Jack's Hardware Store",
+            },
+            {text = "Better bait = better fish chances"},
+        },
+    },
+    {
+        level = 60,
+        name = "FishingRodUltimate",
+        display_name = "Ultimate Fishing Rod",
+        reward_info = {tool_name = "FishingRodUltimate"},
+        display_reward = {
+            {image = "rbxassetid://75257833138570", text = "Ultimate Fishing Rod!"},
+            {text = "Unlocks the Ultimate Fishing Rod which can be purchased at Jack's Hardware Store"},
+        },
+    },
+    {
+        level = 70,
+        name = "GoFishDocks",
+        display_name = "Go Fish Docks",
+        display_reward = {
+            {image = "rbxassetid://17368081924", text = "Go Fish Docks!"},
+            {
+                text = "Unlocks Go Fish Docks, behind the car dealership. If you know where to look, it's possible to find ultimate fish there!",
+            },
+            {text = "Specific locations in a fishing zone have better odds for better fish"},
+        },
+    },
+}

@@ -1,0 +1,10 @@
+-- Path : Workspace.Map.Tiles.BurgerPlaceTile.UrbanCyclesAndSkates.Interior.Crates.Bike Crate.OlderCrateOptions.Elite
+-- Script path: Workspace.Map.Tiles.BurgerPlaceTile.UrbanCyclesAndSkates.Interior.Crates.Bike Crate.OlderCrateOptions.Elite
+-- Decompile time: 0.13 ms
+
+return {
+    crate_name = script.Name,
+    crate_color_type = "Elite",
+    layout_order = 3,
+    items = {{name = "BMX", item_type = "bike"}, {name = "BMX2", item_type = "bike"}},
+}

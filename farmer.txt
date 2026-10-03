@@ -1,0 +1,232 @@
+-- Path : ReplicatedStorage.Modules.Game.Skills.SkillsList.farmer
+-- Script path: ReplicatedStorage.Modules.Game.Skills.SkillsList.farmer
+-- Decompile time: 3.71 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+require(ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local FarmingInfo = require(ReplicatedStorage.Modules.Game.Farming.FarmingInfo)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+return {
+    {
+        level = 1,
+        name = "SunflowerSeeds",
+        display_name = "Sunflower Seeds",
+        reward_info = {tool_name = "SunflowerSeeds"},
+        display_reward = {
+            {image = "rbxassetid://118660731306618", text = "Sunflower Seeds!"},
+            {text = "Unlocks the Sunflower Seeds which can be purchased at Jack's Hardware Store"},
+            {
+                text = ("Takes %* to grow for %*$"):format(
+                    Util.seconds_to_legible_time(FarmingInfo.plants.sunflower.time_to_grow),
+                    FarmingInfo.plants.sunflower.reward
+                ),
+            },
+        },
+    },
+    {
+        level = 1,
+        name = "RegularSoil",
+        display_name = "Regular Soil",
+        reward_info = {tool_name = "RegularSoil"},
+        display_reward = {
+            {image = "rbxassetid://122514227919196", text = "Regular Soil!"},
+            {text = "Unlocks the Regular Soil which can be purchased at Jack's Hardware Store"},
+            {text = "A pot needs soil before you can plant stuff on it"},
+        },
+    },
+    {
+        level = 8,
+        name = "RegularFertilizer",
+        display_name = "Regular Fertilizer",
+        reward_info = {tool_name = "RegularFertilizer"},
+        display_reward = {
+            {image = "rbxassetid://113138762786432", text = "Regular Fertilizer!"},
+            {text = "Unlocks the Regular Fertilizer which can be purchased at Jack's Hardware Store"},
+            {
+                text = ("Shaves %* off growth time"):format((Util.seconds_to_legible_time(FarmingInfo.fertilizers.RegularFertilizer.save_time))),
+            },
+        },
+    },
+    {
+        level = 1,
+        name = "WateringCan",
+        display_name = "WateringCan",
+        reward_info = {tool_name = "WateringCan"},
+        display_reward = {
+            {image = "rbxassetid://77319738963842", text = "Watering Can!"},
+            {text = "Unlocks the Watering Can which can be purchased at Jack's Hardware Store"},
+            {text = "Keeps plants fresh, awarding maximum money"},
+        },
+    },
+    {
+        level = 10,
+        name = "CornSeeds",
+        display_name = "Corn Seeds",
+        reward_info = {tool_name = "CornSeeds"},
+        display_reward = {
+            {image = "rbxassetid://99549647180678", text = "Corn Seeds!"},
+            {text = "Unlocks the Corn Seeds which can be purchased at Jack's Hardware Store"},
+            {
+                text = ("Takes %* to grow for %*$"):format(
+                    Util.seconds_to_legible_time(FarmingInfo.plants.corn.time_to_grow),
+                    FarmingInfo.plants.corn.reward
+                ),
+            },
+        },
+    },
+    {
+        level = 15,
+        name = "RegularPot",
+        display_name = "Regular Pot",
+        reward_info = {tool_name = "RegularPot"},
+        display_reward = {
+            {image = "rbxassetid://106359480402687", text = "Regular Pot!"},
+            {text = "Unlocks the Regular Pot which can be purchased at Jack's Hardware Store"},
+            {text = "Place this by your home to grow more plants"},
+        },
+    },
+    {
+        level = 15,
+        name = "ExtraPot2",
+        display_name = "Extra Pot Slot",
+        display_reward = {
+            {image = "rbxassetid://106359480402687", text = "+1 Extra Pot Slot"},
+            {text = "You can place one extra pot by your house"},
+        },
+    },
+    {
+        level = 22,
+        name = "ExtraPot3",
+        display_name = "Extra Pot Slot",
+        display_reward = {
+            {image = "rbxassetid://106359480402687", text = "+1 Extra Pot Slot"},
+            {text = "You can place one extra pot by your house"},
+        },
+    },
+    {
+        level = 25,
+        name = "TomatoSeeds",
+        display_name = "Tomato Seeds",
+        reward_info = {tool_name = "TomatoSeeds"},
+        display_reward = {
+            {image = "rbxassetid://80442497229024", text = "Tomato Seeds!"},
+            {text = "Unlocks the Tomato Seeds which can be purchased at Jack's Hardware Store"},
+            {
+                text = ("Takes %* to grow for %*$"):format(
+                    Util.seconds_to_legible_time(FarmingInfo.plants.tomato.time_to_grow),
+                    FarmingInfo.plants.tomato.reward
+                ),
+            },
+        },
+    },
+    {
+        level = 30,
+        name = "PremiumSoil",
+        display_name = "Premium Soil",
+        reward_info = {tool_name = "PremiumSoil"},
+        display_reward = {
+            {image = "rbxassetid://73811326167326", text = "Premium Soil!"},
+            {text = "Unlocks the  Premium Soil which can be purchased at Jack's Hardware Store"},
+            {
+                text = ("Increases water retention by %*%% and money earned by %*%%"):format(
+                    math.round((FarmingInfo.soils.PremiumSoil.water_retention - 1) * 100),
+                    (math.round((FarmingInfo.soils.PremiumSoil.reward_multiplier - 1) * 100))
+                ),
+            },
+        },
+    },
+    {
+        level = 30,
+        name = "FarmerUnlockSeedsCrate",
+        display_name = "Stock Sunflower Seeds crate",
+        display_reward = {
+            {
+                image = "rbxassetid://134812486114734",
+                text = "Unlocks stocking Sunflower Seeds at Quick-11",
+            },
+            {text = "You must also be level 50 in shelf stocking"},
+        },
+    },
+    {
+        level = 35,
+        name = "ExtraPot4",
+        display_name = "Extra Pot Slot",
+        display_reward = {
+            {image = "rbxassetid://106359480402687", text = "+1 Extra Pot Slot"},
+            {text = "You can place one extra pot by your house"},
+        },
+    },
+    {
+        level = 40,
+        name = "OrganicFertilizer",
+        display_name = "Organic Fertilizer",
+        reward_info = {tool_name = "OrganicFertilizer"},
+        display_reward = {
+            {image = "rbxassetid://95082122023519", text = "Organic Fertilizer!"},
+            {text = "Unlocks the Organic Fertilizer which can be purchased at Jack's Hardware Store"},
+            {
+                text = ("Shaves %* off growth time"):format((Util.seconds_to_legible_time(FarmingInfo.fertilizers.OrganicFertilizer.save_time))),
+            },
+        },
+    },
+    {
+        level = 45,
+        name = "ExtraPot5",
+        display_name = "Extra Pot Slot",
+        display_reward = {
+            {image = "rbxassetid://106359480402687", text = "+1 Extra Pot Slot"},
+            {text = "You can place one extra pot by your house"},
+        },
+    },
+    {
+        level = 50,
+        name = "GoldenPot",
+        display_name = "Golden Pot",
+        reward_info = {tool_name = "GoldenPot"},
+        display_reward = {
+            {image = "rbxassetid://123770892561188", text = "Golden Pot!"},
+            {text = "Unlocks the Golden Pot which can be purchased at Jack's Hardware Store"},
+            {
+                text = ("Increases the money earned by %*%%"):format((math.round((FarmingInfo.pots.GoldenPot.reward_multiplier - 1) * 100))),
+            },
+        },
+    },
+    {
+        level = 55,
+        name = "ExtraPot6",
+        display_name = "Extra Pot Slot",
+        display_reward = {
+            {image = "rbxassetid://106359480402687", text = "+1 Extra Pot Slot"},
+            {text = "You can place one extra pot by your house"},
+        },
+    },
+    {
+        level = 60,
+        name = "GoldenTomatoSeeds",
+        display_name = "Golden Tomato Seeds",
+        reward_info = {tool_name = "GoldenTomatoSeeds"},
+        display_reward = {
+            {image = "rbxassetid://122690846515397", text = "Golden Tomato Seeds!"},
+            {text = "Unlocks the Golden Tomato Seeds which can be purchased at Jack's Hardware Store"},
+            {
+                text = ("Takes %* to grow for %*$"):format(
+                    Util.seconds_to_legible_time(FarmingInfo.plants.golden_tomato.time_to_grow),
+                    FarmingInfo.plants.golden_tomato.reward
+                ),
+            },
+        },
+    },
+    {
+        level = 70,
+        name = "DiamondPot",
+        display_name = "Diamond Pot",
+        reward_info = {tool_name = "DiamondPot"},
+        display_reward = {
+            {image = "rbxassetid://122526796647541", text = "Diamond Pot!"},
+            {text = "Unlocks the Diamond Pot which can be purchased at Jack's Hardware Store"},
+            {
+                text = ("Increases the money earned by %*%%"):format((math.round((FarmingInfo.pots.DiamondPot.reward_multiplier - 1) * 100))),
+            },
+        },
+    },
+}

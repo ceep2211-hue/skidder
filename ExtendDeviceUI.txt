@@ -1,0 +1,33 @@
+-- Path : ReplicatedStorage.Modules.Game.UI.ExtendDeviceUI
+-- Script path: ReplicatedStorage.Modules.Game.UI.ExtendDeviceUI
+-- Decompile time: 0.62 ms
+
+local v1 = {}
+local PlayerGui = game.Players.LocalPlayer.PlayerGui
+
+function update_insets() -- Line: 4 -- upvalues: PlayerGui (val)
+    if PlayerGui.CurrentScreenOrientation == Enum.ScreenOrientation.LandscapeLeft then
+        for k, n in PlayerGui:GetChildren() do
+            if n:IsA("ScreenGui") and not n:GetAttribute("EscapeUIExtension") then
+                n.ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets
+            end
+        end
+        return
+    end
+    for i, j in PlayerGui:GetChildren() do
+        if j:IsA("ScreenGui") and not j:GetAttribute("EscapeUIExtension") then
+            j.ScreenInsets = Enum.ScreenInsets.None
+        end
+    end
+end
+
+function v1.initiate() end
+
+function v1.loaded() -- Line: 25 -- upvalues: PlayerGui (val)
+    update_insets()
+    ;(PlayerGui:GetPropertyChangedSignal("CurrentScreenOrientation")):Connect(function() -- Line: 27
+        update_insets()
+    end)
+end
+
+return v1

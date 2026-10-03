@@ -1,0 +1,208 @@
+-- Path : ReplicatedStorage.Modules.Game.Farming.Farming
+-- Script path: ReplicatedStorage.Modules.Game.Farming.Farming
+-- Decompile time: 6.02 ms
+
+require(game.ReplicatedStorage.Modules.Game.Home.Home)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local u13 = {}
+local FlagManager = require(ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local Home = require(ReplicatedStorage.Modules.Game.Home.Home)
+local PotClient = require(script.Parent.PotClient)
+local Util = require(ReplicatedStorage.Modules.Core.Util)
+local NotificationsUI = require(game.ReplicatedStorage.Modules.Game.UI.NotificationsUI)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+require(ReplicatedStorage.Modules.Game.Farming.FarmingOptionsUI)
+local FarmingInfo = require(ReplicatedStorage.Modules.Game.Farming.FarmingInfo)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local LocalPlayer = game.Players.LocalPlayer
+u13.FLAG_FARMING_ENABLED = FlagManager.FLAG_FARMING_ENABLED
+
+local function get_home_from_pot_model(a1) -- Line: 20 -- types: a1: userdata
+    for i, j in a1.Parent.Parent:GetChildren() do
+        if j:HasTag("Home") then
+            return j
+        end
+    end
+end
+
+function u13.initiate() end
+
+function u13.loaded() -- Line: 33
+    -- upvalues: u13 (val), PotClient (val), Util (val), Home (val), get_home_from_pot_model (val), Char (val)
+    -- upvalues: Net (val), NotificationsUI (val), FarmingInfo (val), FlagManager (val), LocalPlayer (val)
+    if not u13.FLAG_FARMING_ENABLED then
+        return
+    end
+    PotClient.class.hook(function(a1) -- Line: 36
+        -- upvalues: Util (upval), Home (upval), get_home_from_pot_model (upval), Char (upval), Net (upval)
+        -- upvalues: NotificationsUI (upval), FarmingInfo (upval), PotClient (upval)
+        local v1 = Util.wait_for_descendant(a1.instance, "ProximityPrompt")
+        Home.class.get(get_home_from_pot_model(a1.instance))
+        v1.Triggered:Connect(function() -- Line: 40
+            -- upvalues: Char (upval), a1 (val), Net (upval), NotificationsUI (upval), FarmingInfo (upval)
+            -- upvalues: PotClient (upval)
+            local UseAnimation, v1
+            local v2 = Char.held_tool.get()
+            if a1.states.current_pot.get() == "" then
+                if not v2 or v2:GetAttribute("FarmItem") ~= "pot" then
+                    NotificationsUI.show_notification(nil, "You can buy a pot to place from Jack's Hardware Store")
+                else
+                    Net.send("add_to_pot", v2:GetAttribute("FarmItem"), a1.instance, v2)
+                end
+                if v2 then
+                    UseAnimation = v2:FindFirstChild("UseAnimation", true)
+                    if UseAnimation then
+                        v1 = Char.anim(UseAnimation)
+                        v1.Looped = false
+                        v1:Play()
+                        v1:AdjustSpeed(1.5)
+                    end
+                end
+                return
+            end
+            if v2 and v2:GetAttribute("FarmItem") == "pot" and v2.Name ~= a1.states.current_pot.get() then
+                if not v2 or v2:GetAttribute("FarmItem") ~= "pot" then
+                    NotificationsUI.show_notification(nil, "You can buy a pot to place from Jack's Hardware Store")
+                else
+                    Net.send("add_to_pot", v2:GetAttribute("FarmItem"), a1.instance, v2)
+                end
+                if v2 then
+                    UseAnimation = v2:FindFirstChild("UseAnimation", true)
+                    if UseAnimation then
+                        v1 = Char.anim(UseAnimation)
+                        v1.Looped = false
+                        v1:Play()
+                        v1:AdjustSpeed(1.5)
+                    end
+                end
+                return
+            end
+            if a1.states.current_soil.get() == "" then
+                if not v2 or v2:GetAttribute("FarmItem") ~= "soil" then
+                    NotificationsUI.show_notification(nil, "This pot needs some soil")
+                else
+                    Net.send("add_to_pot", v2:GetAttribute("FarmItem"), a1.instance, v2)
+                end
+                if v2 then
+                    UseAnimation = v2:FindFirstChild("UseAnimation", true)
+                    if UseAnimation then
+                        v1 = Char.anim(UseAnimation)
+                        v1.Looped = false
+                        v1:Play()
+                        v1:AdjustSpeed(1.5)
+                    end
+                end
+                return
+            end
+            if a1.states.current_plant.get() == "" then
+                if not v2 or v2:GetAttribute("FarmItem") ~= "seed" then
+                    NotificationsUI.show_notification(nil, "You need some seeds for this pot")
+                else
+                    Net.send("add_to_pot", v2:GetAttribute("FarmItem"), a1.instance, v2)
+                end
+                if v2 then
+                    UseAnimation = v2:FindFirstChild("UseAnimation", true)
+                    if UseAnimation then
+                        v1 = Char.anim(UseAnimation)
+                        v1.Looped = false
+                        v1:Play()
+                        v1:AdjustSpeed(1.5)
+                    end
+                end
+                return
+            end
+            if a1.states.current_plant.get() == "" then
+                if v2 then
+                    UseAnimation = v2:FindFirstChild("UseAnimation", true)
+                    if UseAnimation then
+                        v1 = Char.anim(UseAnimation)
+                        v1.Looped = false
+                        v1:Play()
+                        v1:AdjustSpeed(1.5)
+                    end
+                end
+                return
+            end
+            local v3 = FarmingInfo.plants[a1.states.current_plant.get()]
+            local v4 = PotClient.get_current_os_time()
+            v1 = a1.states.planted_stamp.get() + v3.time_to_grow / a1.states.growth_multiplier.get() <= v4
+            v4 = a1.states.watered_stamp.get()
+            local v5 = a1.states.current_plant.get()
+            local v6 = math.floor(100 - (PotClient.time_completion_percentage(v4, v4 + FarmingInfo.plants[v5].quality_time * (a1.states.water_retention.get()))) * 100) == 0
+            local v7 = v2
+            if v7 then
+                v7 = true
+                if v2:GetAttribute("FarmItem") ~= "fertilizer" then
+                    v7 = v2:GetAttribute("FarmItem") == "water"
+                end
+            end
+            if not v1 and not v6 then
+                if v6 then
+                    return
+                end
+                if not v7 then
+                    NotificationsUI.show_notification(nil, "Keep your plant watered to maximise its payout")
+                else
+                    Net.send("add_to_pot", v2:GetAttribute("FarmItem"), a1.instance, v2)
+                end
+                if v2 then
+                    UseAnimation = v2:FindFirstChild("UseAnimation", true)
+                    if UseAnimation then
+                        v1 = Char.anim(UseAnimation)
+                        v1.Looped = false
+                        v1:Play()
+                        v1:AdjustSpeed(1.5)
+                    end
+                end
+                return
+            end
+            if not v7 then
+                Net.send("harvest", a1.instance)
+                return
+            end
+            if v6 then
+                NotificationsUI.show_notification(nil, "You can't add stuff to dead plants")
+                return
+            end
+            if v1 then
+                NotificationsUI.show_notification(nil, "Not needed, plant is fully grown!")
+            end
+        end)
+        return function() end
+    end)
+    Home.class.hook(function(a1) -- Line: 113 -- upvalues: Util (upval), FlagManager (upval), LocalPlayer (upval)
+        local instance = a1.instance
+        local u2 = nil
+        Util.hook_children(instance.Parent, function(a1_2) -- Line: 117 -- upvalues: u2 (ref), FlagManager (upval), a1 (val), LocalPlayer (upval), instance (val)
+            if a1_2.Name == "FarmingSigns" then
+                u2 = a1_2
+                task.defer(function() -- Line: 120 -- upvalues: FlagManager (upval), u2 (upval), a1 (upval), LocalPlayer (upval), instance (upval)
+                    if not FlagManager.FLAG_FARMING_ENABLED then
+                        u2:Destroy()
+                        u2 = nil
+                        return
+                    end
+                    if a1.states.owner.get() == LocalPlayer then
+                        u2.Parent = instance.Parent
+                        return
+                    end
+                    u2.Parent = nil
+                end)
+            end
+        end)
+        return function() -- Line: 136 -- upvalues: a1 (val), u2 (ref), LocalPlayer (upval), instance (val)
+            a1.states.owner.hook(function(a1) -- Line: 137 -- upvalues: u2 (upval), LocalPlayer (upval), instance (upval) -- types: a1: userdata?
+                if u2 == nil then
+                    return
+                end
+                if a1 == LocalPlayer then
+                    u2.Parent = instance.Parent
+                    return
+                end
+                u2.Parent = nil
+            end)
+        end
+    end)
+end
+
+return u13

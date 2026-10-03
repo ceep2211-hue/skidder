@@ -1,0 +1,30 @@
+-- Path : Workspace.Map.Tiles.GunShopTile.PatriotWeapons.Interior.Crates.Weapon Crate.CrateOptions.Elite
+-- Script path: Workspace.Map.Tiles.GunShopTile.PatriotWeapons.Interior.Crates.Weapon Crate.CrateOptions.Elite
+-- Decompile time: 0.44 ms
+
+return {
+    crate_name = script.Name,
+    crate_color_type = "Elite",
+    layout_order = 4,
+    bias = 1.05,
+    items = {
+        {name = "Sawnoff", item_type = "gun"},
+        {name = "Hunting Rifle", item_type = "gun"},
+        {name = "Wrench", item_type = "melee"},
+        {name = "Frying Pan", item_type = "melee"},
+        {name = "Cinder Block", item_type = "throwable", amount = 25},
+        {name = "Metal Baseball Bat", item_type = "melee"},
+        {name = "Combat Axe", item_type = "melee"},
+        {name = "Machette", item_type = "melee"},
+        {name = "Sledge Hammer", item_type = "melee"},
+        {name = "Shovel", item_type = "melee"},
+        {name = "Molotov", item_type = "throwable", amount = 25},
+        {name = "Barbed Baseball Bat", item_type = "melee"},
+        {name = "Grenade", item_type = "throwable", amount = 5},
+        {name = "Draco", item_type = "gun"},
+        {name = "Double Barrel", item_type = "gun"},
+        {name = "M24", item_type = "gun"},
+        {name = "Uzi", item_type = "gun"},
+        {name = "Skorpion", item_type = "gun"},
+    },
+}

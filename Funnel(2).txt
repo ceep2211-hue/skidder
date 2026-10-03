@@ -1,0 +1,272 @@
+-- Path : ReplicatedStorage.Modules.Game.Analytics.Funnel
+-- Script path: ReplicatedStorage.Modules.Game.Analytics.Funnel
+-- Decompile time: 8.19 ms
+
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local JobUtil = require(game.ReplicatedStorage.Modules.Game.Jobs.JobUtil)
+local Crate = require(ReplicatedStorage.Modules.Game.CrateSystem.Crate)
+game:GetService("CollectionService")
+local LocalPlayer = game:GetService("Players").LocalPlayer
+local v1 = {}
+
+local function get_closest_job_direct_part_pos() -- Line: 22 -- upvalues: Net (val)
+    return Net.get("get_closest_job_direct_part_pos")
+end
+
+local u69 = State.new(nil)
+local u70 = nil
+local u71 = nil
+local u74 = State.new(nil)
+
+local function direct_to_job(a1) -- Line: 32
+    -- upvalues: Char (val), u69 (val), u71 (ref), u70 (ref), JobUtil (val), Util (val), LocalPlayer (val)
+    task.spawn(function() -- Line: 33
+        -- upvalues: a1 (val), Char (upval), u69 (upval), u71 (upval), u70 (upval), JobUtil (upval), Util (upval)
+        -- upvalues: LocalPlayer (upval)
+        if a1 then
+            local v1 = Char.get_hrp()
+            local u4 = {}
+            u69.set(a1)
+            u71 = Instance.new("Attachment", workspace.Terrain)
+            u71.WorldPosition = a1
+            u70 = JobUtil.create_arrow(v1, u71)
+
+            local function destroy() -- Line: 43 -- upvalues: u70 (upval), u71 (upval), u4 (ref)
+                u70:Destroy()
+                u70 = nil
+                u71:Destroy()
+                u71 = nil
+                for i, j in u4 do
+                    j:Disconnect()
+                end
+                u4 = {}
+            end
+
+            local v2 = LocalPlayer
+            local v3 = Util.watch_attribute(v2, "Job", function(a1) -- Line: 55 -- upvalues: destroy (val), u69 (upval)
+                if a1 and a1 ~= "" then
+                    destroy()
+                    u69.set(nil)
+                end
+            end)
+            table.insert(u4, v3)
+            v3 = LocalPlayer.CharacterRemoving:Connect(function() -- Line: 62 -- upvalues: destroy (val)
+                destroy()
+            end)
+            table.insert(u4, v3)
+        end
+    end)
+end
+
+local u76 = nil
+local u77 = nil
+
+local function direct_to_crate() -- Line: 71
+    -- upvalues: Char (val), Net (val), u76 (ref), u77 (ref), JobUtil (val), Crate (val)
+    local v1 = Char.get_hrp()
+    local get_gun_crate_position = Net.get("get_gun_crate_position")
+    if u76 then
+        u76:Destroy()
+    end
+    u77 = Instance.new("Attachment", workspace.Terrain)
+    u77.WorldPosition = get_gun_crate_position
+    u76 = JobUtil.create_arrow(v1, u77)
+    if not Crate.spinning.get() then
+        Crate.spinning.wait()
+    end
+    if u76 then
+        u77:Destroy()
+        u76:Destroy()
+        u76 = nil
+        u77 = nil
+    end
+end
+
+function v1.initiate() -- Line: 96
+    -- upvalues: Net (val), u74 (val), UI (val), Char (val), u69 (val), u71 (ref), u70 (ref), JobUtil (val), Util (val)
+    -- upvalues: LocalPlayer (val), direct_to_crate (val)
+    Net.hook("onboarding_hint", function(a1, a2) -- Line: 97
+        -- upvalues: u74 (upval), UI (upval), Net (upval), Char (upval), u69 (upval), u71 (upval), u70 (upval)
+        -- upvalues: JobUtil (upval), Util (upval), LocalPlayer (upval), direct_to_crate (upval)
+        u74.set(a2)
+        local OnboardingHintLabel = UI.get("OnboardingHintLabel")
+        if not a1.hint_string then
+            OnboardingHintLabel.Visible = false
+        else
+            OnboardingHintLabel.Text = "Hint: " .. tostring(a1.hint_string)
+            OnboardingHintLabel.Visible = true
+        end
+        if a2 == "GetJob" then
+            local get_closest_job_direct_part_pos = Net.get("get_closest_job_direct_part_pos")
+            task.spawn(function() -- Line: 33
+                -- upvalues: get_closest_job_direct_part_pos (val), Char (upval), u69 (upval), u71 (upval), u70 (upval)
+                -- upvalues: JobUtil (upval), Util (upval), LocalPlayer (upval)
+                if get_closest_job_direct_part_pos then
+                    local v1 = Char.get_hrp()
+                    local u4 = {}
+                    u69.set(get_closest_job_direct_part_pos)
+                    u71 = Instance.new("Attachment", workspace.Terrain)
+                    u71.WorldPosition = get_closest_job_direct_part_pos
+                    u70 = JobUtil.create_arrow(v1, u71)
+
+                    local function destroy() -- Line: 43 -- upvalues: u70 (upval), u71 (upval), u4 (ref)
+                        u70:Destroy()
+                        u70 = nil
+                        u71:Destroy()
+                        u71 = nil
+                        for i, j in u4 do
+                            j:Disconnect()
+                        end
+                        u4 = {}
+                    end
+
+                    local v2 = LocalPlayer
+                    local v3 = Util.watch_attribute(v2, "Job", function(a1) -- Line: 55 -- upvalues: destroy (val), u69 (upval)
+                        if a1 and a1 ~= "" then
+                            destroy()
+                            u69.set(nil)
+                        end
+                    end)
+                    table.insert(u4, v3)
+                    v3 = LocalPlayer.CharacterRemoving:Connect(function() -- Line: 62 -- upvalues: destroy (val)
+                        destroy()
+                    end)
+                    table.insert(u4, v3)
+                end
+            end)
+            return
+        end
+        if a2 ~= "EarnJobMoney" then
+            if a2 == "OpenCrate" then
+                direct_to_crate()
+            end
+            return
+        end
+        local Attribute = LocalPlayer:GetAttribute("Job")
+        if Attribute == "shelf_stocker" then
+            OnboardingHintLabel.Text = "Hint: Start stocking shelves for money"
+            return
+        end
+        if Attribute == "janitor" then
+            OnboardingHintLabel.Text = "Hint: Start mopping puddles for money"
+            return
+        end
+        OnboardingHintLabel.Text = "Hint: Start cooking steak for money"
+    end)
+    Net.hook("finish_onboarding_steps", function() -- Line: 129 -- upvalues: UI (upval)
+        local OnboardingHintLabel = UI.get("OnboardingHintLabel")
+        OnboardingHintLabel.Visible = false
+    end)
+end
+
+function v1.loaded() -- Line: 135
+    -- upvalues: UI (val), Char (val), u70 (ref), u69 (val), u74 (val), get_closest_job_direct_part_pos (val), u71 (ref)
+    -- upvalues: JobUtil (val), Util (val), LocalPlayer (val)
+    local OnboardingHintLabel = UI.get("OnboardingHintLabel")
+    OnboardingHintLabel.Visible = false
+    Char.hook(function() -- Line: 138
+        -- upvalues: u70 (upval), u69 (upval), u74 (upval), get_closest_job_direct_part_pos (upval), Char (upval)
+        -- upvalues: u71 (upval), JobUtil (upval), Util (upval), LocalPlayer (upval), UI (upval)
+        if u70 then
+            return
+        end
+        if u69.get() or u74.get() == "EarnJobMoney" then
+            u69.set(get_closest_job_direct_part_pos())
+            local u14 = u69.get()
+            task.spawn(function() -- Line: 33
+                -- upvalues: u14 (val), Char (upval), u69 (upval), u71 (upval), u70 (upval), JobUtil (upval)
+                -- upvalues: Util (upval), LocalPlayer (upval)
+                if u14 then
+                    local v1 = Char.get_hrp()
+                    local u4 = {}
+                    u69.set(u14)
+                    u71 = Instance.new("Attachment", workspace.Terrain)
+                    u71.WorldPosition = u14
+                    u70 = JobUtil.create_arrow(v1, u71)
+
+                    local function destroy() -- Line: 43 -- upvalues: u70 (upval), u71 (upval), u4 (ref)
+                        u70:Destroy()
+                        u70 = nil
+                        u71:Destroy()
+                        u71 = nil
+                        for i, j in u4 do
+                            j:Disconnect()
+                        end
+                        u4 = {}
+                    end
+
+                    local v2 = LocalPlayer
+                    local v3 = Util.watch_attribute(v2, "Job", function(a1) -- Line: 55 -- upvalues: destroy (val), u69 (upval)
+                        if a1 and a1 ~= "" then
+                            destroy()
+                            u69.set(nil)
+                        end
+                    end)
+                    table.insert(u4, v3)
+                    v3 = LocalPlayer.CharacterRemoving:Connect(function() -- Line: 62 -- upvalues: destroy (val)
+                        destroy()
+                    end)
+                    table.insert(u4, v3)
+                end
+            end)
+            local OnboardingHintLabel = UI.get("OnboardingHintLabel")
+            OnboardingHintLabel.Text = "Hint: Get yourself a job to earn money"
+        end
+    end)
+    local v1 = LocalPlayer
+    Util.watch_attribute(v1, "Job", function(a1) -- Line: 152
+        -- upvalues: u74 (upval), u69 (upval), get_closest_job_direct_part_pos (upval), Char (upval), u71 (upval)
+        -- upvalues: u70 (upval), JobUtil (upval), Util (upval), LocalPlayer (upval), UI (upval)
+        if not a1 or a1 == "" then
+            if u74.get() == "GetJob" or u74.get() == "EarnJobMoney" then
+                u69.set(get_closest_job_direct_part_pos())
+                local u14 = u69.get()
+                task.spawn(function() -- Line: 33
+                    -- upvalues: u14 (val), Char (upval), u69 (upval), u71 (upval), u70 (upval), JobUtil (upval)
+                    -- upvalues: Util (upval), LocalPlayer (upval)
+                    if u14 then
+                        local v1 = Char.get_hrp()
+                        local u4 = {}
+                        u69.set(u14)
+                        u71 = Instance.new("Attachment", workspace.Terrain)
+                        u71.WorldPosition = u14
+                        u70 = JobUtil.create_arrow(v1, u71)
+
+                        local function destroy() -- Line: 43 -- upvalues: u70 (upval), u71 (upval), u4 (ref)
+                            u70:Destroy()
+                            u70 = nil
+                            u71:Destroy()
+                            u71 = nil
+                            for i, j in u4 do
+                                j:Disconnect()
+                            end
+                            u4 = {}
+                        end
+
+                        local v2 = LocalPlayer
+                        local v3 = Util.watch_attribute(v2, "Job", function(a1) -- Line: 55 -- upvalues: destroy (val), u69 (upval)
+                            if a1 and a1 ~= "" then
+                                destroy()
+                                u69.set(nil)
+                            end
+                        end)
+                        table.insert(u4, v3)
+                        v3 = LocalPlayer.CharacterRemoving:Connect(function() -- Line: 62 -- upvalues: destroy (val)
+                            destroy()
+                        end)
+                        table.insert(u4, v3)
+                    end
+                end)
+                local OnboardingHintLabel = UI.get("OnboardingHintLabel")
+                OnboardingHintLabel.Text = "Hint: Get yourself a job to earn money"
+            end
+        end
+    end)
+end
+
+return v1

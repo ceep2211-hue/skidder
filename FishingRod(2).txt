@@ -1,0 +1,385 @@
+-- Path : ReplicatedStorage.Modules.Game.ItemTypes.FishingRod
+-- Script path: ReplicatedStorage.Modules.Game.ItemTypes.FishingRod
+-- Decompile time: 12.74 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local StatefulObject = require(game.ReplicatedStorage.Modules.Core.StatefulObject)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+require(game.ReplicatedStorage.Modules.Game.UI.Crosshair)
+require(game.ReplicatedStorage.Modules.Game.Keybinds)
+local ItemUtils = require(game.ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+require(game.ReplicatedStorage.Modules.Core.Spring)
+require(game.ReplicatedStorage.Modules.Core.UI)
+local Audio = require(game.ReplicatedStorage.Modules.Core.Audio)
+require(ReplicatedStorage.Modules.Game.ToolUtil)
+local Data = require(ReplicatedStorage.Modules.Core.Data)
+local Hotbar = require(ReplicatedStorage.Modules.Game.Inventory.Hotbar)
+local ItemUtils_2 = require(ReplicatedStorage.Modules.Game.Inventory.ItemUtils)
+local SliderMinigame = require(ReplicatedStorage.Modules.Game.Minigames.SliderMinigame)
+local NotificationsUI = require(ReplicatedStorage.Modules.Game.UI.NotificationsUI)
+local u123 = {}
+local LocalPlayer = game.Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+local u134 = Color3.fromRGB(18, 26, 34)
+local u135 = 0
+u123.class = StatefulObject.new_class(function() -- Line: 45 -- upvalues: State (val)
+    return {
+        owner = State.new(nil),
+        has_thrown = State.new(false),
+        start_time = State.new(0),
+        hold_length = State.new(0),
+        bobber_position = State.new((Vector3.new())),
+        token = State.new(""),
+        has_bite = State.new(false),
+        hooked_fish = State.new(""),
+        max_distance = State.new(60),
+    }
+end, script.Name)
+u123.equipped_rod = State.new(nil)
+
+local function make_silhouette() -- Line: 70 -- upvalues: ItemUtils (val), u134 (val)
+    local Bass = ItemUtils.get_item_instance("Bass")
+    local Handle = Bass and Bass:FindFirstChild("Handle")
+    if Handle and Handle:IsA("BasePart") then
+        local v1 = Handle:Clone()
+        v1.Name = "BiteSilhouette"
+        v1.Color = u134
+        v1.Transparency = 0.45
+        v1.Material = Enum.Material.SmoothPlastic
+        v1.CastShadow = false
+        v1.CanCollide = false
+        v1.CanQuery = false
+        v1.CanTouch = false
+        if v1:IsA("MeshPart") then
+            v1.TextureID = ""
+        end
+        for i, j in v1:GetDescendants() do
+            if j:IsA("Decal") or j:IsA("Texture") or j:IsA("SurfaceAppearance") then
+                j:Destroy()
+            end
+        end
+        return v1
+    end
+    return nil
+end
+
+local function make_hooked_fish(a1) -- Line: 102 -- upvalues: ItemUtils (val) -- types: a1: string
+    if typeof(a1) == "string" and a1 ~= "" then
+        local v1 = ItemUtils.get_item_instance(a1)
+        local Handle = v1 and v1:FindFirstChild("Handle")
+        if Handle and Handle:IsA("BasePart") then
+            local v2 = Handle:Clone()
+            v2.Name = "HookedFish"
+            v2.CanCollide = false
+            v2.CanQuery = false
+            v2.CanTouch = false
+            v2.Massless = true
+            return v2
+        end
+        return nil
+    end
+    return nil
+end
+
+function setup_fishing_rod(a1) -- Line: 121
+    -- upvalues: Util (val), LocalPlayer (val), Char (val), SliderMinigame (val), u135 (ref), ItemUtils_2 (val)
+    -- upvalues: Data (val), ItemUtils (val), Net (val), u123 (val), NotificationsUI (val), Mouse (val)
+    local instance = a1.instance
+    local Attribute = instance:GetAttribute("ItemGUID")
+    instance.Activated:Connect((Util.db(function() -- Line: 125
+        -- upvalues: a1 (val), LocalPlayer (upval), Char (upval), instance (val), SliderMinigame (upval), u135 (upval)
+        -- upvalues: ItemUtils_2 (upval), Data (upval), ItemUtils (upval), Net (upval), Attribute (val), u123 (upval)
+        -- upvalues: NotificationsUI (upval), Mouse (upval)
+        if a1.states.owner.get() ~= LocalPlayer then
+            return
+        end
+        if Char.held_tool.get() == instance and not SliderMinigame.enabled.get() then
+            local v1, v2
+            if os.clock() - u135 < 1 then
+                return
+            end
+            local v3 = ItemUtils_2.get_item_info(Data, instance:GetAttribute("ItemGUID"))
+            if v3.ammo_amount == nil or v3.ammo_amount <= 0 then
+                local u34 = v3.override_ammo_type or "fish_bait"
+                local u35 = nil
+                v2 = Data
+                ItemUtils.iterate_through_items_of_type(v2, "ammo", function(a1) -- Line: 140 -- upvalues: u35 (ref), u34 (val)
+                    if string.find(a1.class.name, "fish_bait") and a1.location == "hand" and 0 < a1.amount then
+                        if u35 == nil or u35.class.name ~= u34 and a1.class.name == u34 then
+                            u35 = a1
+                        end
+                    end
+                end)
+                if u35 then
+                    v1, v2 = Net.get("equip_ammo_on_item", Attribute, u35.guid)
+                    if v1 and v2 then
+                        v3.ammo_amount = v1
+                        v3.override_ammo_type = v2
+                        update_tool_ammo(u123.equipped_rod.get())
+                    end
+                end
+            end
+            if v3.ammo_amount ~= nil and not (v3.ammo_amount <= 0) then
+                if a1.states.has_thrown:get() ~= false then
+                    if a1.states.has_bite.get() == nil then
+                        a1.states.bobber_position.set((Vector3.new()))
+                        a1.states.has_thrown.set(false)
+                        Net.send("cancel_throw", instance)
+                        SliderMinigame.enabled.set(false)
+                        u135 = os.clock()
+                        update_tool_ammo(instance)
+                    end
+                    return
+                end
+                local v4 = Char.get_hrp()
+                local v5 = RaycastParams.new()
+                v1 = {Char.current_char.get()}
+                v5.FilterDescendantsInstances = v1
+                v2 = workspace:Raycast(Mouse.Origin.Position, Mouse.Origin.LookVector * 300, v5)
+                if v2 and v2.Material == Enum.Material.Water then
+                    local Position_2 = v2.Position
+                    v1 = Vector3.new(Position_2.X, v4.CFrame.Y, Position_2.Z)
+                    local v6 = a1.states.max_distance.get() or 30
+                    local v7 = v1
+                    if v6 < (v1 - v4.CFrame.Position).Magnitude then
+                        v7 = v4.Position + CFrame.lookAt(v4.CFrame.Position, v1).LookVector * v6
+                    end
+                    local v8 = workspace:Raycast(v7, Vector3.new(0, -100, 0), v5)
+                    if v8 then
+                        a1.states.bobber_position.set(v8.Position)
+                        a1.states.has_thrown.set(true)
+                        local v9, v10 = Net.get("throw_rod", instance, v8.Position)
+                        if not v9 then
+                            a1.states.has_thrown.set(false)
+                            NotificationsUI.show_notification(nil, v10 or "You can't fish here", nil, true)
+                            return
+                        end
+                    end
+                    return
+                end
+                return
+            end
+            NotificationsUI.show_notification(nil, "You're out of fish bait!")
+            return
+        end
+    end)))
+    instance.Unequipped:Connect(function() -- Line: 261 -- upvalues: a1 (val), LocalPlayer (upval), instance (val), Net (upval), SliderMinigame (upval)
+        if a1.states.owner.get() ~= LocalPlayer then
+            return
+        end
+        update_tool_ammo(instance)
+        if a1.states.has_thrown.get() then
+            a1.states.bobber_position.set((Vector3.new()))
+            a1.states.has_thrown.set(false)
+            Net.send("cancel_throw", instance)
+            SliderMinigame.enabled.set(false)
+        end
+    end)
+end
+
+function u123.initiate() end
+
+function update_tool_ammo(a1, a2) -- Line: 282 -- upvalues: Hotbar (val), ItemUtils (val), Data (val)
+    if a1 and a1:HasTag("FishingRod") then
+        local v1 = a2 or Hotbar.get_hotbar_item_by_guid(a1:GetAttribute("ItemGUID"))
+        local v2 = ItemUtils.get_item_info(Data, a1:GetAttribute("ItemGUID"))
+        if v2 then
+            local v3 = ItemUtils.get_ammo_model_for_ammo_type(v2.override_ammo_type or a1:GetAttribute("AmmoType"))
+            if not v3 or not (0 < v2.ammo_amount) then
+                v1.ToolFrame.AmmoType.Visible = false
+            else
+                v1.ToolFrame.AmmoType.Image = v3:GetAttribute("ImageId")
+                v1.ToolFrame.AmmoType.Visible = true
+            end
+            v1.ToolFrame.Ammo.Visible = true
+            v1.ToolFrame.Ammo.Text = ("%*/1"):format(v2.ammo_amount or 0)
+            return
+        end
+        warn("item info doesn't exist")
+    end
+end
+
+function u123.loaded() -- Line: 302
+    -- upvalues: Hotbar (val), u123 (val), Char (val), Audio (val), Util (val), TweenService (val), LocalPlayer (val)
+    -- upvalues: SliderMinigame (val), ItemUtils_2 (val), Data (val), Net (val), u135 (ref), make_hooked_fish (val)
+    -- upvalues: make_silhouette (val)
+    Hotbar.hook_hotbar_items(function(a1) -- Line: 303 -- types: a1: userdata
+        local Value = a1.Tool.Value
+        update_tool_ammo(Value, a1)
+    end)
+    u123.equipped_rod.hook(function(a1) -- Line: 308
+        if a1 then
+            update_tool_ammo(a1)
+        end
+    end)
+    u123.class.hook(function(a1) -- Line: 323
+        -- upvalues: Char (upval), u123 (upval), Audio (upval), Util (upval), TweenService (upval), LocalPlayer (upval)
+        -- upvalues: SliderMinigame (upval), ItemUtils_2 (upval), Data (upval), Net (upval), u135 (upval)
+        -- upvalues: make_hooked_fish (upval), make_silhouette (upval)
+        local instance = a1.instance
+        local Handle = a1.get("Handle")
+        if instance:GetAttribute("FishingItem") == "rod" then
+            setup_fishing_rod(a1)
+        end
+        local u16 = script.Bobber:Clone()
+        local u21 = script.Rings:Clone()
+        u21.Parent = u16
+        local u26 = script.WaterParticles:Clone()
+        u26.Parent = u16
+        local u31 = script.Line:Clone()
+        u31.Attachment0 = Handle.LineStart
+        u31.Attachment1 = u16.LineEnd
+        local u35 = nil
+        instance.Equipped:Connect(function() -- Line: 344 -- upvalues: Char (upval), instance (val), u123 (upval)
+            if Char.get(true) ~= nil and instance:IsDescendantOf((Char.get())) then
+                u123.equipped_rod.set(instance)
+                update_tool_ammo(instance)
+                return
+            end
+        end)
+        instance.Unequipped:Connect(function() -- Line: 350 -- upvalues: u123 (upval), instance (val)
+            if u123.equipped_rod.get() == instance then
+                u123.equipped_rod.set(nil)
+            end
+        end)
+        local u47 = nil
+        return function() -- Line: 359
+            -- upvalues: a1 (val), u31 (val), instance (val), u16 (val), Handle (val), Audio (upval), u47 (ref)
+            -- upvalues: Util (upval), TweenService (upval), u26 (val), u21 (val), LocalPlayer (upval)
+            -- upvalues: SliderMinigame (upval), u35 (ref), ItemUtils_2 (upval), Data (upval), Net (upval), u135 (upval)
+            -- upvalues: Char (upval), make_hooked_fish (upval), make_silhouette (upval)
+            a1.states.has_thrown.hook(function(a1_2, a2) -- Line: 360
+                -- upvalues: u31 (upval), instance (upval), u16 (upval), Handle (upval), a1 (upval), Audio (upval)
+                -- upvalues: u47 (upval), Util (upval), TweenService (upval), u26 (upval), u21 (upval)
+                -- upvalues: LocalPlayer (upval), SliderMinigame (upval)
+                local v1
+                if not a1_2 then
+                    if not a1_2 then
+                        u31.Parent = nil
+                        u16.Parent = nil
+                    else
+                        u31.Parent = instance
+                        u16.Parent = instance
+                        v1 = a1.states.bobber_position.get()
+                        u16.Position = v1
+                    end
+                elseif not a2 then
+                    u31.Parent = instance
+                    u16.Parent = instance
+                    local Position = Handle.LineStart.WorldCFrame.Position
+                    local u14 = a1.states.bobber_position.get()
+                    u16.Position = Position
+                    Audio.play(9118971184, 2, 1, Handle)
+                    local u27 = TweenInfo.new(1.5, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+                    local u29 = tick()
+                    if u47 then
+                        u47:Disconnect()
+                        u47 = nil
+                    end
+                    u47 = Util.run(function(a1, a2) -- Line: 393
+                        -- upvalues: u29 (val), u27 (val), TweenService (upval), u16 (upval), Util (upval)
+                        -- upvalues: Position (val), u14 (val), u47 (upval)
+                        local v1 = math.min(tick() - u29, u27.Time)
+                        local Value = TweenService:GetValue(v1 / u27.Time, u27.EasingStyle, u27.EasingDirection)
+                        u16.Position = Util.quad_blerp(u16.Position, (Position + u14) * 0.5 + Vector3.new(0, 40, 0), u14, Value)
+                        if u27.Time <= v1 then
+                            a2:Disconnect()
+                            u47 = nil
+                        end
+                    end)
+                    task.wait(1.5)
+                    u26:Emit(15)
+                    u21:Emit(1)
+                    Audio.play(2846734837, 1, 1, u16)
+                elseif not a1_2 then
+                    u31.Parent = nil
+                    u16.Parent = nil
+                else
+                    u31.Parent = instance
+                    u16.Parent = instance
+                    v1 = a1.states.bobber_position.get()
+                    u16.Position = v1
+                end
+                if not a1_2 and a2 and a1.states.owner.get() == LocalPlayer then
+                    SliderMinigame.enabled.set(false)
+                end
+            end)
+            a1.states.has_bite.hook(function(a1_2) -- Line: 430
+                -- upvalues: u35 (upval), a1 (upval), LocalPlayer (upval), ItemUtils_2 (upval), Data (upval)
+                -- upvalues: instance (upval), SliderMinigame (upval), Net (upval), u135 (upval), Char (upval)
+                -- upvalues: Util (upval), u16 (upval), Audio (upval), make_hooked_fish (upval), make_silhouette (upval)
+                -- upvalues: u26 (upval), u21 (upval)
+                if u35 then
+                    u35:Destroy()
+                    u35 = nil
+                end
+                if a1_2 then
+                    if a1.states.owner.get() == LocalPlayer then
+                        local v1 = ItemUtils_2.get_item_info(Data, instance:GetAttribute("ItemGUID"))
+                        v1.ammo_amount = 0
+                        update_tool_ammo(instance)
+                        local u29 = SliderMinigame.server_mode_enabled()
+                        if not u29 then
+                            SliderMinigame.tries.set(1)
+                            SliderMinigame.levels.set(6)
+                            SliderMinigame.bar_percentage_increase.set(100)
+                            SliderMinigame.start(0.8333333333333334)
+                        end
+                        SliderMinigame.win:Connect(function(a1_2) -- Line: 455 -- upvalues: a1 (upval), u29 (val), Net (upval), u135 (upval)
+                            a1.states.bobber_position.set((Vector3.new()))
+                            a1.states.has_thrown.set(false)
+                            if not u29 then
+                                Net.send("reel_ended", a1.instance, a1_2)
+                            end
+                            u135 = os.clock()
+                        end)
+                        local u56 = {}
+                        table.insert(u56, (SliderMinigame.enabled.hook(function(a1) -- Line: 466 -- upvalues: u135 (upval), u56 (val)
+                            if not a1 then
+                                u135 = os.clock()
+                                for i, j in u56 do
+                                    j.unhook()
+                                end
+                            end
+                        end)))
+                        table.insert(u56, (SliderMinigame.level.hook(function(a1_2, a2) -- Line: 477 -- upvalues: Char (upval), a1 (upval), Util (upval), u16 (upval), Audio (upval)
+                            if a2 < a1_2 then
+                                local Position = Char.get_hrp().CFrame.Position
+                                local v1 = Vector3.new(Position.X, (a1.states.bobber_position.get()).Y, Position.Z)
+                                local v2 = CFrame.lookAt(a1.states.bobber_position.get(), v1)
+                                local v3 = (a1.states.bobber_position.get() - v1).Magnitude * (a1_2 / 10)
+                                Util.tween(u16, TweenInfo.new(1), {
+                                    CFrame = (CFrame.new(a1.states.bobber_position.get())) + v2.LookVector * v3,
+                                })
+                                Audio.play(79404754846319, 1, 1, u16)
+                            end
+                        end)))
+                    end
+                    if u35 then
+                        u35:Destroy()
+                        u35 = nil
+                    end
+                    u35 = make_hooked_fish(a1.states.hooked_fish.get()) or make_silhouette()
+                    if u35 then
+                        u35.Parent = instance
+                        u35:PivotTo((u16:GetPivot()) * CFrame.Angles(1.5707963267948966, 0, 0) + (Vector3.new(0, -u35.Size.Magnitude * 0.3, 0)))
+                        u35.Anchored = false
+                        Util.weld(u35, u16)
+                    end
+                    local Position = u16.Position
+                    u26:Emit(15)
+                    u21:Emit(1)
+                    Audio.play(2846734837, 1, 1, u16)
+                    Util.tween(u16, TweenInfo.new(0.3), {Position = Position - Vector3.new(0, 0.5, 0)}).Completed:Wait()
+                    Util.tween(u16, TweenInfo.new(0.3), {Position = Position})
+                end
+            end)
+        end
+    end)
+end
+
+return u123

@@ -1,0 +1,27 @@
+-- Path : Workspace.Map.Tiles.GunShopTile.PatriotWeapons.Interior.Crates.Gunsmith Crate.CrateOptions.Grips and Mags 1
+-- Script path: Workspace.Map.Tiles.GunShopTile.PatriotWeapons.Interior.Crates.Gunsmith Crate.CrateOptions.Grips and Mags 1
+-- Decompile time: 0.43 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local v1 = {}
+require(ReplicatedStorage.Modules.Game.ItemCustomization.ItemCustomizationUI.CustomizationCategories)
+require(ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+v1.crate_name = "Grips & Mags"
+v1.crate_color_type = "Legendary"
+v1.category = "weapon_grips"
+v1.layout_order = 1
+v1.bias = 1
+v1.items = {}
+for i, j in {
+    "Stubby Grip",
+    "Vertical Grip",
+    "Fold Grip",
+    "Quickdraw Grip",
+    "Ergonomic Grip",
+    "Bipod Rest",
+    "45 Drum Mag",
+    "60 Drum Mag",
+} do
+    table.insert(v1.items, {item_type = "cosmetic", name = j})
+end
+return v1

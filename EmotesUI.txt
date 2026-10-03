@@ -1,0 +1,304 @@
+-- Path : ReplicatedStorage.Modules.Game.Emotes.EmotesUI
+-- Script path: ReplicatedStorage.Modules.Game.Emotes.EmotesUI
+-- Decompile time: 9.60 ms
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UI = require(game.ReplicatedStorage.Modules.Core.UI)
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local UIFX = require(game.ReplicatedStorage.Modules.Core.UIFX)
+local SubMenuBackground = require(game.ReplicatedStorage.Modules.Game.UI.SubMenuBackground)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+local Char = require(game.ReplicatedStorage.Modules.Core.Char)
+local Viewport = require(game.ReplicatedStorage.Modules.Game.UI.Viewport)
+local FlagManager = require(game.ReplicatedStorage.Modules.Game.GameInfo.FlagManager)
+local XPFormula = require(game.ReplicatedStorage.Modules.Game.Skills.XPFormula)
+local Data = require(game.ReplicatedStorage.Modules.Core.Data)
+local SkillsList = require(ReplicatedStorage.Modules.Game.Skills.SkillsList)
+local Net = require(ReplicatedStorage.Modules.Core.Net)
+local AssassinationsList = require(game.ReplicatedStorage.Modules.Game.Emotes.AssassinationsList)
+local EmotesList = require(game.ReplicatedStorage.Modules.Game.Emotes.EmotesList)
+local MultiPlayerAnimation = require(ReplicatedStorage.Modules.Game.MultiAnimations.MultiPlayerAnimation)
+local u112 = {}
+u112.enabled = State.new(false)
+u112.current_emote_playing = State.new(nil)
+u112.current_page = State.new("emotes")
+local LocalPlayer = game:GetService("Players").LocalPlayer
+local u130 = State.new(0)
+
+local function can_emote() -- Line: 30 -- upvalues: Char (val), LocalPlayer (val)
+    if Char.get_hum():GetAttribute("HasBeenDowned") or Char.get_hum().Health <= 0 then
+        return false
+    end
+    if LocalPlayer:GetAttribute("IsMultiPlayerAnimating") then
+        return
+    end
+    return true
+end
+
+function u112.initiate() end
+
+local function fill_dance_list() -- Line: 41
+    -- upvalues: EmotesList (val), SkillsList (val), UI (val), u130 (val), FlagManager (val), Viewport (val), u112 (val)
+    -- upvalues: Char (val), LocalPlayer (val)
+    local v1 = nil
+    local v2 = nil
+    for i, j in EmotesList, v1, v2 do
+        local level = 1
+        for k, n in SkillsList.list.total_level do
+            if n.name == j.skill_unlock_name then
+                level = n.level
+                break
+            end
+        end
+        local u33 = UI.get("EmoteTemplate"):Clone()
+        u33:SetAttribute("EmoteIndex", i)
+        u33.Name = j.name
+        u33.EmoteEquipped.Visible = false
+        u33.LayoutOrder = level
+        u33.UnlocksAtText.Text = "Unlocks at Total Level: " .. level
+        u33.EmoteName.Text = j.name
+        u33.Visible = true
+        u33.Parent = UI.get("EmoteTemplate").Parent
+        u130.hook(function(a1) -- Line: 61 -- upvalues: u33 (val), level (ref)
+            u33.UnlocksAtText.Visible = a1 < level
+            u33.EmoteName.Visible = level <= a1
+        end)
+        if not FlagManager.FLAG_EMOTES_UI_USE_IMAGES or not j.image then
+            (Viewport.new(u33.ViewportFrame, u112.enabled, true)).hook(function(a1) -- Line: 72 -- upvalues: j (val)
+                if a1 then
+                    local Animation = Instance.new("Animation")
+                    Animation.AnimationId = "rbxassetid://" .. j.id
+                    local Humanoid = a1:FindFirstChild("Humanoid")
+                    if Humanoid then
+                        local Animator = Humanoid:FindFirstChild("Animator")
+                        if Animator then
+                            local u19 = Animator:LoadAnimation(Animation)
+                            u19.Looped = true
+                            task.defer(function() -- Line: 82 -- upvalues: u19 (val)
+                                u19:Play()
+                            end)
+                        end
+                    end
+                end
+            end)
+        else
+            u33.ImageLabel.Visible = true
+            u33.ImageLabel.Image = j.image or ""
+        end
+        u112.current_emote_playing.hook(function(a1) -- Line: 91 -- upvalues: u33 (val)
+            u33.EmoteEquipped.Visible = a1 == u33
+        end)
+        UI.on_click(u33, function() -- Line: 95
+            -- upvalues: u130 (upval), level (ref), Char (upval), LocalPlayer (upval), u112 (upval), u33 (val)
+            if u130.get() < level
+                or not (if not Char.get_hum():GetAttribute("HasBeenDowned") then if not (Char.get_hum().Health <= 0) then if not LocalPlayer:GetAttribute("IsMultiPlayerAnimating") then true else nil else false else false) then
+                return
+            end
+            u112.enabled.set(false)
+            if u112.current_emote_playing.get() == u33 then
+                u112.current_emote_playing.set(nil)
+                return
+            end
+            u112.current_emote_playing.set(u33)
+        end)
+    end
+end
+
+local function fill_assassination_list() -- Line: 109
+    -- upvalues: AssassinationsList (val), SkillsList (val), UI (val), FlagManager (val), MultiPlayerAnimation (val)
+    -- upvalues: Util (val), Char (val), u112 (val), u130 (val), Data (val), Net (val)
+    local v1 = nil
+    local v2 = nil
+    for i, j in AssassinationsList, v1, v2 do
+        local level = 1
+        for k, n in SkillsList.list.total_level do
+            if n.name == j.skill_unlock_name then
+                level = n.level
+                break
+            end
+        end
+        local u33 = UI.get("EmoteTemplate"):Clone()
+        u33:SetAttribute("AssassinationIndex", i)
+        u33.Name = j.display_name
+        u33.EmoteEquipped.Visible = false
+        u33.LayoutOrder = level
+        u33.UnlocksAtText.Text = "Unlocks at Total Level: " .. level
+        u33.EmoteName.Text = j.display_name
+        u33.Visible = true
+        u33.Parent = UI.get("EmoteTemplate").Parent
+        local WorldModel = u33.ViewportFrame:FindFirstChildOfClass("WorldModel")
+        local Camera = Instance.new("Camera")
+        Camera.CFrame = (CFrame.new(0, 7.5, 15)) * CFrame.fromEulerAngles(-0.7853981633974483, 0, 0)
+        Camera.FieldOfView = 70
+        Camera.CameraType = Enum.CameraType.Scriptable
+        Camera.Parent = WorldModel
+        u33.ViewportFrame.CurrentCamera = Camera
+        if not FlagManager.FLAG_EMOTES_UI_USE_IMAGES or not j.image then
+            local name = j.name
+            local u91 = nil
+            local u92 = nil
+            local u93 = nil
+
+            local function play_animation() -- Line: 146
+                -- upvalues: MultiPlayerAnimation (upval), u91 (ref), u92 (ref), name (val), WorldModel (val), u93 (ref)
+                -- upvalues: Util (upval), Camera (val)
+                MultiPlayerAnimation.local_play_animation({player_a = u91, player_b = u92}, name)
+                local CamPart = WorldModel:FindFirstChild("CamPart", true)
+                if CamPart then
+                    if u93 then
+                        u93:Disconnect()
+                    end
+                    u93 = Util.render_stepped(function(a1) -- Line: 156 -- upvalues: Camera (upval), CamPart (val)
+                        Camera.CFrame = CamPart.CFrame
+                    end)
+                end
+            end
+
+            local function create_animation() -- Line: 162
+                -- upvalues: u91 (ref), u92 (ref), Char (upval), WorldModel (val), play_animation (val)
+                if u91 then
+                    u91:Destroy()
+                end
+                if u92 then
+                    u92:Destroy()
+                end
+                u91 = Char.get():Clone()
+                u92 = Char.get():Clone()
+                u91.PrimaryPart.Anchored = true
+                u92.PrimaryPart.Anchored = true
+                u91:PivotTo((CFrame.new(0, 0, 0)) * (CFrame.fromOrientation(0, 3.141592653589793, 0)))
+                u92:PivotTo((CFrame.new(0, 0, 0)) * (CFrame.fromOrientation(0, 3.141592653589793, 0)))
+                u91.Parent = WorldModel
+                u92.Parent = WorldModel
+                task.defer(function() -- Line: 178 -- upvalues: play_animation (upval)
+                    play_animation()
+                end)
+            end
+
+            u112.enabled.hook(function(a1) -- Line: 183 -- upvalues: Char (upval), create_animation (val), u93 (ref)
+                if a1 then
+                    Char.get().Archivable = true
+                    create_animation()
+                    Char.get().Archivable = false
+                    return
+                end
+                if u93 then
+                    u93:Disconnect()
+                    u93 = nil
+                end
+            end)
+        else
+            u33.ImageLabel.Visible = true
+            u33.ImageLabel.Image = j.image or ""
+        end
+        u130.hook(function(a1) -- Line: 199 -- upvalues: u33 (val), level (ref)
+            u33.UnlocksAtText.Visible = a1 < level
+            u33.EmoteName.Visible = level <= a1
+        end)
+        Data.hook("equipped_assassination", function(a1) -- Line: 204 -- upvalues: u33 (val), j (val)
+            u33.EmoteEquipped.Visible = a1 == j.name
+        end)
+        UI.on_click(u33, function() -- Line: 208 -- upvalues: u130 (upval), level (ref), Net (upval), j (val)
+            if u130.get() < level then
+                return
+            end
+            Net.send("toggle_equip_assassination", j.name)
+        end)
+    end
+end
+
+function u112.loaded() -- Line: 215
+    -- upvalues: UI (val), UIFX (val), u112 (val), SubMenuBackground (val), Net (val), Char (val), EmotesList (val)
+    -- upvalues: Data (val), XPFormula (val), u130 (val), fill_dance_list (val), fill_assassination_list (val)
+    -- upvalues: LocalPlayer (val), Util (val)
+    local Emotes = UI.get("Emotes")
+    local EmotesHolder = UI.get("EmotesHolder")
+    UIFX.set_close(EmotesHolder)
+    local EmoteTemplate = UI.get("EmoteTemplate")
+    EmoteTemplate.Visible = false
+    UI.on_click("EmotesPageButton", function() -- Line: 224 -- upvalues: u112 (upval)
+        u112.current_page.set("emotes")
+    end)
+    UI.on_click("AssassinationsPageButton", function() -- Line: 228 -- upvalues: u112 (upval)
+        u112.current_page.set("assassinations")
+    end)
+    u112.enabled.hook(function(a1, a2) -- Line: 232
+        -- upvalues: SubMenuBackground (upval), u112 (upval), Emotes (val), UIFX (upval), EmotesHolder (val)
+        if a1 == a2 or not SubMenuBackground.can_open() then
+            return
+        end
+        if a1 then
+            SubMenuBackground.open(u112.enabled, Emotes)
+            UIFX.scale_open(EmotesHolder)
+            return
+        end
+        SubMenuBackground.close()
+        UIFX.scale_close(EmotesHolder)
+    end)
+    UI.on_click("EmotesButton", function() -- Line: 247 -- upvalues: u112 (upval)
+        u112.enabled.update(function(a1) -- Line: 248
+            return not a1
+        end)
+    end)
+    UI.on_click("EmotesCloseButton", function() -- Line: 253 -- upvalues: u112 (upval)
+        u112.enabled.set(false)
+    end)
+    u112.current_emote_playing.hook(function(a1, a2) -- Line: 257 -- upvalues: Net (upval), Char (upval), EmotesList (upval)
+        if a2 then
+            Net.send("stop_emote")
+            Char.anim(EmotesList[a2:GetAttribute("EmoteIndex")].id):Stop()
+        end
+        if a1 then
+            Net.send("start_emote", a1:GetAttribute("EmoteIndex"))
+            local v1 = Char.anim(EmotesList[a1:GetAttribute("EmoteIndex")].id)
+            v1:Play()
+            v1:AdjustSpeed(EmotesList[(a1:GetAttribute("EmoteIndex"))].anim_playback_speed or 1)
+        end
+    end)
+    Data.hook("xp", function(a1) -- Line: 271 -- upvalues: XPFormula (upval), u130 (upval)
+        local total_level = a1.total_level
+        local v1 = XPFormula.xp_to_level(total_level)
+        u130.set(v1)
+    end)
+    fill_dance_list()
+    fill_assassination_list()
+    u112.current_page.hook(function(a1, a2) -- Line: 280 -- upvalues: UI (upval)
+        local v1
+        if a1 == "emotes" then
+            for k, n in UI.get("EmotesScrollingFrame"):GetChildren() do
+                if n:IsA("ImageButton") and n.Name ~= "EmoteTemplate" then
+                    v1 = n:GetAttribute("EmoteIndex") ~= nil
+                    n.Visible = v1
+                end
+            end
+            UI.get("EmotesHolder").Title.Text = "Emotes"
+            return
+        end
+        if a1 == "assassinations" then
+            for i, j in UI.get("EmotesScrollingFrame"):GetChildren() do
+                if j:IsA("ImageButton") and j.Name ~= "EmoteTemplate" then
+                    v1 = j:GetAttribute("AssassinationIndex") ~= nil
+                    j.Visible = v1
+                end
+            end
+            UI.get("EmotesHolder").Title.Text = "Finishers"
+        end
+    end)
+
+    local function update_emote_play_eligibility() -- Line: 298
+        -- upvalues: u112 (upval), Char (upval), LocalPlayer (upval)
+        if u112.current_emote_playing.get()
+            and not (if not Char.get_hum():GetAttribute("HasBeenDowned") then if not (Char.get_hum().Health <= 0) then if not LocalPlayer:GetAttribute("IsMultiPlayerAnimating") then true else nil else false else false) then
+            u112.current_emote_playing.set(nil)
+        end
+    end
+
+    Char.hook(function(a1) -- Line: 304 -- upvalues: Util (upval), update_emote_play_eligibility (val) -- types: a1: userdata
+        local Humanoid = a1:WaitForChild("Humanoid")
+        Util.watch_attribute(Humanoid, "HasBeenDowned", update_emote_play_eligibility)
+        Util.watch_property(Humanoid, "Health", update_emote_play_eligibility)
+    end)
+    Util.watch_attribute(LocalPlayer, "IsMultiPlayerAnimating", update_emote_play_eligibility)
+end
+
+return u112

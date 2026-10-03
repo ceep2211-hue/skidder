@@ -1,0 +1,26 @@
+-- Path : ReplicatedStorage.Modules.Core.FPSTracker
+-- Script path: ReplicatedStorage.Modules.Core.FPSTracker
+-- Decompile time: 0.58 ms
+
+local RunService = game:GetService("RunService")
+local u5 = {}
+local u7 = tick()
+RunService.RenderStepped:Connect(function() -- Line: 7 -- upvalues: u7 (ref), u5 (val)
+    local v1 = tick()
+    local v2 = v1 - u7
+    u7 = v1
+    table.insert(u5, v2)
+    if #u5 > 300 then
+        table.remove(u5, 1)
+    end
+end)
+return {
+    get_fps = function() -- Line: 20 -- upvalues: u5 (val)
+        local v1 = 0
+        for i, v in ipairs(u5) do
+            v1 = v1 + v
+        end
+        local v2 = v1 / #u5
+        return v2 > 0 and 1 / v2 or 0
+    end,
+}

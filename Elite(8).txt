@@ -1,0 +1,24 @@
+-- Path : Workspace.Map.Tiles.PrestigeDealerAndHousing.PrestigeCarDealer.Interior.Crates.Car Crate.CrateOptions.Elite
+-- Script path: Workspace.Map.Tiles.PrestigeDealerAndHousing.PrestigeCarDealer.Interior.Crates.Car Crate.CrateOptions.Elite
+-- Decompile time: 0.30 ms
+
+return {
+    crate_name = script.Name,
+    crate_color_type = "Elite",
+    layout_order = 3,
+    bias = 1.3877582093303236,
+    items = {
+        {name = "F150", item_type = "car"},
+        {name = "G-Cruzer", item_type = "car"},
+        {name = "SRT", item_type = "car"},
+        {name = "Trackhawk", item_type = "car"},
+        {name = "Urus", item_type = "car"},
+        {name = "DirtBike", item_type = "bike"},
+        {name = "Cullivane", item_type = "car"},
+        {name = "Go Kart", item_type = "car"},
+        {name = "Stang", item_type = "car"},
+        {name = "Rezvani", item_type = "car"},
+        {name = "Turbolin", item_type = "car"},
+        {name = "Hurricane", item_type = "car"},
+    },
+}

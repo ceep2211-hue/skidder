@@ -1,0 +1,26 @@
+-- Path : ReplicatedStorage.Modules.Core.Friend
+-- Script path: ReplicatedStorage.Modules.Core.Friend
+-- Decompile time: 0.43 ms
+
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local v1 = {}
+local Players = game:GetService("Players")
+
+local function get_friends() -- Line: 6 -- upvalues: Players (val)
+    local LocalPlayer = Players.LocalPlayer
+    local success, result = pcall(LocalPlayer.GetFriendsOnline, LocalPlayer, 10)
+    if success then
+        return result
+    end
+    warn("Failed to get online players: " .. result)
+end
+
+function v1.initiate() -- Line: 17 -- upvalues: Net (val), get_friends (val)
+    Net.hook("get_friends", function() -- Line: 18 -- upvalues: get_friends (upval)
+        return get_friends()
+    end)
+end
+
+function v1.loaded() end
+
+return v1

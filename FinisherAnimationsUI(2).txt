@@ -1,0 +1,19 @@
+-- Path : ReplicatedStorage.Modules.Game.MultiAnimations.FinisherAnimationsUI
+-- Script path: ReplicatedStorage.Modules.Game.MultiAnimations.FinisherAnimationsUI
+-- Decompile time: 0.39 ms
+
+require(game.ReplicatedStorage.Modules.Core.Util)
+require(game.ReplicatedStorage.Modules.Game.MultiAnimations.MultiPlayerAnimation)
+require(game.ReplicatedStorage.Modules.Core.Char)
+local State = require(game.ReplicatedStorage.Modules.Core.State)
+require(game.ReplicatedStorage.Modules.Core.UI)
+game:GetService("ReplicatedStorage")
+local v1 = {}
+local LocalPlayer = (game:GetService("Players")).LocalPlayer
+State.new(false)
+
+function v1.initiate() end
+
+function v1.loaded() end
+
+return v1

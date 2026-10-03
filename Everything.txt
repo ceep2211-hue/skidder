@@ -1,0 +1,51 @@
+-- Path : Workspace.Map.Tiles.GunShopTile.PatriotWeapons.Interior.Crates.Weapon Crate.CrateOptions.Everything
+-- Script path: Workspace.Map.Tiles.GunShopTile.PatriotWeapons.Interior.Crates.Weapon Crate.CrateOptions.Everything
+-- Decompile time: 1.14 ms
+
+local v1 = {
+    crate_name = script.Name,
+    crate_color_type = "Everything",
+    layout_order = 2,
+    price = 10,
+    purchase_type = "token",
+    items = {},
+}
+
+local function add_all_items_of_type_to_table(a1, a2) -- Line: 13
+    local v1
+    local v2 = (game.ReplicatedStorage:WaitForChild("Items")):WaitForChild(a1)
+    if not v2 then
+        return
+    end
+    local v3, v4 = a1, a2
+    for i, j in v2:GetChildren() do
+        if j:GetAttribute("RarityPrice")
+            and not ((j:GetAttribute("RarityPrice")) <= 0)
+            and j:GetAttribute("AddToEverythingCrate") then
+            if j.Name:find("Hollow") or j.Name:find("Pan") or j.Name:find("Mop") then
+                warn("ERROR: THIS SHOULD NO LONGER BE WARNING....... IT SHOULD BE EXCLUDED: " .. j.Name)
+            elseif not j.Name:find("FishBait") then
+                v1 = 1
+                if v3 == "throwable" then
+                    v1 = 10
+                elseif v3 == "ammo" then
+                    v1 = 20
+                end
+                table.insert(v4, {
+                    name = j.Name,
+                    item_type = v3,
+                    amount = v1,
+                    ammo_type = if v3 ~= "ammo" then nil else j:GetAttribute("AmmoType"),
+                })
+            else
+                warn("ERROR: THIS SHOULD NO LONGER BE WARNING....... IT SHOULD BE EXCLUDED: " .. j.Name)
+            end
+        end
+    end
+end
+
+add_all_items_of_type_to_table("melee", v1.items)
+add_all_items_of_type_to_table("gun", v1.items)
+add_all_items_of_type_to_table("ammo", v1.items)
+add_all_items_of_type_to_table("throwable", v1.items)
+return v1

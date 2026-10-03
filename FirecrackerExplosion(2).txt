@@ -1,0 +1,73 @@
+-- Path : ReplicatedStorage.Modules.Game.Effects.FirecrackerExplosion
+-- Script path: ReplicatedStorage.Modules.Game.Effects.FirecrackerExplosion
+-- Decompile time: 1.76 ms
+
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local Net = require(game.ReplicatedStorage.Modules.Core.Net)
+local u14 = {}
+
+function u14.explosion(a1) -- Line: 5 -- upvalues: Util (val)
+    local v1
+    local Attachment = Instance.new("Attachment")
+    Attachment.Parent = workspace.Terrain
+    Attachment.WorldCFrame = CFrame.new(a1)
+    local v2 = script.Particles.SparkExplosion:Clone()
+    local v3 = script.Particles.LongRangeSparkExplosion:Clone()
+    local v4 = script.Particles.SparkExplosionColor:Clone()
+    local v5 = script.Particles.LongRangeSparkExplosionColor:Clone()
+    local FirecrackerExplosion = script.Sounds.FirecrackerExplosion
+    local v6 = Color3.fromHSV(Util.rand(0, 5) / 5, 0.7, 1)
+    v4.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, v6), (ColorSequenceKeypoint.new(1, v6))})
+    v5.Color = v4.Color
+    v2.Parent = Attachment
+    v3.Parent = Attachment
+    v4.Parent = Attachment
+    v5.Parent = Attachment
+    for i = 10, 1, -1 do
+        if i <= 7 then
+            v2:Emit(i * 5)
+            v4:Emit(i * 5)
+        else
+            v2:Emit(i * 10)
+            v4:Emit(i * 10)
+        end
+        if i > 4 then
+            v1 = FirecrackerExplosion:Clone()
+            v1.PlaybackSpeed = Util.rand(0.9, i / 10 + 1)
+            v1.Volume = i * 0.2 * Util.rand(0.9, 1.1)
+            v1.Parent = Attachment
+            v1:Play()
+        end
+        task.wait(0.05 * Util.rand(0.9, 1.1))
+        v3:Emit(i * 5)
+        v5:Emit(i * 5)
+        task.wait(0.05 * Util.rand(0.9, 1.1))
+    end
+    game.Debris:AddItem(Attachment, 3)
+end
+
+function u14.firework_explosion(a1) -- Line: 61
+    local v1
+    local Attachment = Instance.new("Attachment")
+    Attachment.Parent = workspace.Terrain
+    Attachment.WorldCFrame = CFrame.new(a1)
+    for i, j in script.Fireworks:GetChildren() do
+        v1 = j:Clone()
+        v1.Parent = Attachment
+        if v1:IsA("ParticleEmitter") then
+            v1:Emit(20)
+        elseif v1:IsA("Sound") then
+            v1:Play()
+        end
+    end
+    game.Debris:AddItem(Attachment, 3)
+end
+
+function u14.initiate() -- Line: 79 -- upvalues: Net (val), u14 (val)
+    Net.hook("fire_cracker_explosion", u14.explosion)
+    Net.hook("firework_explosion", u14.firework_explosion)
+end
+
+function u14.loaded() end
+
+return u14

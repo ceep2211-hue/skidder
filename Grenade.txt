@@ -1,0 +1,44 @@
+-- Path : ReplicatedStorage.Modules.Game.ItemTypes.Throwable.ThrowableTypes.Grenade
+-- Script path: ReplicatedStorage.Modules.Game.ItemTypes.Throwable.ThrowableTypes.Grenade
+-- Decompile time: 1.31 ms
+
+local Util = require(game.ReplicatedStorage.Modules.Core.Util)
+local Blood = require(game.ReplicatedStorage.Modules.Game.Effects.Blood)
+local Sparks = require(game.ReplicatedStorage.Modules.Game.Effects.Sparks)
+local v1 = {}
+
+function can_go_through(a1) -- Line: 6
+    if a1:HasTag("Glass") and a1:GetAttribute("Shattered") then
+        return true
+    end
+end
+
+function v1.init(a1) -- Line: 12 -- upvalues: Util (val), Blood (val), Sparks (val)
+    local PrimaryPart = a1.PrimaryPart
+    PrimaryPart.CFrame = PrimaryPart.CFrame * CFrame.Angles(0, 0, 1.3962634015954636)
+    a1.PrimaryPart.AssemblyAngularVelocity = Vector3.new(Util.rand(-5, 5), Util.rand(-5, 5), (Util.rand(-5, 5)))
+    local u27 = 0.4
+    game.Debris:AddItem(a1, (a1:GetAttribute("ExplodeDelay")))
+    return function(a1_2, a2) -- Line: 22 -- upvalues: a1 (val), Util (upval), u27 (ref), Blood (upval), Sparks (upval)
+        if can_go_through(a1_2) then
+            return
+        end
+        local AssemblyLinearVelocity = a1.Handle.AssemblyLinearVelocity
+        local v1 = script.BounceSound:Clone()
+        v1.PlaybackSpeed = Util.rand(0.8, 1.2)
+        v1.Parent = a1.Handle
+        v1.Volume = u27
+        v1:Play()
+        u27 = u27 - 0.1
+        local Position = a2 and a2.Position or a1.PrimaryPart.Position
+        local v2 = a1_2:FindFirstAncestorWhichIsA("Model")
+        if v2 and v2:FindFirstChild("Humanoid") then
+            Blood.apply_blood(a1_2.Position, a1.PrimaryPart.CFrame.LookVector)
+        end
+        if a1_2:IsDescendantOf(game.Workspace.Vehicles) then
+            Sparks.car_hit(Position, a1.PrimaryPart.CFrame.LookVector)
+        end
+    end
+end
+
+return v1
